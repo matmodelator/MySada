@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>План зала — canvas</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef1f6;
+      color: #243447;
+    }
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .toolbar button {
+      border: 1px solid #b8c2cf;
+      background: white;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .toolbar button:hover { background: #f7f9fc; }
+    .toolbar .hint { color: #5b6b7f; font-size: 14px; }
+    .wrap {
+      background: white;
+      border: 1px solid #c3ccd8;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      overflow: auto;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 1360px;
+      height: auto;
+      border-radius: 10px;
+      background: #f7f9fc;
+      touch-action: none;
+    }
+    .legend {
+      margin-top: 10px;
+      color: #5b6b7f;
+      font-size: 14px;
+    }
+    code {
+      background: #eef3f8;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="toolbar">
+      <button id="addSquare">Добавить квадратный стол</button>
+      <button id="addRound">Добавить круглый стол</button>
+      <button id="reset">Сбросить</button>
+      <button id="export">Показать JSON</button>
+      <span class="hint">Тяни стол мышкой. Колесо — масштаб. Двойной клик по столу — удалить.</span>
+    </div>
+
+    <div class="wrap">
+      <canvas id="plan" width="1360" height="980"></canvas>
+    </div>
+
+    <div class="legend">
+      Зоны: <code>hall</code>, <code>terrace_top</code>, <code>terrace_bottom</code>, <code>terrace_left</code>, <code>terrace_right</code>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('plan');
+    const ctx = canvas.getContext('2d');
+
+    const base = {
+      outer: { x: 40, y: 40, w: 1280, h: 900 },
+      ring: { x: 120, y: 140, w: 1120, h: 700 },
+      hall: { x: 300, y: 250, w: 760, h: 480 }
+    };
+
+    const zones = {
+      hall: { x: base.hall.x, y: base.hall.y, w: base.hall.w, h: base.hall.h },
+      terrace_top: {
+        x: base.ring.x,
+        y: base.ring.y,
+        w: base.ring.w,
+        h: base.hall.y - base.ring.y
+      },
+      terrace_bottom: {
+        x: base.ring.x,
+        y: base.hall.y + base.hall.h,
+        w: base.ring.w,
+        h: base.ring.y + base.ring.h - (base.hall.y + base.hall.h)
+      },
+      terrace_left: {
+        x: base.ring.x,
+        y: base.hall.y,
+        w: base.hall.x - base.ring.x,
+        h: base.hall.h
+      },
+      terrace_right: {
+        x: base.hall.x + base.hall.w,
+        y: base.hall.y,
+        w: base.ring.x + base.ring.w - (base.hall.x + base.hall.w),
+        h: base.hall.h
+      }
+    };
+
+    let scale = 1;
+    let tables = [
+      { id: 1, type: 'square', x: 390, y: 360, size: 70, seats: 4 },
+      { id: 2, type: 'round', x: 690, y: 420, size: 76, seats: 4 },
+      { id: 3, type: 'square', x: 180, y: 180, size: 64, seats: 2 },
+      { id: 4, type: 'round', x: 1140, y: 780, size: 72, seats: 4 }
+    ];
+
+    let drag = null;
+    let nextId = 5;
+
+    function screenToWorld(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * (canvas.width / rect.width) / scale;
+      const y = (clientY - rect.top) * (canvas.height / rect.height) / scale;
+      return { x, y };
+    }
+
+    function pointInRect(p, r) {
+      return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+    }
+
+    function getZoneName(table) {
+      const p = { x: table.x, y: table.y };
+      for (const [name, rect] of Object.entries(zones)) {
+        if (pointInRect(p, rect)) return name;
+      }
+      return 'outside';
+    }
+
+    function drawTileArea(r) {
+      ctx.fillStyle = '#d9dde3';
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.strokeStyle = '#b9c1cb';
+      ctx.lineWidth = 1;
+      for (let x = r.x; x <= r.x + r.w; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, r.y);
+        ctx.lineTo(x, r.y + r.h);
+        ctx.stroke();
+      }
+      for (let y = r.y; y <= r.y + r.h; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(r.x, y);
+        ctx.lineTo(r.x + r.w, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawWoodArea(r) {
+      ctx.fillStyle = '#efd8b4';
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.strokeStyle = '#e0c39a';
+      ctx.lineWidth = 1;
+      for (let y = r.y; y <= r.y + r.h; y += 18) {
+        ctx.beginPath();
+        ctx.moveTo(r.x, y);
+        ctx.lineTo(r.x + r.w, y);
+        ctx.stroke();
+      }
+      for (let x = r.x; x <= r.x + r.w; x += 110) {
+        ctx.beginPath();
+        ctx.moveTo(x, r.y);
+        ctx.lineTo(x, r.y + r.h);
+        ctx.stroke();
+      }
+    }
+
+    function drawZoneLabel(text, x, y) {
+      ctx.fillStyle = '#67788d';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, x, y);
+    }
+
+    function drawTable(t) {
+      const zone = getZoneName(t);
+      const isOutside = zone === 'outside';
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.18)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 4;
+
+      if (t.type === 'square') {
+        ctx.fillStyle = isOutside ? '#d95f5f' : '#4d87c7';
+        ctx.fillRect(t.x - t.size / 2, t.y - t.size / 2, t.size, t.size);
+      } else {
+        ctx.fillStyle = isOutside ? '#d95f5f' : '#7aa65a';
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(t.id), t.x, t.y);
+
+      ctx.fillStyle = '#243447';
+      ctx.font = '14px Arial';
+      ctx.fillText(zone, t.x, t.y + t.size / 2 + 18);
+    }
+
+    function draw() {
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#eef1f6';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#f7f9fc';
+      roundRect(base.outer.x, base.outer.y, base.outer.w, base.outer.h, 18, true, false);
+      ctx.strokeStyle = '#bcc6d3';
+      ctx.lineWidth = 3;
+      roundRect(base.outer.x, base.outer.y, base.outer.w, base.outer.h, 18, false, true);
+
+      drawTileArea(base.ring);
+
+      ctx.fillStyle = '#f7f9fc';
+      ctx.fillRect(base.hall.x - 4, base.hall.y - 4, base.hall.w + 8, base.hall.h + 8);
+      drawWoodArea(base.hall);
+      ctx.strokeStyle = '#4b5563';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(base.hall.x, base.hall.y, base.hall.w, base.hall.h);
+
+      ctx.fillStyle = '#35506f';
+      ctx.font = 'bold 34px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('План зала', 90, 105);
+
+      drawZoneLabel('УЛИЦА — ВЕРХ', 680, 195);
+      drawZoneLabel('УЛИЦА — НИЗ', 680, 820);
+
+      ctx.save();
+      ctx.translate(175, 490);
+      ctx.rotate(-Math.PI / 2);
+      drawZoneLabel('УЛИЦА — ЛЕВО', 0, 0);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(1185, 490);
+      ctx.rotate(Math.PI / 2);
+      drawZoneLabel('УЛИЦА — ПРАВО', 0, 0);
+      ctx.restore();
+
+      ctx.fillStyle = 'rgba(122,90,45,0.35)';
+      ctx.font = 'bold 52px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('ЗАЛ', 680, 505);
+
+      tables.forEach(drawTable);
+    }
+
+    function roundRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function findTable(p) {
+      for (let i = tables.length - 1; i >= 0; i--) {
+        const t = tables[i];
+        if (t.type === 'square') {
+          const half = t.size / 2;
+          if (p.x >= t.x - half && p.x <= t.x + half && p.y >= t.y - half && p.y <= t.y + half) return i;
+        } else {
+          const dx = p.x - t.x;
+          const dy = p.y - t.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= t.size / 2) return i;
+        }
+      }
+      return -1;
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const p = screenToWorld(e.clientX, e.clientY);
+      const index = findTable(p);
+      if (index >= 0) {
+        drag = { index, dx: p.x - tables[index].x, dy: p.y - tables[index].y };
+        canvas.setPointerCapture(e.pointerId);
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const p = screenToWorld(e.clientX, e.clientY);
+      tables[drag.index].x = p.x - drag.dx;
+      tables[drag.index].y = p.y - drag.dy;
+      draw();
+    });
+
+    canvas.addEventListener('pointerup', () => {
+      drag = null;
+    });
+
+    canvas.addEventListener('dblclick', (e) => {
+      const p = screenToWorld(e.clientX, e.clientY);
+      const index = findTable(p);
+      if (index >= 0) {
+        tables.splice(index, 1);
+        draw();
+      }
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      scale += e.deltaY < 0 ? 0.05 : -0.05;
+      scale = Math.max(0.6, Math.min(1.6, scale));
+      draw();
+    }, { passive: false });
+
+    document.getElementById('addSquare').addEventListener('click', () => {
+      tables.push({ id: nextId++, type: 'square', x: 680, y: 490, size: 70, seats: 4 });
+      draw();
+    });
+
+    document.getElementById('addRound').addEventListener('click', () => {
+      tables.push({ id: nextId++, type: 'round', x: 680, y: 490, size: 76, seats: 4 });
+      draw();
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      scale = 1;
+      tables = [];
+      nextId = 1;
+      draw();
+    });
+
+    document.getElementById('export').addEventListener('click', () => {
+      const data = tables.map(t => ({ ...t, zone: getZoneName(t) }));
+      alert(JSON.stringify(data, null, 2));
+    });
+
+    draw();
+  </script>
+</body>
+</html>
