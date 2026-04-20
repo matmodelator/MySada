@@ -1,6 +1,4 @@
 
-
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -13,6 +11,7 @@
   <link rel="stylesheet"
         href="styles/console.css" />
   
+
   <style>
     * { box-sizing: border-box; }
     body {
@@ -35,13 +34,24 @@
     }
     .toolbar button {
       border: 1px solid #b8c2cf;
-      background: white;
+      background: linear-gradient(180deg, #ffffff 0%, #eef3f8 100%);
       border-radius: 10px;
       padding: 10px 14px;
       cursor: pointer;
       font-size: 14px;
+      color: #243447;
+      box-shadow: 0 2px 0 #c5cfdb, 0 6px 14px rgba(0,0,0,0.08);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
     }
-    .toolbar button:hover { background: #f7f9fc; }
+    .toolbar button:hover {
+      background: linear-gradient(180deg, #ffffff 0%, #e8eef6 100%);
+    }
+    .toolbar button:active,
+    .toolbar button.is-active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #c5cfdb, 0 3px 8px rgba(0,0,0,0.08);
+      background: linear-gradient(180deg, #e5edf7 0%, #dce7f4 100%);
+    }
     .toolbar .hint { color: #5b6b7f; font-size: 14px; }
     .wrap {
       background: white;
@@ -100,8 +110,10 @@
     <div class="toolbar">
       <button id="undo">Отменить</button>
       <button id="reset">Сбросить</button>
+      <button id="apply">Применить</button>
       <button id="export">Показать JSON</button>
-      <span class="hint">Тяни стол мышкой со склада или по плану. Клик по столу — сменить номер. Двойной клик по столу — удалить.</span>
+      <button id="save">Сохранить</button>
+      <span class="hint">Клик по столу — сменить номер. Двойной клик — сменить тип. Удаление — выбросом на белое поле вне рабочей зоны.</span>
     </div>
 
     <div class="wrap">
@@ -164,6 +176,13 @@
       { id: 'stock_half_square', type: 'half_square', x: 1325, y: 350, size: 78, seats: 6, label: 'half square' }
     ];
 
+    const typeCycle = ['round', 'square', 'half_square'];
+    const typeMeta = {
+      round: { size: 64, seats: 2, label: 'round' },
+      square: { size: 68, seats: 4, label: 'square' },
+      half_square: { size: 78, seats: 6, label: 'half square' }
+    };
+
     let scale = 1;
     let tables = [
       { id: 1, type: 'square', x: 390, y: 360, size: 68, seats: 4 },
@@ -172,12 +191,15 @@
       { id: 4, type: 'round', x: 1140, y: 780, size: 64, seats: 2 }
     ];
 
+    let appliedTables = JSON.parse(JSON.stringify(tables));
     let drag = null;
     let nextId = 5;
     let history = [];
+    let movedDuringDrag = false;
+    let suppressClick = false;
 
-    function cloneTables() {
-      return JSON.parse(JSON.stringify(tables));
+    function cloneTables(source = tables) {
+      return JSON.parse(JSON.stringify(source));
     }
 
     function pushHistory() {
@@ -202,6 +224,23 @@
         if (pointInRect(p, rect)) return name;
       }
       return 'outside';
+    }
+
+    function isInsideWorkArea(p) {
+      return pointInRect(p, base.ring);
+    }
+
+    function syncTypeProps(table, type) {
+      const meta = typeMeta[type];
+      table.type = type;
+      table.size = meta.size;
+      table.seats = meta.seats;
+    }
+
+    function cycleType(table) {
+      const index = typeCycle.indexOf(table.type);
+      const nextType = typeCycle[(index + 1) % typeCycle.length];
+      syncTypeProps(table, nextType);
     }
 
     function drawTileArea(r) {
@@ -249,9 +288,9 @@
       ctx.fillText(text, x, y);
     }
 
-    function getDuplicateIds() {
+    function getDuplicateIds(source = tables) {
       const counts = {};
-      tables.forEach(t => {
+      source.forEach(t => {
         const key = String(t.id);
         counts[key] = (counts[key] || 0) + 1;
       });
@@ -439,12 +478,7 @@
 
     function renderConsole() {
       const duplicateIds = getDuplicateIds();
-      const groups = {
-        round: [],
-        square: [],
-        half_square: []
-      };
-
+      const groups = { round: [], square: [], half_square: [] };
       tables.forEach(t => groups[t.type].push(t));
       Object.values(groups).forEach(arr => arr.sort((a, b) => Number(a.id) - Number(b.id)));
 
@@ -464,6 +498,9 @@
         lines.push({ text: 'WARNING: outside valid zones -> ' + outsideCount, error: true });
       }
 
+      const appliedCount = appliedTables.length;
+      lines.push({ text: 'Applied in JSON: ' + appliedCount });
+
       consoleLines.innerHTML = lines.map(line => '<div class="console-line' + (line.error ? ' error' : '') + '">' + escapeHtml(line.text) + '</div>').join('');
     }
 
@@ -476,8 +513,14 @@
         .replace(/'/g, '&#039;');
     }
 
+    function pulseButton(button) {
+      button.classList.add('is-active');
+      setTimeout(() => button.classList.remove('is-active'), 120);
+    }
+
     canvas.addEventListener('pointerdown', (e) => {
       const p = screenToWorld(e.clientX, e.clientY);
+      movedDuringDrag = false;
       const index = findTable(p);
       if (index >= 0) {
         pushHistory();
@@ -499,12 +542,7 @@
           seats: item.seats
         };
         tables.push(newTable);
-        drag = {
-          index: tables.length - 1,
-          dx: 0,
-          dy: 0,
-          createdFromStock: true
-        };
+        drag = { index: tables.length - 1, dx: 0, dy: 0, createdFromStock: true };
         canvas.setPointerCapture(e.pointerId);
         draw();
       }
@@ -515,18 +553,29 @@
       const p = screenToWorld(e.clientX, e.clientY);
       tables[drag.index].x = p.x - drag.dx;
       tables[drag.index].y = p.y - drag.dy;
+      movedDuringDrag = true;
       draw();
     });
 
-    canvas.addEventListener('pointerup', () => {
+    canvas.addEventListener('pointerup', (e) => {
+      if (!drag) return;
+      const p = screenToWorld(e.clientX, e.clientY);
+      const target = tables[drag.index];
+      const outsideWorkArea = !isInsideWorkArea(p);
+      if (outsideWorkArea) {
+        tables.splice(drag.index, 1);
+      }
       drag = null;
+      if (movedDuringDrag) suppressClick = true;
+      draw();
+      setTimeout(() => { suppressClick = false; }, 0);
     });
 
     canvas.addEventListener('click', (e) => {
+      if (suppressClick) return;
       const p = screenToWorld(e.clientX, e.clientY);
       const index = findTable(p);
       if (index < 0) return;
-      if (drag) return;
       const current = tables[index];
       const value = prompt('Номер стола', String(current.id));
       if (value === null) return;
@@ -542,8 +591,10 @@
       const index = findTable(p);
       if (index >= 0) {
         pushHistory();
-        tables.splice(index, 1);
+        cycleType(tables[index]);
+        suppressClick = true;
         draw();
+        setTimeout(() => { suppressClick = false; }, 0);
       }
     });
 
@@ -554,17 +605,17 @@
       draw();
     }, { passive: false });
 
-    document.getElementById('undo').addEventListener('click', () => {
+    document.getElementById('undo').addEventListener('click', (e) => {
+      pulseButton(e.currentTarget);
       if (!history.length) return;
       tables = history.pop();
-      const ids = tables
-        .map(t => parseInt(t.id, 10))
-        .filter(n => !Number.isNaN(n));
+      const ids = tables.map(t => parseInt(t.id, 10)).filter(n => !Number.isNaN(n));
       nextId = ids.length ? Math.max(...ids) + 1 : tables.length + 1;
       draw();
     });
 
-    document.getElementById('reset').addEventListener('click', () => {
+    document.getElementById('reset').addEventListener('click', (e) => {
+      pulseButton(e.currentTarget);
       pushHistory();
       scale = 1;
       tables = [];
@@ -572,14 +623,34 @@
       draw();
     });
 
-    document.getElementById('export').addEventListener('click', () => {
-      const data = tables.map(t => ({ ...t, zone: getZoneName(t) }));
+    document.getElementById('apply').addEventListener('click', (e) => {
+      pulseButton(e.currentTarget);
+      appliedTables = cloneTables();
+      draw();
+    });
+
+    document.getElementById('export').addEventListener('click', (e) => {
+      pulseButton(e.currentTarget);
+      const data = appliedTables.map(t => ({ ...t, zone: getZoneName(t) }));
       alert(JSON.stringify(data, null, 2));
+    });
+
+    document.getElementById('save').addEventListener('click', (e) => {
+      pulseButton(e.currentTarget);
+      const data = appliedTables.map(t => ({ ...t, zone: getZoneName(t) }));
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tables-layout.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
 
     draw();
   </script>
-
 
 
 
@@ -597,7 +668,22 @@
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    рабочий вход с обезьянкой и повтором пароля | v1.1.0
+   типы столов:
+round — 2 place
+square — 4 place
+half square — 6 place
+справа от План зала — склад столов
+со склада столы можно перетягивать мышкой
+кнопка Отменить слева от Сбросить
+клик по столу → можно менять номер
+ двойной клик теперь меняет тип стола
+удаление теперь выбросом на белое поле вне рабочей зоны
+Отменить поправил — теперь должно срабатывать с первого нажатия
+добавил эффект нажатия кнопок
+нижняя консоль со списком столов по типам включена
+добавил Применить слева от Показать JSON
+добавил Сохранить справа от Показать JSON
+Показать JSON и Сохранить теперь работают по применённому состоянию, а не по текущему черновику   | v1.1.1
 
   </div>
 
