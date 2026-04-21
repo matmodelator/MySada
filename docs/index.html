@@ -11,7 +11,6 @@
   <link rel="stylesheet"
         href="styles/console.css" />
   
-
   <style>
     * { box-sizing: border-box; }
     body {
@@ -52,7 +51,10 @@
       box-shadow: 0 1px 0 #c5cfdb, 0 3px 8px rgba(0,0,0,0.08);
       background: linear-gradient(180deg, #e5edf7 0%, #dce7f4 100%);
     }
-    .toolbar .hint { color: #5b6b7f; font-size: 14px; }
+    .toolbar .hint {
+      color: #5b6b7f;
+      font-size: 14px;
+    }
     .wrap {
       background: white;
       border: 1px solid #c3ccd8;
@@ -84,10 +86,20 @@
       font-family: Consolas, Monaco, monospace;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
     }
+    .console-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
     .console-title {
       font-size: 14px;
       color: #8fb7ff;
-      margin-bottom: 10px;
+    }
+    .console-total {
+      font-size: 13px;
+      color: #b7c8df;
     }
     .console-line {
       padding: 3px 0;
@@ -108,12 +120,12 @@
 <body>
   <div class="app">
     <div class="toolbar">
-      <button id="undo">Отменить</button>
-      <button id="reset">Сбросить</button>
-      <button id="apply">Применить</button>
-      <button id="export">Показать JSON</button>
-      <button id="save">Сохранить</button>
-      <span class="hint">Клик по столу — сменить номер. Двойной клик — сменить тип. Удаление — выбросом на белое поле вне рабочей зоны.</span>
+      <button id="undo">Undo</button>
+      <button id="reset">Reset</button>
+      <button id="apply">Apply</button>
+      <button id="export">Show JSON</button>
+      <button id="save">Save</button>
+      <span class="hint">Click table — change number. Double click — change type. Throw to white area outside workspace to delete.</span>
     </div>
 
     <div class="wrap">
@@ -121,27 +133,40 @@
     </div>
 
     <div class="legend">
-      Зоны: <code>hall</code>, <code>terrace_top</code>, <code>terrace_bottom</code>, <code>terrace_left</code>, <code>terrace_right</code>
+      Zones: <code>hall</code>, <code>terrace_top</code>, <code>terrace_bottom</code>, <code>terrace_left</code>, <code>terrace_right</code>
     </div>
 
     <div class="console" id="consoleBox">
-      <div class="console-title">Консоль столов</div>
+      <div class="console-head">
+        <div class="console-title">Table Console</div>
+        <div class="console-total" id="consoleTotal">Total tables: 0</div>
+      </div>
       <div id="consoleLines"></div>
     </div>
   </div>
 
   <script>
+    // ========================================
+    // CANVAS AND CONSOLE REFERENCES
+    // ========================================
     const canvas = document.getElementById('plan');
     const ctx = canvas.getContext('2d');
     const consoleLines = document.getElementById('consoleLines');
+    const consoleTotal = document.getElementById('consoleTotal');
 
+    // ========================================
+    // BASIC PLAN GEOMETRY
+    // ========================================
     const base = {
       outer: { x: 40, y: 40, w: 1380, h: 960 },
       ring: { x: 120, y: 140, w: 1120, h: 700 },
       hall: { x: 300, y: 250, w: 760, h: 480 },
-      stock: { x: 1265, y: 70, w: 120, h: 300 }
+      stock: { x: 1252, y: 68, w: 142, h: 320 }
     };
 
+    // ========================================
+    // VALID PLACEMENT ZONES
+    // ========================================
     const zones = {
       hall: { x: base.hall.x, y: base.hall.y, w: base.hall.w, h: base.hall.h },
       terrace_top: {
@@ -170,34 +195,46 @@
       }
     };
 
+    // ========================================
+    // STOCK TABLES PANEL
+    // ========================================
     const stockItems = [
-      { id: 'stock_round', type: 'round', x: 1325, y: 165, size: 64, seats: 2, label: 'round' },
-      { id: 'stock_square', type: 'square', x: 1325, y: 255, size: 68, seats: 4, label: 'square' },
-      { id: 'stock_half_square', type: 'half_square', x: 1325, y: 350, size: 78, seats: 6, label: 'half square' }
+      { id: 'stock_round', type: 'round', x: 1323, y: 160, size: 58, seats: 2, label: 'round' },
+      { id: 'stock_square', type: 'square', x: 1323, y: 252, size: 62, seats: 4, label: 'square' },
+      { id: 'stock_half_square', type: 'half_square', x: 1323, y: 348, size: 72, seats: 6, label: 'half square' }
     ];
 
+    // ========================================
+    // TABLE TYPE SETTINGS
+    // ========================================
     const typeCycle = ['round', 'square', 'half_square'];
     const typeMeta = {
-      round: { size: 64, seats: 2, label: 'round' },
-      square: { size: 68, seats: 4, label: 'square' },
-      half_square: { size: 78, seats: 6, label: 'half square' }
+      round: { size: 58, seats: 2, label: 'round' },
+      square: { size: 62, seats: 4, label: 'square' },
+      half_square: { size: 72, seats: 6, label: 'half square' }
     };
 
+    // ========================================
+    // STATE
+    // ========================================
     let scale = 1;
     let tables = [
-      { id: 1, type: 'square', x: 390, y: 360, size: 68, seats: 4 },
-      { id: 2, type: 'round', x: 690, y: 420, size: 64, seats: 2 },
-      { id: 3, type: 'half_square', x: 180, y: 180, size: 78, seats: 6 },
-      { id: 4, type: 'round', x: 1140, y: 780, size: 64, seats: 2 }
+      { id: 1, type: 'square', x: 390, y: 360, size: 62, seats: 4 },
+      { id: 2, type: 'round', x: 690, y: 420, size: 58, seats: 2 },
+      { id: 3, type: 'half_square', x: 180, y: 180, size: 72, seats: 6 },
+      { id: 4, type: 'round', x: 1140, y: 780, size: 58, seats: 2 }
     ];
-
     let appliedTables = JSON.parse(JSON.stringify(tables));
     let drag = null;
     let nextId = 5;
     let history = [];
     let movedDuringDrag = false;
     let suppressClick = false;
+    let suppressClickTimer = null;
 
+    // ========================================
+    // HELPERS
+    // ========================================
     function cloneTables(source = tables) {
       return JSON.parse(JSON.stringify(source));
     }
@@ -243,6 +280,32 @@
       syncTypeProps(table, nextType);
     }
 
+    function getDuplicateIds(source = tables) {
+      const counts = {};
+      source.forEach(t => {
+        const key = String(t.id);
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      return new Set(Object.keys(counts).filter(key => counts[key] > 1));
+    }
+
+    function pulseButton(button) {
+      button.classList.add('is-active');
+      setTimeout(() => button.classList.remove('is-active'), 120);
+    }
+
+    function blockNextClick() {
+      suppressClick = true;
+      if (suppressClickTimer) clearTimeout(suppressClickTimer);
+      suppressClickTimer = setTimeout(() => {
+        suppressClick = false;
+        suppressClickTimer = null;
+      }, 260);
+    }
+
+    // ========================================
+    // DRAW HELPERS
+    // ========================================
     function drawTileArea(r) {
       ctx.fillStyle = '#d9dde3';
       ctx.fillRect(r.x, r.y, r.w, r.h);
@@ -288,20 +351,22 @@
       ctx.fillText(text, x, y);
     }
 
-    function getDuplicateIds(source = tables) {
-      const counts = {};
-      source.forEach(t => {
-        const key = String(t.id);
-        counts[key] = (counts[key] || 0) + 1;
-      });
-      return new Set(Object.keys(counts).filter(key => counts[key] > 1));
+    function roundRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
     }
 
     function drawHalfSquareShape(x, y, size) {
       const w = size;
       const h = Math.round(size * 0.62);
-      const r = 10;
-      roundRect(x - w / 2, y - h / 2, w, h, r, true, false);
+      roundRect(x - w / 2, y - h / 2, w, h, 10, true, false);
     }
 
     function drawTableShape(t, fillColor) {
@@ -315,6 +380,23 @@
       } else {
         drawHalfSquareShape(t.x, t.y, t.size);
       }
+    }
+
+    function drawStockItem(item) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.12)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 3;
+      const color = item.type === 'round' ? '#7aa65a' : item.type === 'square' ? '#4d87c7' : '#9b7bd1';
+      drawTableShape(item, color);
+      ctx.restore();
+
+      ctx.fillStyle = '#243447';
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.label, item.x, item.y + item.size / 2 + 14);
+      ctx.font = '11px Arial';
+      ctx.fillText(item.seats + ' seats', item.x, item.y + item.size / 2 + 29);
     }
 
     function drawTable(t) {
@@ -335,33 +417,19 @@
       ctx.restore();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 22px Arial';
+      ctx.font = 'bold 20px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(String(t.id), t.x, t.y);
 
       ctx.fillStyle = isDuplicate ? '#e24848' : '#243447';
-      ctx.font = '14px Arial';
+      ctx.font = '13px Arial';
       ctx.fillText(zone, t.x, t.y + t.size / 2 + 18);
     }
 
-    function drawStockItem(item) {
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.12)';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 3;
-      const color = item.type === 'round' ? '#7aa65a' : item.type === 'square' ? '#4d87c7' : '#9b7bd1';
-      drawTableShape(item, color);
-      ctx.restore();
-
-      ctx.fillStyle = '#243447';
-      ctx.font = 'bold 13px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(item.label, item.x, item.y + item.size / 2 + 16);
-      ctx.font = '12px Arial';
-      ctx.fillText(item.seats + ' seats', item.x, item.y + item.size / 2 + 32);
-    }
-
+    // ========================================
+    // MAIN DRAW
+    // ========================================
     function draw() {
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -387,7 +455,7 @@
       ctx.fillStyle = '#35506f';
       ctx.font = 'bold 34px Arial';
       ctx.textAlign = 'left';
-      ctx.fillText('План зала', 90, 105);
+      ctx.fillText('Hall Plan', 90, 105);
 
       ctx.fillStyle = '#f3f6fb';
       roundRect(base.stock.x, base.stock.y, base.stock.w, base.stock.h, 14, true, false);
@@ -397,45 +465,36 @@
       ctx.fillStyle = '#35506f';
       ctx.font = 'bold 18px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Склад столов', base.stock.x + base.stock.w / 2, base.stock.y + 28);
+      ctx.fillText('Table Stock', base.stock.x + base.stock.w / 2, base.stock.y + 28);
 
-      drawZoneLabel('УЛИЦА — ВЕРХ', 680, 195);
-      drawZoneLabel('УЛИЦА — НИЗ', 680, 820);
+      drawZoneLabel('TOP TERRACE', 680, 195);
+      drawZoneLabel('BOTTOM TERRACE', 680, 820);
 
       ctx.save();
       ctx.translate(175, 490);
       ctx.rotate(-Math.PI / 2);
-      drawZoneLabel('УЛИЦА — ЛЕВО', 0, 0);
+      drawZoneLabel('LEFT TERRACE', 0, 0);
       ctx.restore();
 
       ctx.save();
       ctx.translate(1185, 490);
       ctx.rotate(Math.PI / 2);
-      drawZoneLabel('УЛИЦА — ПРАВО', 0, 0);
+      drawZoneLabel('RIGHT TERRACE', 0, 0);
       ctx.restore();
 
       ctx.fillStyle = 'rgba(122,90,45,0.35)';
       ctx.font = 'bold 52px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('ЗАЛ', 680, 505);
+      ctx.fillText('HALL', 680, 505);
 
       stockItems.forEach(drawStockItem);
       tables.forEach(drawTable);
       renderConsole();
     }
 
-    function roundRect(x, y, w, h, r, fill, stroke) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-      if (fill) ctx.fill();
-      if (stroke) ctx.stroke();
-    }
-
+    // ========================================
+    // HIT TESTS
+    // ========================================
     function isInsideHalfSquare(p, t) {
       const w = t.size;
       const h = Math.round(t.size * 0.62);
@@ -476,30 +535,39 @@
       return -1;
     }
 
+    // ========================================
+    // CONSOLE RENDER
+    // ========================================
     function renderConsole() {
       const duplicateIds = getDuplicateIds();
       const groups = { round: [], square: [], half_square: [] };
       tables.forEach(t => groups[t.type].push(t));
       Object.values(groups).forEach(arr => arr.sort((a, b) => Number(a.id) - Number(b.id)));
 
+      const roundCount = groups.round.length;
+      const squareCount = groups.square.length;
+      const halfSquareCount = groups.half_square.length;
+      const totalCount = tables.length;
+      consoleTotal.textContent = 'Total tables: ' + totalCount;
+
       const lines = [];
-      lines.push({ text: 'round / 2 place: ' + (groups.round.length ? groups.round.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') });
-      lines.push({ text: 'square / 4 place: ' + (groups.square.length ? groups.square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') });
-      lines.push({ text: 'half square / 6 place: ' + (groups.half_square.length ? groups.half_square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') });
+      lines.push({ text: 'round / 2 seats: ' + (roundCount ? groups.round.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') + ' | count: ' + roundCount });
+      lines.push({ text: 'square / 4 seats: ' + (squareCount ? groups.square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') + ' | count: ' + squareCount });
+      lines.push({ text: 'half square / 6 seats: ' + (halfSquareCount ? groups.half_square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') + ' | count: ' + halfSquareCount });
+
+      const checkStatus = duplicateIds.size ? 'ERROR' : 'OK';
+      lines.push({ text: 'CHECK | unique table numbers | ' + checkStatus, error: duplicateIds.size > 0 });
 
       if (duplicateIds.size) {
         lines.push({ text: 'ERROR: duplicate number -> ' + Array.from(duplicateIds).join(', '), error: true });
-      } else {
-        lines.push({ text: 'OK: all table numbers are unique' });
       }
 
       const outsideCount = tables.filter(t => getZoneName(t) === 'outside').length;
       if (outsideCount) {
-        lines.push({ text: 'WARNING: outside valid zones -> ' + outsideCount, error: true });
+        lines.push({ text: 'ERROR: outside valid zones -> ' + outsideCount, error: true });
       }
 
-      const appliedCount = appliedTables.length;
-      lines.push({ text: 'Applied in JSON: ' + appliedCount });
+      lines.push({ text: 'Applied in JSON: ' + appliedTables.length });
 
       consoleLines.innerHTML = lines.map(line => '<div class="console-line' + (line.error ? ' error' : '') + '">' + escapeHtml(line.text) + '</div>').join('');
     }
@@ -513,14 +581,13 @@
         .replace(/'/g, '&#039;');
     }
 
-    function pulseButton(button) {
-      button.classList.add('is-active');
-      setTimeout(() => button.classList.remove('is-active'), 120);
-    }
-
+    // ========================================
+    // POINTER EVENTS
+    // ========================================
     canvas.addEventListener('pointerdown', (e) => {
       const p = screenToWorld(e.clientX, e.clientY);
       movedDuringDrag = false;
+
       const index = findTable(p);
       if (index >= 0) {
         pushHistory();
@@ -560,15 +627,13 @@
     canvas.addEventListener('pointerup', (e) => {
       if (!drag) return;
       const p = screenToWorld(e.clientX, e.clientY);
-      const target = tables[drag.index];
       const outsideWorkArea = !isInsideWorkArea(p);
       if (outsideWorkArea) {
         tables.splice(drag.index, 1);
       }
       drag = null;
-      if (movedDuringDrag) suppressClick = true;
+      if (movedDuringDrag) blockNextClick();
       draw();
-      setTimeout(() => { suppressClick = false; }, 0);
     });
 
     canvas.addEventListener('click', (e) => {
@@ -576,11 +641,13 @@
       const p = screenToWorld(e.clientX, e.clientY);
       const index = findTable(p);
       if (index < 0) return;
+
       const current = tables[index];
-      const value = prompt('Номер стола', String(current.id));
+      const value = prompt('Table number', String(current.id));
       if (value === null) return;
       const clean = value.trim();
       if (!clean) return;
+
       pushHistory();
       current.id = clean;
       draw();
@@ -592,9 +659,8 @@
       if (index >= 0) {
         pushHistory();
         cycleType(tables[index]);
-        suppressClick = true;
+        blockNextClick();
         draw();
-        setTimeout(() => { suppressClick = false; }, 0);
       }
     });
 
@@ -605,6 +671,9 @@
       draw();
     }, { passive: false });
 
+    // ========================================
+    // BUTTON ACTIONS
+    // ========================================
     document.getElementById('undo').addEventListener('click', (e) => {
       pulseButton(e.currentTarget);
       if (!history.length) return;
@@ -632,7 +701,13 @@
     document.getElementById('export').addEventListener('click', (e) => {
       pulseButton(e.currentTarget);
       const data = appliedTables.map(t => ({ ...t, zone: getZoneName(t) }));
-      alert(JSON.stringify(data, null, 2));
+      const text = JSON.stringify(data, null, 2);
+      const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const html = '<div class="console-line">----- JSON START -----</div>' +
+        '<div class="console-line"><pre style="margin:6px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; color:#dbe7f5;">' + safeText + '</pre></div>' +
+        '<div class="console-line">----- JSON END -----</div>';
+      consoleLines.innerHTML = html;
+      consoleTotal.textContent = 'Total tables: ' + tables.length;
     });
 
     document.getElementById('save').addEventListener('click', (e) => {
@@ -649,6 +724,9 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
 
+    // ========================================
+    // INITIAL RENDER
+    // ========================================
     draw();
   </script>
 
@@ -668,22 +746,21 @@
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-   типы столов:
-round — 2 place
-square — 4 place
-half square — 6 place
-справа от План зала — склад столов
-со склада столы можно перетягивать мышкой
-кнопка Отменить слева от Сбросить
-клик по столу → можно менять номер
- двойной клик теперь меняет тип стола
-удаление теперь выбросом на белое поле вне рабочей зоны
-Отменить поправил — теперь должно срабатывать с первого нажатия
-добавил эффект нажатия кнопок
-нижняя консоль со списком столов по типам включена
-добавил Применить слева от Показать JSON
-добавил Сохранить справа от Показать JSON
-Показать JSON и Сохранить теперь работают по применённому состоянию, а не по текущему черновику   | v1.1.1
+  убрал конфликт одинарного и двойного клика
+двойной клик теперь должен менять тип, а не открывать номер
+Show JSON теперь выводит JSON внизу без обрезания
+в консоли:
+у каждой строки есть count: N
+справа в шапке есть Total tables: N
+строка проверки теперь:
+CHECK | unique table numbers | OK
+или CHECK | unique table numbers | ERROR
+на складе исправил подпись:
+round
+2 seats
+и уменьшил размеры, чтобы всё влезало в рамку
+добавил комментарии в код
+перевёл всё на английский | v1.1.2
 
   </div>
 
