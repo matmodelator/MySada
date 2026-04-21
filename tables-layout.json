@@ -1,0 +1,119 @@
+[
+  {
+    "id": 1,
+    "type": "square",
+    "x": 390,
+    "y": 360,
+    "size": 52,
+    "seats": 4,
+    "zone": "hall"
+  },
+  {
+    "id": "45",
+    "type": "round",
+    "x": 284.07474931631725,
+    "y": 969.6670955007665,
+    "size": 54,
+    "seats": 2,
+    "zone": "bar"
+  },
+  {
+    "id": 3,
+    "type": "half_square",
+    "x": 180,
+    "y": 180,
+    "size": 68,
+    "seats": 6,
+    "zone": "terrace_top"
+  },
+  {
+    "id": 4,
+    "type": "round",
+    "x": 1140,
+    "y": 780,
+    "size": 54,
+    "seats": 2,
+    "zone": "terrace_bottom"
+  },
+  {
+    "id": "15",
+    "type": "square",
+    "x": 916.9917958067457,
+    "y": 335.39009216995925,
+    "size": 52,
+    "seats": 4,
+    "zone": "hall"
+  },
+  {
+    "id": "70",
+    "type": "half_square",
+    "x": 1141.9143117593437,
+    "y": 938.293710237386,
+    "size": 68,
+    "seats": 6,
+    "zone": "sauna"
+  },
+  {
+    "id": "51",
+    "type": "half_square",
+    "x": 545.6700091157703,
+    "y": 944.9482755582186,
+    "size": 68,
+    "seats": 6,
+    "zone": "vip"
+  },
+  {
+    "id": "61",
+    "type": "square",
+    "x": 819.8359161349134,
+    "y": 962.2501453923832,
+    "size": 52,
+    "seats": 4,
+    "zone": "pool"
+  },
+  {
+    "id": 9,
+    "type": "square",
+    "x": 920.9845031905196,
+    "y": 650.8164883774209,
+    "size": 52,
+    "seats": 4,
+    "zone": "hall"
+  },
+  {
+    "id": 10,
+    "type": "square",
+    "x": 392.61622607110303,
+    "y": 652.1474014415875,
+    "size": 52,
+    "seats": 4,
+    "zone": "hall"
+  },
+  {
+    "id": 11,
+    "type": "half_square",
+    "x": 1132.5979945305378,
+    "y": 190.32056817581022,
+    "size": 68,
+    "seats": 6,
+    "zone": "terrace_top"
+  },
+  {
+    "id": 13,
+    "type": "square",
+    "x": 204.95897903372835,
+    "y": 775.9223164090724,
+    "size": 52,
+    "seats": 4,
+    "zone": "terrace_bottom"
+  },
+  {
+    "id": 14,
+    "type": "half_square",
+    "x": 662.7894257064722,
+    "y": 492.4378337416069,
+    "size": 68,
+    "seats": 6,
+    "zone": "hall"
+  }
+]
