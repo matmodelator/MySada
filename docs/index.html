@@ -20,7 +20,7 @@
       color: #243447;
     }
     .app {
-      max-width: 1500px;
+      max-width: 1680px;
       margin: 0 auto;
       padding: 16px;
     }
@@ -55,6 +55,12 @@
       color: #5b6b7f;
       font-size: 14px;
     }
+    .main {
+      display: grid;
+      grid-template-columns: minmax(980px, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
     .wrap {
       background: white;
       border: 1px solid #c3ccd8;
@@ -72,39 +78,51 @@
       background: #f7f9fc;
       touch-action: none;
     }
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: sticky;
+      top: 16px;
+    }
     .legend {
-      margin-top: 10px;
       color: #5b6b7f;
       font-size: 14px;
+      background: white;
+      border: 1px solid #c3ccd8;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
     .console {
-      margin-top: 14px;
       background: #10151c;
       color: #dbe7f5;
       border-radius: 14px;
       padding: 14px 16px;
       font-family: Consolas, Monaco, monospace;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
-    }
-    .console-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 24px rgba(0,0,0,0.18);
+      min-height: 520px;
     }
     .console-title {
       font-size: 14px;
       color: #8fb7ff;
+      margin-bottom: 8px;
     }
     .console-total {
       font-size: 13px;
-      color: #b7c8df;
+      color: #ffe28a;
+      background: rgba(255,226,138,0.12);
+      border: 1px solid rgba(255,226,138,0.28);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-weight: 700;
     }
     .console-line {
-      padding: 3px 0;
+      padding: 4px 0;
       white-space: pre-wrap;
       word-break: break-word;
+      line-height: 1.4;
     }
     .console-line.error {
       color: #ff8b8b;
@@ -114,6 +132,17 @@
       background: #eef3f8;
       padding: 2px 6px;
       border-radius: 6px;
+    }
+    @media (max-width: 1320px) {
+      .main {
+        grid-template-columns: 1fr;
+      }
+      .side {
+        position: static;
+      }
+      .console {
+        min-height: 0;
+      }
     }
   </style>
 </head>
@@ -128,26 +157,30 @@
       <span class="hint">Click table — change number. Double click — change type. Throw to white area outside workspace to delete.</span>
     </div>
 
-    <div class="wrap">
-      <canvas id="plan" width="1460" height="1040"></canvas>
-    </div>
-
-    <div class="legend">
-      Zones: <code>hall</code>, <code>terrace_top</code>, <code>terrace_bottom</code>, <code>terrace_left</code>, <code>terrace_right</code>
-    </div>
-
-    <div class="console" id="consoleBox">
-      <div class="console-head">
-        <div class="console-title">Table Console</div>
-        <div class="console-total" id="consoleTotal">Total tables: 0</div>
+    <div class="main">
+      <div>
+        <div class="wrap">
+          <canvas id="plan" width="1460" height="1160"></canvas>
+        </div>
       </div>
-      <div id="consoleLines"></div>
+
+      <div class="side">
+        <div class="legend">
+          Zones: <code>hall</code>, <code>terrace_top</code>, <code>terrace_bottom</code>, <code>terrace_left</code>, <code>terrace_right</code>, <code>bar</code>, <code>vip</code>, <code>pool</code>, <code>sauna</code>
+        </div>
+
+        <div class="console" id="consoleBox">
+          <div class="console-title">Table Console</div>
+          <div class="console-total" id="consoleTotal">Total tables: 0</div>
+          <div id="consoleLines"></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
     // ========================================
-    // CANVAS AND CONSOLE REFERENCES
+    // ССЫЛКИ НА CANVAS И КОНСОЛЬ
     // ========================================
     const canvas = document.getElementById('plan');
     const ctx = canvas.getContext('2d');
@@ -155,17 +188,21 @@
     const consoleTotal = document.getElementById('consoleTotal');
 
     // ========================================
-    // BASIC PLAN GEOMETRY
+    // БАЗОВАЯ ГЕОМЕТРИЯ ПЛАНА
     // ========================================
     const base = {
-      outer: { x: 40, y: 40, w: 1380, h: 960 },
+      outer: { x: 40, y: 40, w: 1380, h: 1080 },
       ring: { x: 120, y: 140, w: 1120, h: 700 },
       hall: { x: 300, y: 250, w: 760, h: 480 },
-      stock: { x: 1252, y: 68, w: 142, h: 320 }
+      stock: { x: 1252, y: 68, w: 142, h: 320 },
+      extraRowY: 870,
+      extraRowH: 160,
+      extraGap: 24,
+      extraW: 242
     };
 
     // ========================================
-    // VALID PLACEMENT ZONES
+    // ОСНОВНЫЕ ЗОНЫ РАССТАНОВКИ
     // ========================================
     const zones = {
       hall: { x: base.hall.x, y: base.hall.y, w: base.hall.w, h: base.hall.h },
@@ -192,37 +229,41 @@
         y: base.hall.y,
         w: base.ring.x + base.ring.w - (base.hall.x + base.hall.w),
         h: base.hall.h
-      }
+      },
+      bar: { x: 120, y: base.extraRowY, w: base.extraW, h: base.extraRowH },
+      vip: { x: 120 + base.extraW + base.extraGap, y: base.extraRowY, w: base.extraW, h: base.extraRowH },
+      pool: { x: 120 + (base.extraW + base.extraGap) * 2, y: base.extraRowY, w: base.extraW, h: base.extraRowH },
+      sauna: { x: 120 + (base.extraW + base.extraGap) * 3, y: base.extraRowY, w: base.extraW, h: base.extraRowH }
     };
 
     // ========================================
-    // STOCK TABLES PANEL
+    // СКЛАД ТИПОВ СТОЛОВ
     // ========================================
     const stockItems = [
-      { id: 'stock_round', type: 'round', x: 1323, y: 160, size: 58, seats: 2, label: 'round' },
-      { id: 'stock_square', type: 'square', x: 1323, y: 252, size: 62, seats: 4, label: 'square' },
-      { id: 'stock_half_square', type: 'half_square', x: 1323, y: 348, size: 72, seats: 6, label: 'half square' }
+      { id: 'stock_round', type: 'round', x: 1323, y: 160, size: 54, seats: 2, label: 'round' },
+      { id: 'stock_square', type: 'square', x: 1323, y: 252, size: 56, seats: 4, label: 'square' },
+      { id: 'stock_half_square', type: 'half_square', x: 1323, y: 348, size: 68, seats: 6, label: 'half square' }
     ];
 
     // ========================================
-    // TABLE TYPE SETTINGS
+    // ПАРАМЕТРЫ ТИПОВ СТОЛОВ
     // ========================================
     const typeCycle = ['round', 'square', 'half_square'];
     const typeMeta = {
-      round: { size: 58, seats: 2, label: 'round' },
-      square: { size: 62, seats: 4, label: 'square' },
-      half_square: { size: 72, seats: 6, label: 'half square' }
+      round: { size: 54, seats: 2, label: 'round' },
+      square: { size: 56, seats: 4, label: 'square' },
+      half_square: { size: 68, seats: 6, label: 'half square' }
     };
 
     // ========================================
-    // STATE
+    // СОСТОЯНИЕ
     // ========================================
     let scale = 1;
     let tables = [
-      { id: 1, type: 'square', x: 390, y: 360, size: 62, seats: 4 },
-      { id: 2, type: 'round', x: 690, y: 420, size: 58, seats: 2 },
-      { id: 3, type: 'half_square', x: 180, y: 180, size: 72, seats: 6 },
-      { id: 4, type: 'round', x: 1140, y: 780, size: 58, seats: 2 }
+      { id: 1, type: 'square', x: 390, y: 360, size: 56, seats: 4 },
+      { id: 2, type: 'round', x: 690, y: 420, size: 54, seats: 2 },
+      { id: 3, type: 'half_square', x: 180, y: 180, size: 68, seats: 6 },
+      { id: 4, type: 'round', x: 1140, y: 780, size: 54, seats: 2 }
     ];
     let appliedTables = JSON.parse(JSON.stringify(tables));
     let drag = null;
@@ -231,9 +272,11 @@
     let movedDuringDrag = false;
     let suppressClick = false;
     let suppressClickTimer = null;
+    let lastClickTime = 0;
+    let lastClickIndex = -1;
 
     // ========================================
-    // HELPERS
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     // ========================================
     function cloneTables(source = tables) {
       return JSON.parse(JSON.stringify(source));
@@ -264,7 +307,7 @@
     }
 
     function isInsideWorkArea(p) {
-      return pointInRect(p, base.ring);
+      return pointInRect(p, base.ring) || pointInRect(p, zones.bar) || pointInRect(p, zones.vip) || pointInRect(p, zones.pool) || pointInRect(p, zones.sauna);
     }
 
     function syncTypeProps(table, type) {
@@ -300,11 +343,11 @@
       suppressClickTimer = setTimeout(() => {
         suppressClick = false;
         suppressClickTimer = null;
-      }, 260);
+      }, 280);
     }
 
     // ========================================
-    // DRAW HELPERS
+    // РИСОВАНИЕ ОСНОВНЫХ ЗОН
     // ========================================
     function drawTileArea(r) {
       ctx.fillStyle = '#d9dde3';
@@ -399,6 +442,18 @@
       ctx.fillText(item.seats + ' seats', item.x, item.y + item.size / 2 + 29);
     }
 
+    function drawExtraZone(rect, title, fill, stroke) {
+      ctx.fillStyle = fill;
+      roundRect(rect.x, rect.y, rect.w, rect.h, 16, true, false);
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 3;
+      roundRect(rect.x, rect.y, rect.w, rect.h, 16, false, true);
+      ctx.fillStyle = '#35506f';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, rect.x + rect.w / 2, rect.y + rect.h / 2 + 8);
+    }
+
     function drawTable(t) {
       const zone = getZoneName(t);
       const isOutside = zone === 'outside';
@@ -428,7 +483,7 @@
     }
 
     // ========================================
-    // MAIN DRAW
+    // ОСНОВНАЯ ОТРИСОВКА
     // ========================================
     function draw() {
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -451,6 +506,11 @@
       ctx.strokeStyle = '#4b5563';
       ctx.lineWidth = 8;
       ctx.strokeRect(base.hall.x, base.hall.y, base.hall.w, base.hall.h);
+
+      drawExtraZone(zones.bar, 'BAR', '#efe7d7', '#bea77b');
+      drawExtraZone(zones.vip, 'VIP', '#efe0f2', '#b486c1');
+      drawExtraZone(zones.pool, 'POOL', '#dff1fb', '#6db7dc');
+      drawExtraZone(zones.sauna, 'SAUNA', '#f6e2d8', '#d39975');
 
       ctx.fillStyle = '#35506f';
       ctx.font = 'bold 34px Arial';
@@ -493,7 +553,7 @@
     }
 
     // ========================================
-    // HIT TESTS
+    // ПРОВЕРКА ПОПАДАНИЯ В ФИГУРЫ
     // ========================================
     function isInsideHalfSquare(p, t) {
       const w = t.size;
@@ -536,7 +596,7 @@
     }
 
     // ========================================
-    // CONSOLE RENDER
+    // ОТРИСОВКА КОНСОЛИ
     // ========================================
     function renderConsole() {
       const duplicateIds = getDuplicateIds();
@@ -582,7 +642,7 @@
     }
 
     // ========================================
-    // POINTER EVENTS
+    // РАБОТА С УКАЗАТЕЛЕМ / МЫШЬЮ
     // ========================================
     canvas.addEventListener('pointerdown', (e) => {
       const p = screenToWorld(e.clientX, e.clientY);
@@ -591,7 +651,7 @@
       const index = findTable(p);
       if (index >= 0) {
         pushHistory();
-        drag = { index, dx: p.x - tables[index].x, dy: p.y - tables[index].y, createdFromStock: false };
+        drag = { index, dx: p.x - tables[index].x, dy: p.y - tables[index].y };
         canvas.setPointerCapture(e.pointerId);
         return;
       }
@@ -609,7 +669,7 @@
           seats: item.seats
         };
         tables.push(newTable);
-        drag = { index: tables.length - 1, dx: 0, dy: 0, createdFromStock: true };
+        drag = { index: tables.length - 1, dx: 0, dy: 0 };
         canvas.setPointerCapture(e.pointerId);
         draw();
       }
@@ -642,6 +702,15 @@
       const index = findTable(p);
       if (index < 0) return;
 
+      const now = Date.now();
+      if (lastClickIndex === index && now - lastClickTime < 300) {
+        lastClickIndex = -1;
+        lastClickTime = 0;
+        return;
+      }
+      lastClickIndex = index;
+      lastClickTime = now;
+
       const current = tables[index];
       const value = prompt('Table number', String(current.id));
       if (value === null) return;
@@ -660,6 +729,8 @@
         pushHistory();
         cycleType(tables[index]);
         blockNextClick();
+        lastClickIndex = -1;
+        lastClickTime = 0;
         draw();
       }
     });
@@ -672,7 +743,7 @@
     }, { passive: false });
 
     // ========================================
-    // BUTTON ACTIONS
+    // КНОПКИ УПРАВЛЕНИЯ
     // ========================================
     document.getElementById('undo').addEventListener('click', (e) => {
       pulseButton(e.currentTarget);
@@ -703,10 +774,9 @@
       const data = appliedTables.map(t => ({ ...t, zone: getZoneName(t) }));
       const text = JSON.stringify(data, null, 2);
       const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const html = '<div class="console-line">----- JSON START -----</div>' +
+      consoleLines.innerHTML = '<div class="console-line">----- JSON START -----</div>' +
         '<div class="console-line"><pre style="margin:6px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; color:#dbe7f5;">' + safeText + '</pre></div>' +
         '<div class="console-line">----- JSON END -----</div>';
-      consoleLines.innerHTML = html;
       consoleTotal.textContent = 'Total tables: ' + tables.length;
     });
 
@@ -725,10 +795,11 @@
     });
 
     // ========================================
-    // INITIAL RENDER
+    // ПЕРВЫЙ РЕНДЕР
     // ========================================
     draw();
   </script>
+
 
 
 
@@ -746,21 +817,15 @@
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-  убрал конфликт одинарного и двойного клика
-двойной клик теперь должен менять тип, а не открывать номер
-Show JSON теперь выводит JSON внизу без обрезания
-в консоли:
-у каждой строки есть count: N
-справа в шапке есть Total tables: N
-строка проверки теперь:
-CHECK | unique table numbers | OK
-или CHECK | unique table numbers | ERROR
-на складе исправил подпись:
-round
-2 seats
-и уменьшил размеры, чтобы всё влезало в рамку
-добавил комментарии в код
-перевёл всё на английский | v1.1.2
+  консоль теперь справа вертикально
+Total tables теперь сразу под Table Console и выделен цветом
+добавил зоны внизу под BOTTOM TERRACE:
+BAR
+VIP
+POOL
+SAUNA
+уменьшил синий квадрат на складе
+комментарии в коде перевёл на русский | v1.2.0
 
   </div>
 
