@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Hall Work — Sync Layout ↔ State</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- СТИЛЬ КОНСОЛИ -->
+
+  <link rel="stylesheet"
+        href="styles/console.css" />
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f6f8;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+
+    #syncBtn {
+      background: #2563eb;
+      color: white;
+    }
+
+    #saveBtn {
+      background: #16a34a;
+      color: white;
+    }
+
+    pre {
+      background: #111;
+      color: #0f0;
+      padding: 12px;
+      border-radius: 8px;
+      overflow: auto;
+      max-height: 400px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Hall Work — Sync Layout ↔ State</h1>
+
+  <div class="panel">
+    <button id="syncBtn">Sync tables</button>
+    <button id="saveBtn">Save state JSON</button>
+  </div>
+
+  <div class="panel">
+    <h3>Current state</h3>
+    <pre id="output">loading...</pre>
+  </div>
+
+<script>
+
+// ========================================
+// ПУТИ К ФАЙЛАМ
+// ========================================
+
+const LAYOUT_URL = "tables/tables-layout.json";
+const STATE_URL  = "tables/tables-state.json";
+
+// ========================================
+// ЗАГРУЗКА JSON
+// ========================================
+
+async function loadJSON(url) {
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    // если state не существует — это нормально
+    if (url === STATE_URL) return [];
+
+    throw new Error("Cannot load: " + url);
+  }
+
+  return await res.json();
+}
+
+// ========================================
+// СИНХРОНИЗАЦИЯ
+// ========================================
+
+function syncLayoutState(layout, state) {
+
+  // создаем map state по id
+  const stateMap = new Map();
+
+  state.forEach(item => {
+    stateMap.set(item.id, item);
+  });
+
+  const result = [];
+
+  // 1. добавить недостающие столы
+  layout.forEach(table => {
+
+    const id = table.id;
+
+    if (stateMap.has(id)) {
+
+      // оставить существующий
+      result.push(stateMap.get(id));
+
+    } else {
+
+      // создать новый
+      result.push({
+        id: id,
+        status: "free"
+      });
+
+      console.log("Added table:", id);
+    }
+
+  });
+
+  // 2. лишние автоматически исчезнут
+
+  return result;
+}
+
+// ========================================
+// ОТОБРАЖЕНИЕ
+// ========================================
+
+function showState(state) {
+  const el = document.getElementById("output");
+  el.textContent = JSON.stringify(state, null, 2);
+}
+
+// ========================================
+// СОХРАНЕНИЕ ФАЙЛА
+// ========================================
+
+function saveStateFile(state) {
+
+  const blob = new Blob(
+    [JSON.stringify(state, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "tables-state.json";
+
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
+
+// ========================================
+// ОСНОВНАЯ ЛОГИКА
+// ========================================
+
+let currentState = [];
+
+async function runSync() {
+
+  try {
+
+    const layout = await loadJSON(LAYOUT_URL);
+    const state  = await loadJSON(STATE_URL);
+
+    const synced = syncLayoutState(layout, state);
+
+    currentState = synced;
+
+    showState(synced);
+
+    console.log("Sync complete");
+
+  } catch (err) {
+
+    console.error(err);
+
+    document.getElementById("output").textContent = err.message;
+
+  }
+}
+
+// ========================================
+// КНОПКИ
+// ========================================
+
+document.getElementById("syncBtn").addEventListener("click", runSync);
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  saveStateFile(currentState);
+});
+
+// ========================================
+// АВТОСТАРТ ПРИ ОТКРЫТИИ
+// ========================================
+
+runSync();
+
+</script>
+
+
+
+
+<!-- ========================================
+     SERVICE CONSOLE
+     Верхняя строка редактируется вручную
+     Здесь задается:
+     - название страницы
+     - номер версии
+======================================== -->
+
+<div id="service-console">
+
+  <div class="row" id="build-top">
+
+    <!-- ВВОД ВРУЧНУЮ -->
+
+    start | v1.0.0
+
+  </div>
+
+  <div class="row" id="build-down">
+
+    deploy: --
+
+  </div>
+
+</div>
+
+<!-- ========================================
+     SCRIPT
+     Автоматически выводит:
+     - дату
+     - время
+     Момент загрузки страницы
+======================================== -->
+
+<script>
+
+(function () {
+
+  /* Текущая дата и время */
+
+  const now = new Date();
+
+  /* Добавляет ведущий ноль */
+
+  const pad = n =>
+    String(n).padStart(2, '0');
+
+  /* Формат даты */
+
+  const date =
+      pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear();
+
+  /* Формат времени */
+
+  const time =
+      pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes());
+
+  /* Вывод в нижнюю строку */
+
+  document
+    .getElementById('build-down')
+    .textContent =
+      'deploy: '
+      + date
+      + ' '
+      + time;
+
+})();
+
+</script>
+
+  </body>
+</html>
