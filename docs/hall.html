@@ -110,6 +110,18 @@ test.style.height =
 
 hall.appendChild(test)
 
+// =====================
+// проверка Supabase
+// =====================
+
+const { data, error } =
+  await supabase
+    .from("tables")
+    .select("*")
+
+console.log("DATA:", data)
+console.log("ERROR:", error)    
+
 </script>
 <!--
 /*import { supabase }
@@ -375,7 +387,7 @@ loadTables()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-   ТЕСТ с зеленой кнопкой - рабочий скрипт| v1.0.2
+   проверка Supabase| v1.0.3
 
   </div>
 
