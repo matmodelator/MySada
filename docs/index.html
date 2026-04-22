@@ -16,12 +16,13 @@
   <style>
     * { box-sizing: border-box; }
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #eef1f6;
-      color: #243447;
-    }
-    .app {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef1f6;
+  color: #243447;
+  min-height: 100vh;
+}
+      .app {
       max-width: 1720px;
       margin: 0 auto;
       padding: 16px;
@@ -72,23 +73,23 @@
       font-size: 14px;
     }
     .wrap {
-      background: white;
-      border: 1px solid #c3ccd8;
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      overflow: auto;
-      position: relative;
-    }
-    canvas {
-      display: block;
-      width: 100%;
-      max-width: 1460px;
-      height: auto;
-      border-radius: 10px;
-      background: #f7f9fc;
-      touch-action: none;
-    }
+  background: white;
+  border: 1px solid #c3ccd8;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  overflow: visible;
+  position: relative;
+}
+   canvas {
+  display: block;
+  width: 100%;
+  max-width: 1460px;
+  height: auto;
+  border-radius: 10px;
+  background: #f7f9fc;
+  touch-action: pan-x pan-y;
+}
     .side {
       display: flex;
       flex-direction: column;
@@ -927,8 +928,6 @@
     setView('console');
     draw();
   </script>
-</body>
-</html>
 
 
 
@@ -949,14 +948,7 @@
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-смена номера стола — только левой кнопкой
-правая кнопка — только меню выбора из 3 типов столов
-JSON теперь заменяет Table Console в правой панели
-кнопка работает как переключатель:
-JSON → показывает JSON
-Console → возвращает консоль
-Table Stock опустил ниже
-Table Stock растянул на всю высоту terrace | v1.2.2
+scroll mobile fix | v1.2.3
 
   </div>
 
