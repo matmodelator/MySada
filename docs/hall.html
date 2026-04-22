@@ -62,6 +62,14 @@ body {
 
 <div id="hall"></div>
 
+<div id="table-dialog" class="dialog hidden">
+  <div class="dialog-box">
+    <h3 id="dialog-title">Стол</h3>
+    <div id="dialog-body"></div>
+    <button id="dialog-close">Закрыть</button>
+  </div>
+</div>      
+
 <script type="module">
 
 import { supabase }
@@ -121,18 +129,41 @@ function createTable(row) {
 
   hall.appendChild(el)
 
-  el.addEventListener(
-    "mousedown",
-    e => {
-      dragging = el
+ let moved = false
 
-      offsetX =
-        e.clientX - el.offsetLeft
+el.addEventListener(
+  "mousedown",
+  e => {
+    dragging = el
+    moved = false
 
-      offsetY =
-        e.clientY - el.offsetTop
-    }
-  )
+    offsetX =
+      e.clientX - el.offsetLeft
+
+    offsetY =
+      e.clientY - el.offsetTop
+  }
+)
+
+el.addEventListener(
+  "mousemove",
+  () => {
+    if (dragging)
+      moved = true
+  }
+)
+
+el.addEventListener(
+  "click",
+  async () => {
+
+    if (moved)
+      return
+
+    alert("Клик по столу: " + row.name)
+
+  }
+)
 }
 
 document.addEventListener(
@@ -164,24 +195,28 @@ document.addEventListener(
     const y =
       parseInt(dragging.style.top, 10)
 
-    const { error } =
-      await supabase
-        .from("tables")
-        .update({
-          x,
-          y
-        })
-        .eq("table_id", table_id)
+   const { data, error } =
+  await supabase
+    .from("tables")
+    .update({
+      x,
+      y
+    })
+    .eq("table_id", table_id)
+    .select()
 
-    if (error) {
-      console.error("UPDATE ERROR:", error)
-    }
+console.log("UPDATE DATA:", data)
+console.log("UPDATE ERROR:", error)
+
+if (error) {
+  console.error("UPDATE ERROR:", error)
+}
 
     dragging = null
   }
 )
 
-supabase
+const channel = supabase
   .channel("tables-realtime")
   .on(
     "postgres_changes",
@@ -191,7 +226,7 @@ supabase
       table: "tables"
     },
     payload => {
-      console.log("Realtime:", payload)
+      console.log("Realtime payload:", payload)
 
       if (payload.eventType === "DELETE") {
         removeTable(payload.old)
@@ -199,14 +234,14 @@ supabase
       }
 
       const row = payload.new
-
-      if (!row)
-        return
+      if (!row) return
 
       updateTable(row)
     }
   )
-  .subscribe()
+  .subscribe((status) => {
+    console.log("Realtime status:", status)
+  })
 
 function updateTable(row) {
   let el =
@@ -263,7 +298,7 @@ loadTables()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    hall realtime | v1.0.0
+    hall realtime | v1.1.1
   </div>
 
   <div class="row" id="build-down">
@@ -300,84 +335,6 @@ loadTables()
 
 
 
-
-
-<!-- ========================================
-     SERVICE CONSOLE
-     Верхняя строка редактируется вручную
-     Здесь задается:
-     - название страницы
-     - номер версии
-======================================== -->
-
-<div id="service-console">
-
-  <div class="row" id="build-top">
-
-    <!-- ВВОД ВРУЧНУЮ -->
-
-   логическое ядро| v1.1.0
-
-  </div>
-
-  <div class="row" id="build-down">
-
-    deploy: --
-
-  </div>
-
-</div>
-
-<!-- ========================================
-     SCRIPT
-     Автоматически выводит:
-     - дату
-     - время
-     Момент загрузки страницы
-======================================== -->
-
-<script>
-
-(function () {
-
-  /* Текущая дата и время */
-
-  const now = new Date();
-
-  /* Добавляет ведущий ноль */
-
-  const pad = n =>
-    String(n).padStart(2, '0');
-
-  /* Формат даты */
-
-  const date =
-      pad(now.getDate())
-    + '.'
-    + pad(now.getMonth() + 1)
-    + '.'
-    + now.getFullYear();
-
-  /* Формат времени */
-
-  const time =
-      pad(now.getHours())
-    + ':'
-    + pad(now.getMinutes());
-
-  /* Вывод в нижнюю строку */
-
-  document
-    .getElementById('build-down')
-    .textContent =
-      'deploy: '
-      + date
-      + ' '
-      + time;
-
-})();
-
-</script>
 
   </body>
 </html>
