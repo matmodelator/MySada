@@ -1,0 +1,18 @@
+#service-console {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 6px 10px;
+  background: #111;
+  color: #8cff8c;
+  font-family: monospace;
+  font-size: 12px;
+  border-top: 1px solid #333;
+  z-index: 9999;
+  opacity: 0.9;
+}
+
+#service-console .row {
+  display: block;
+}
