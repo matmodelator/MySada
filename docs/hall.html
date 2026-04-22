@@ -69,8 +69,44 @@ body {
 <script type="module">
 
 
+console.log("hall module started")
 
 import { supabase }
+from "./scripts/config.js"
+
+console.log("supabase imported:", supabase)
+
+const hall =
+  document.getElementById("hall")
+
+console.log("hall element:", hall)
+
+const test =
+  document.createElement("div")
+
+test.className =
+  "table free"
+
+test.textContent =
+  "TEST"
+
+test.style.left =
+  "100px"
+
+test.style.top =
+  "100px"
+
+test.style.width =
+  "120px"
+
+test.style.height =
+  "120px"
+
+hall.appendChild(test)
+
+</script>
+<!--
+/*import { supabase }
 from "./scripts/config.js"
 
 // теперь supabase уже готов
@@ -315,7 +351,7 @@ function updateTable(row) {
 
 loadTables()
 
-</script>
+-->
 
 
 
