@@ -68,59 +68,80 @@ body {
 
 
 // ============================
-// ТЕСТ с зеленой кнопкой - рабочий скрипт
+// ТЕСТ базы
 // ============================
 
       
 <script type="module">
 
-
-console.log("hall module started")
-
 import { supabase }
 from "./scripts/config.js"
-
-console.log("supabase imported:", supabase)
 
 const hall =
   document.getElementById("hall")
 
-console.log("hall element:", hall)
+// ============================
+// загрузить столы
+// ============================
 
-const test =
-  document.createElement("div")
+async function loadTables() {
 
-test.className =
-  "table free"
+  const { data, error } =
+    await supabase
+      .from("tables")
+      .select("*")
 
-test.textContent =
-  "TEST"
+  console.log("DATA:", data)
+  console.log("ERROR:", error)
 
-test.style.left =
-  "100px"
+  if (error) {
+    console.error(error)
+    return
+  }
 
-test.style.top =
-  "100px"
+  hall.innerHTML = ""
 
-test.style.width =
-  "120px"
+  data.forEach(createTable)
 
-test.style.height =
-  "120px"
+}
 
-hall.appendChild(test)
+// ============================
+// создать стол
+// ============================
 
-// =====================
-// проверка Supabase
-// =====================
+function createTable(row) {
 
-const { data, error } =
-  await supabase
-    .from("tables")
-    .select("*")
+  const el =
+    document.createElement("div")
 
-console.log("DATA:", data)
-console.log("ERROR:", error)    
+  el.className =
+    "table " + row.table_status
+
+  el.dataset.tableId =
+    row.table_id
+
+  el.textContent =
+    row.name
+
+  el.style.left =
+    row.x + "px"
+
+  el.style.top =
+    row.y + "px"
+
+  el.style.width =
+    row.width + "px"
+
+  el.style.height =
+    row.height + "px"
+
+  hall.appendChild(el)
+
+}
+
+// ============================
+
+loadTables()
 
 </script>
 <!--
@@ -387,7 +408,7 @@ loadTables()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-   проверка Supabase| v1.0.3
+    ТЕСТ базы| v1.0.4
 
   </div>
 
