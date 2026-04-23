@@ -3,19 +3,13 @@
 <head>
 <meta charset="UTF-8">
 
-<!--
-  Адаптация под мобильные устройства.
-  initial-scale=1.0 — чтобы страница открывалась без дополнительного зума.
--->
+<!-- Адаптация под мобильные -->
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0">
 
 <title>План зала</title>
 
-<!--
-  Внешний CSS твоей сервисной консоли.
-  Если путь неверный — поправь href под свою структуру папок.
--->
+<!-- СТИЛЬ КОНСОЛИ -->
 <link rel="stylesheet"
       href="styles/console.css" />
 
@@ -32,7 +26,6 @@ body {
 
 /* ========================================
    ПОЛЕ ПЛАНА ЗАЛА
-   Здесь будут рисоваться столы.
 ======================================== */
 
 #hall {
@@ -44,7 +37,7 @@ body {
 }
 
 /* ========================================
-   ВИЗУАЛЬНЫЙ ВИД СТОЛА
+   СТОЛ
 ======================================== */
 
 .table {
@@ -52,7 +45,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 10px;
   color: white;
   font-weight: bold;
@@ -62,29 +54,28 @@ body {
   box-sizing: border-box;
 }
 
-/* Стол свободен */
+/* Свободный */
 .table.free {
   background: #2ecc71;
 }
 
-/* Стол занят */
+/* Занятый */
 .table.occupied {
   background: #e74c3c;
 }
 
-/* Стол зарезервирован */
+/* Резерв */
 .table.reserved {
   background: #f1c40f;
 }
 
-/* Стол на уборке */
+/* Уборка */
 .table.cleaning {
   background: #95a5a6;
 }
 
 /* ========================================
    ДИАЛОГОВОЕ ОКНО
-   Это затемнение на весь экран.
 ======================================== */
 
 .dialog {
@@ -97,14 +88,12 @@ body {
   z-index: 9999;
 }
 
-/* Скрытое состояние окна */
 .dialog.hidden {
   display: none;
 }
 
-/* Белая карточка в центре */
 .dialog-box {
-  width: 340px;
+  width: 360px;
   max-width: calc(100vw - 32px);
   background: white;
   border-radius: 14px;
@@ -113,27 +102,23 @@ body {
   color: #1f2937;
 }
 
-/* Заголовок окна */
 #dialog-title {
   font-size: 20px;
   font-weight: bold;
   margin-bottom: 12px;
 }
 
-/* Текстовая часть окна */
 #dialog-body {
   margin-bottom: 16px;
   line-height: 1.5;
 }
 
-/* Контейнер кнопок */
 .dialog-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-/* Общий стиль кнопок */
 .dialog-actions button {
   border: 0;
   border-radius: 8px;
@@ -142,13 +127,16 @@ body {
   font-size: 14px;
 }
 
-/* Кнопка открытия стола */
 #dialog-open-btn {
   background: #2563eb;
   color: white;
 }
 
-/* Кнопка закрытия окна */
+#dialog-close-order-btn {
+  background: #dc2626;
+  color: white;
+}
+
 #dialog-close-btn {
   background: #e5e7eb;
   color: #111827;
@@ -158,67 +146,53 @@ body {
 
 <body>
 
-<!--
-  Основное поле зала.
-  Все столы добавляются сюда через JavaScript.
--->
+<!-- ========================================
+     ПОЛЕ ЗАЛА
+======================================== -->
 <div id="hall"></div>
 
 <!-- ========================================
-     ВНУТРЕННЕЕ ДИАЛОГОВОЕ ОКНО
-     Открывается при клике на стол.
+     ДИАЛОГОВОЕ ОКНО СТОЛА
 ======================================== -->
-
 <div id="table-dialog" class="dialog hidden">
   <div class="dialog-box">
 
-    <!-- Заголовок окна: сюда подставляется название стола -->
-    <div id="dialog-title">Стол</div>
+    <div id="dialog-title">
+      Стол
+    </div>
 
-    <!-- Тело окна: сюда подставляется статус, места, координаты -->
     <div id="dialog-body"></div>
 
-    <!-- Кнопки действий -->
     <div class="dialog-actions">
 
-      <!--
-        Кнопка открытия стола.
-        Создаёт заказ и ставит стол в occupied.
-      -->
       <button id="dialog-open-btn">
         Открыть стол
       </button>
 
-      <!-- Кнопка просто закрывает окно -->
+      <button id="dialog-close-order-btn">
+        Закрыть заказ
+      </button>
+
       <button id="dialog-close-btn">
-        Закрыть
+        Закрыть окно
       </button>
 
     </div>
   </div>
 </div>
 
-<!-- ========================================
-     ОСНОВНОЙ JS-КОД СТРАНИЦЫ
-======================================== -->
-
 <script type="module">
-
-/*
-========================================
-ПОДКЛЮЧАЕМ ГОТОВЫЙ КЛИЕНТ SUPABASE
-Файл scripts/config.js должен экспортировать:
-export const supabase = createClient(...)
-========================================
-*/
+/* ========================================
+   ПОДКЛЮЧАЕМ ГОТОВЫЙ КЛИЕНТ SUPABASE
+   scripts/config.js должен экспортировать:
+   export const supabase = createClient(...)
+======================================== */
 import { supabase }
 from "./scripts/config.js"
 
-/*
-========================================
-ПОЛУЧАЕМ ОСНОВНЫЕ ЭЛЕМЕНТЫ DOM
-========================================
-*/
+/* ========================================
+   ОСНОВНЫЕ ЭЛЕМЕНТЫ
+======================================== */
 const hall =
   document.getElementById("hall")
 
@@ -234,117 +208,64 @@ const dialogBody =
 const dialogOpenBtn =
   document.getElementById("dialog-open-btn")
 
+const dialogCloseOrderBtn =
+  document.getElementById("dialog-close-order-btn")
+
 const dialogCloseBtn =
   document.getElementById("dialog-close-btn")
 
-/*
-========================================
-ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ DRAG & DROP
-========================================
-*/
+/* ========================================
+   ПЕРЕМЕННЫЕ ДЛЯ ПЕРЕТАСКИВАНИЯ
+======================================== */
 let dragging = null
 let offsetX = 0
 let offsetY = 0
 
-/*
-========================================
-АКТИВНЫЙ СТОЛ В ДИАЛОГОВОМ ОКНЕ
-Сюда сохраняем строку таблицы, по которой кликнули.
-========================================
-*/
+/* ========================================
+   АКТИВНЫЙ СТОЛ В ОКНЕ
+======================================== */
 let activeTable = null
 
-/*
-========================================
-ЗАГРУЗКА СТОЛОВ ИЗ БАЗЫ
-========================================
-*/
+/* ========================================
+   ЗАГРУЗКА СТОЛОВ ИЗ БАЗЫ
+======================================== */
 async function loadTables() {
-
-  /*
-    Читаем все столы из таблицы tables.
-    order("name") — просто сортировка по имени.
-  */
   const { data, error } =
     await supabase
       .from("tables")
       .select("*")
       .order("name")
 
-  /*
-    Диагностика в консоли.
-    Можно оставить — полезно при отладке.
-  */
   console.log("DATA:", data)
   console.log("ERROR:", error)
 
-  /*
-    Если Supabase вернул ошибку — показываем её и выходим.
-  */
   if (error) {
     console.error(error)
     return
   }
 
-  /*
-    Очищаем поле зала перед новой отрисовкой.
-    Это важно при полном перерисовывании.
-  */
   hall.innerHTML = ""
-
-  /*
-    Для каждой строки таблицы создаём визуальный блок стола.
-  */
   data.forEach(createTable)
 }
 
-/*
-========================================
-СОЗДАНИЕ ОДНОГО СТОЛА НА ЭКРАНЕ
-row — это одна строка из таблицы tables
-========================================
-*/
+/* ========================================
+   СОЗДАНИЕ ОДНОГО СТОЛА
+======================================== */
 function createTable(row) {
-
-  /*
-    moved = false означает:
-    пользователь просто кликнул по столу.
-    Если moved = true — значит он стол двигал,
-    и обычный click после drag мы игнорируем.
-  */
   let moved = false
 
-  /*
-    Создаём div для визуального отображения стола.
-  */
   const el =
     document.createElement("div")
 
-  /*
-    Базовый класс + класс статуса.
-    Например: "table free" или "table occupied"
-  */
   el.className =
     "table " + (row.table_status || "free")
 
-  /*
-    Сохраняем table_id в data-атрибут,
-    чтобы потом можно было легко найти именно этот стол.
-  */
   el.dataset.tableId =
     row.table_id
 
-  /*
-    Текст внутри стола — имя из базы.
-    Например "Table 1".
-  */
   el.textContent =
     row.name || "Table"
 
-  /*
-    Позиция и размеры берутся из базы.
-    Если каких-то значений нет — подставляем запасные.
-  */
   el.style.left =
     (row.x ?? 0) + "px"
 
@@ -357,35 +278,15 @@ function createTable(row) {
   el.style.height =
     (row.height ?? 120) + "px"
 
-  /*
-    Добавляем стол в поле зала.
-  */
   hall.appendChild(el)
 
-  /*
-  ========================================
-  НАЧАЛО ПЕРЕТАСКИВАНИЯ
-  ========================================
-  */
+  /* Начало перетаскивания */
   el.addEventListener(
     "mousedown",
     e => {
-
-      /*
-        Сохраняем текущий элемент как перетаскиваемый.
-      */
       dragging = el
-
-      /*
-        Сбрасываем флаг движения.
-        Пока человек только нажал — это ещё не drag.
-      */
       moved = false
 
-      /*
-        Запоминаем смещение мыши относительно левого верхнего угла стола.
-        Это нужно, чтобы стол не прыгал.
-      */
       offsetX =
         e.clientX - el.offsetLeft
 
@@ -394,11 +295,7 @@ function createTable(row) {
     }
   )
 
-  /*
-  ========================================
-  ФИКСИРУЕМ ФАКТ ДВИЖЕНИЯ
-  ========================================
-  */
+  /* Если элемент реально двигали — помечаем */
   el.addEventListener(
     "mousemove",
     () => {
@@ -407,51 +304,27 @@ function createTable(row) {
     }
   )
 
-  /*
-  ========================================
-  ОБЫЧНЫЙ КЛИК ПО СТОЛУ
-  Если стол двигали — окно не открываем.
-  Если просто нажали — открываем диалог.
-  ========================================
-  */
+  /* Обычный клик по столу */
   el.addEventListener(
     "click",
     () => {
-
-      /*
-        Если был drag — игнорируем click.
-      */
       if (moved)
         return
 
-      /*
-        Открываем внутреннее окно для этого стола.
-      */
       openTableDialog(row)
     }
   )
 }
 
-/*
-========================================
-ДВИЖЕНИЕ МЫШИ ПО ДОКУМЕНТУ
-Если сейчас есть dragging — двигаем стол.
-========================================
-*/
+/* ========================================
+   ДВИЖЕНИЕ МЫШИ
+======================================== */
 document.addEventListener(
   "mousemove",
   e => {
-
-    /*
-      Если сейчас ничего не перетаскивается — выходим.
-    */
     if (!dragging)
       return
 
-    /*
-      Новая позиция стола = положение курсора
-      минус сохранённое начальное смещение.
-    */
     dragging.style.left =
       e.clientX - offsetX + "px"
 
@@ -460,73 +333,53 @@ document.addEventListener(
   }
 )
 
-/*
-========================================
-ОТПУСТИЛИ МЫШЬ
-Сохраняем новые координаты в базу.
-========================================
-*/
+/* ========================================
+   ОТПУСТИЛИ МЫШЬ
+   Сохраняем новые координаты в базу
+======================================== */
 document.addEventListener(
   "mouseup",
   async () => {
-
-    /*
-      Если сейчас нет перетаскиваемого стола — выходим.
-    */
     if (!dragging)
       return
 
-    /*
-      Берём table_id из data-атрибута.
-    */
     const table_id =
       dragging.dataset.tableId
 
-    /*
-      Берём новую позицию из inline-стилей.
-      parseInt(..., 10) — переводим строку "123px" в число 123.
-    */
     const x =
       parseInt(dragging.style.left, 10)
 
     const y =
       parseInt(dragging.style.top, 10)
 
-    /*
-      Обновляем координаты стола в таблице tables.
-      .eq("table_id", table_id) — обновляем только нужный стол.
-    */
-   const { data, error } =
-  await supabase
-    .from("tables")
-    .update({
-      x,
-      y
-    })
-    .eq("table_id", table_id)
-    .select()
+    const { data, error } =
+      await supabase
+        .from("tables")
+        .update({
+          x,
+          y
+        })
+        .eq("table_id", table_id)
+        .select()
+        .single()
 
-console.log("COORD UPDATE DATA:", data)
-console.log("COORD UPDATE ERROR:", error)
+    console.log("COORD UPDATE DATA:", data)
+    console.log("COORD UPDATE ERROR:", error)
 
-if (error) {
-  console.error("UPDATE ERROR:", error)
-}
+    if (error) {
+      console.error("UPDATE ERROR:", error)
+    } else if (data) {
+      updateTable(data)
+    }
 
-    /*
-      Завершаем drag.
-    */
     dragging = null
   }
 )
 
-/*
-========================================
-ПОДПИСКА НА REALTIME ИЗМЕНЕНИЯ ТАБЛИЦЫ tables
-Это даёт мгновенное обновление зала без refresh.
-========================================
-*/
-supabase
+/* ========================================
+   REALTIME ПОДПИСКА НА ТАБЛИЦУ TABLES
+======================================== */
+const tablesChannel = supabase
   .channel("tables-realtime")
   .on(
     "postgres_changes",
@@ -536,70 +389,42 @@ supabase
       table: "tables"
     },
     payload => {
+      console.log("TABLES REALTIME:", payload)
 
-      console.log("Realtime:", payload)
-
-      /*
-        Если запись удалили — удаляем и стол со страницы.
-      */
       if (payload.eventType === "DELETE") {
         removeTable(payload.old)
         return
       }
 
-      /*
-        Для INSERT / UPDATE берём новое состояние строки.
-      */
       const row = payload.new
 
       if (!row)
         return
 
-      /*
-        Обновляем уже существующий стол
-        или создаём новый, если его ещё нет на странице.
-      */
       updateTable(row)
     }
   )
   .subscribe((status) => {
-    console.log("Realtime status:", status)
+    console.log("TABLES REALTIME STATUS:", status)
   })
 
-/*
-========================================
-ОБНОВЛЕНИЕ СТОЛА НА СТРАНИЦЕ
-Вызывается при realtime insert/update.
-========================================
-*/
+/* ========================================
+   ОБНОВЛЕНИЕ СТОЛА НА ЭКРАНЕ
+======================================== */
 function updateTable(row) {
-
-  /*
-    Ищем уже существующий DOM-элемент по table_id.
-  */
   let el =
     document.querySelector(
       `[data-table-id="${row.table_id}"]`
     )
 
-  /*
-    Если элемента нет — создаём новый.
-    Например если запись добавили из другой вкладки.
-  */
   if (!el) {
     createTable(row)
     return
   }
 
-  /*
-    Обновляем текст стола.
-  */
   el.textContent =
     row.name || "Table"
 
-  /*
-    Сбрасываем старые классы статуса.
-  */
   el.classList.remove(
     "free",
     "occupied",
@@ -607,38 +432,35 @@ function updateTable(row) {
     "cleaning"
   )
 
-  /*
-    Ставим новый статус.
-  */
   el.classList.add(
     row.table_status || "free"
   )
 
-  /*
-    Обновляем позицию и размеры,
-    если они пришли в realtime-событии.
-  */
-  if (typeof row.x === "number")
-    el.style.left = row.x + "px"
+  el.style.left =
+    (row.x ?? 0) + "px"
 
-  if (typeof row.y === "number")
-    el.style.top = row.y + "px"
+  el.style.top =
+    (row.y ?? 0) + "px"
 
-  if (typeof row.width === "number")
-    el.style.width = row.width + "px"
+  el.style.width =
+    (row.width ?? 120) + "px"
 
-  if (typeof row.height === "number")
-    el.style.height = row.height + "px"
+  el.style.height =
+    (row.height ?? 120) + "px"
+
+  if (
+    activeTable &&
+    activeTable.table_id === row.table_id
+  ) {
+    activeTable = row
+    renderDialogBody(row)
+  }
 }
 
-/*
-========================================
-УДАЛЕНИЕ СТОЛА СО СТРАНИЦЫ
-Используется при realtime DELETE.
-========================================
-*/
+/* ========================================
+   УДАЛЕНИЕ СТОЛА ИЗ DOM
+======================================== */
 function removeTable(row) {
-
   const el =
     document.querySelector(
       `[data-table-id="${row.table_id}"]`
@@ -648,66 +470,49 @@ function removeTable(row) {
     el.remove()
 }
 
-/*
-========================================
-ОТКРЫТИЕ ДИАЛОГОВОГО ОКНА
-row — строка таблицы tables для выбранного стола
-========================================
-*/
-function openTableDialog(row) {
-
-  /*
-    Сохраняем активный стол глобально,
-    чтобы потом кнопка "Открыть стол" знала, с чем работать.
-  */
-  activeTable = row
-
-  /*
-    Заголовок окна = имя стола.
-  */
-  dialogTitle.textContent =
-    row.name || "Стол"
-
-  /*
-    Формируем текстовую информацию внутри окна.
-  */
+/* ========================================
+   ОТРИСОВКА ТЕЛА ОКНА
+======================================== */
+function renderDialogBody(row) {
   dialogBody.innerHTML =
     "Статус: " + (row.table_status || "free") + "<br>" +
     "Мест: " + (row.seats ?? 0) + "<br>" +
     "X: " + (row.x ?? 0) + " | Y: " + (row.y ?? 0)
+}
 
-  /*
-    Показываем окно.
-  */
+/* ========================================
+   ОТКРЫТЬ ДИАЛОГОВОЕ ОКНО
+======================================== */
+function openTableDialog(row) {
+  activeTable = row
+
+  dialogTitle.textContent =
+    row.name || "Стол"
+
+  renderDialogBody(row)
+
   dialog.classList.remove("hidden")
 }
 
-/*
-========================================
-ЗАКРЫТИЕ ДИАЛОГОВОГО ОКНА
-========================================
-*/
+/* ========================================
+   ЗАКРЫТЬ ДИАЛОГОВОЕ ОКНО
+======================================== */
 function closeTableDialog() {
   dialog.classList.add("hidden")
   activeTable = null
 }
 
-/*
-========================================
-КНОПКА "ЗАКРЫТЬ" В ДИАЛОГЕ
-========================================
-*/
+/* ========================================
+   ЗАКРЫТЬ ОКНО ПО КНОПКЕ
+======================================== */
 dialogCloseBtn.addEventListener(
   "click",
   closeTableDialog
 )
 
-/*
-========================================
-КЛИК ПО ТЁМНОМУ ФОНУ ВНЕ КАРТОЧКИ
-Тоже закрывает окно.
-========================================
-*/
+/* ========================================
+   ЗАКРЫТЬ ОКНО ПО КЛИКУ НА ТЁМНЫЙ ФОН
+======================================== */
 dialog.addEventListener(
   "click",
   e => {
@@ -716,18 +521,14 @@ dialog.addEventListener(
   }
 )
 
-/*
-========================================
-КНОПКА "ОТКРЫТЬ СТОЛ"
-Логика:
-1. Создаём заказ в orders
-2. Меняем table_status на occupied
-========================================
-*/
+/* ========================================
+   ОТКРЫТЬ СТОЛ
+   1. Создать заказ
+   2. Поменять стол на occupied
+======================================== */
 dialogOpenBtn.addEventListener(
   "click",
   async () => {
-
     if (!activeTable)
       return
 
@@ -764,24 +565,104 @@ dialogOpenBtn.addEventListener(
         })
         .eq("table_id", activeTable.table_id)
         .select()
+        .single()
 
-    console.log("TABLE DATA:", tableData)
-    console.log("TABLE ERROR:", tableError)
+    console.log("OPEN TABLE DATA:", tableData)
+    console.log("OPEN TABLE ERROR:", tableError)
 
     if (tableError) {
       alert("Заказ создан, но статус стола не обновился")
       return
     }
 
+    if (tableData) {
+      updateTable(tableData)
+    }
+
     closeTableDialog()
   }
 )
 
-/*
-========================================
-ПЕРВИЧНАЯ ЗАГРУЗКА ВСЕХ СТОЛОВ
-========================================
-*/
+/* ========================================
+   ЗАКРЫТЬ ЗАКАЗ
+   1. Найти открытый заказ этого стола
+   2. Перевести заказ в closed
+   3. Освободить стол
+======================================== */
+dialogCloseOrderBtn.addEventListener(
+  "click",
+  async () => {
+    if (!activeTable)
+      return
+
+    const { data: openOrder, error: findError } =
+      await supabase
+        .from("orders")
+        .select("*")
+        .eq("table_id", activeTable.table_id)
+        .eq("order_status", "open")
+        .order("opened_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    console.log("OPEN ORDER:", openOrder)
+    console.log("FIND ORDER ERROR:", findError)
+
+    if (findError) {
+      alert("Не удалось найти открытый заказ")
+      return
+    }
+
+    if (!openOrder) {
+      alert("Для этого стола нет открытого заказа")
+      return
+    }
+
+    const { error: closeOrderError } =
+      await supabase
+        .from("orders")
+        .update({
+          order_status: "closed",
+          closed_at: new Date().toISOString()
+        })
+        .eq("order_id", openOrder.order_id)
+
+    console.log("CLOSE ORDER ERROR:", closeOrderError)
+
+    if (closeOrderError) {
+      alert("Не удалось закрыть заказ")
+      return
+    }
+
+    const { data: freeTableData, error: freeTableError } =
+      await supabase
+        .from("tables")
+        .update({
+          table_status: "free"
+        })
+        .eq("table_id", activeTable.table_id)
+        .select()
+        .single()
+
+    console.log("FREE TABLE DATA:", freeTableData)
+    console.log("FREE TABLE ERROR:", freeTableError)
+
+    if (freeTableError) {
+      alert("Заказ закрыт, но стол не освободился")
+      return
+    }
+
+    if (freeTableData) {
+      updateTable(freeTableData)
+    }
+
+    closeTableDialog()
+  }
+)
+
+/* ========================================
+   ПЕРВИЧНАЯ ЗАГРУЗКА
+======================================== */
 loadTables()
 
 </script>
@@ -789,11 +670,10 @@ loadTables()
 <!-- ========================================
      SERVICE CONSOLE
 ======================================== -->
-
 <div id="service-console">
 
   <div class="row" id="build-top">
-    open table/ drag&drop  | v2.1.0
+    two ways realtime | v2.2.0
   </div>
 
   <div class="row" id="build-down">
@@ -802,28 +682,13 @@ loadTables()
 
 </div>
 
-<!-- ========================================
-     СКРИПТ ДЛЯ ВЫВОДА ДАТЫ И ВРЕМЕНИ СБОРКИ
-======================================== -->
-
 <script>
 (function () {
-
-  /*
-    Текущая дата и время в момент открытия страницы.
-  */
   const now = new Date();
 
-  /*
-    Функция добавляет ведущий ноль.
-    Например 7 -> 07
-  */
   const pad = n =>
     String(n).padStart(2, '0');
 
-  /*
-    Формируем дату.
-  */
   const date =
       pad(now.getDate())
     + '.'
@@ -831,22 +696,15 @@ loadTables()
     + '.'
     + now.getFullYear();
 
-  /*
-    Формируем время.
-  */
   const time =
       pad(now.getHours())
     + ':'
     + pad(now.getMinutes());
 
-  /*
-    Пишем в нижнюю строку сервисной консоли.
-  */
   document
     .getElementById('build-down')
     .textContent =
       'deploy: ' + date + ' ' + time;
-
 })();
 </script>
 
