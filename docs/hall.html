@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- Адаптация под мобильные -->
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0">
 
 <title>План зала</title>
 
-<!-- СТИЛЬ КОНСОЛИ -->
 <link rel="stylesheet"
       href="styles/console.css" />
 
@@ -45,21 +43,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 10px;
   color: white;
   font-weight: bold;
-  cursor: grab;
   user-select: none;
+  cursor: pointer;
   transition: background 0.2s;
   box-sizing: border-box;
 }
 
-/* Свободный */
+/* Свободный стол */
 .table.free {
   background: #2ecc71;
 }
 
-/* Занятый */
+/* Занятый стол */
 .table.occupied {
   background: #e74c3c;
 }
@@ -147,12 +146,12 @@ body {
 <body>
 
 <!-- ========================================
-     ПОЛЕ ЗАЛА
+     ПЛАН ЗАЛА
 ======================================== -->
 <div id="hall"></div>
 
 <!-- ========================================
-     ДИАЛОГОВОЕ ОКНО СТОЛА
+     ДИАЛОГОВОЕ ОКНО
 ======================================== -->
 <div id="table-dialog" class="dialog hidden">
   <div class="dialog-box">
@@ -183,9 +182,7 @@ body {
 
 <script type="module">
 /* ========================================
-   ПОДКЛЮЧАЕМ ГОТОВЫЙ КЛИЕНТ SUPABASE
-   scripts/config.js должен экспортировать:
-   export const supabase = createClient(...)
+   ПОДКЛЮЧАЕМ SUPABASE ИЗ config.js
 ======================================== */
 import { supabase }
 from "./scripts/config.js"
@@ -215,14 +212,7 @@ const dialogCloseBtn =
   document.getElementById("dialog-close-btn")
 
 /* ========================================
-   ПЕРЕМЕННЫЕ ДЛЯ ПЕРЕТАСКИВАНИЯ
-======================================== */
-let dragging = null
-let offsetX = 0
-let offsetY = 0
-
-/* ========================================
-   АКТИВНЫЙ СТОЛ В ОКНЕ
+   АКТИВНЫЙ СТОЛ В ДИАЛОГЕ
 ======================================== */
 let activeTable = null
 
@@ -230,14 +220,15 @@ let activeTable = null
    ЗАГРУЗКА СТОЛОВ ИЗ БАЗЫ
 ======================================== */
 async function loadTables() {
+
   const { data, error } =
     await supabase
       .from("tables")
       .select("*")
       .order("name")
 
-  console.log("DATA:", data)
-  console.log("ERROR:", error)
+  console.log("TABLES DATA:", data)
+  console.log("TABLES ERROR:", error)
 
   if (error) {
     console.error(error)
@@ -245,14 +236,14 @@ async function loadTables() {
   }
 
   hall.innerHTML = ""
+
   data.forEach(createTable)
 }
 
 /* ========================================
-   СОЗДАНИЕ ОДНОГО СТОЛА
+   СОЗДАНИЕ СТОЛА НА ЭКРАНЕ
 ======================================== */
 function createTable(row) {
-  let moved = false
 
   const el =
     document.createElement("div")
@@ -280,182 +271,23 @@ function createTable(row) {
 
   hall.appendChild(el)
 
-  /* Начало перетаскивания */
-  el.addEventListener(
-    "mousedown",
-    e => {
-      dragging = el
-      moved = false
-
-      offsetX =
-        e.clientX - el.offsetLeft
-
-      offsetY =
-        e.clientY - el.offsetTop
-    }
-  )
-
-  /* Если элемент реально двигали — помечаем */
-  el.addEventListener(
-    "mousemove",
-    () => {
-      if (dragging === el)
-        moved = true
-    }
-  )
-
-  /* Обычный клик по столу */
+  /* ========================================
+     КЛИК ПО СТОЛУ
+     Открывает внутреннее окно
+  ======================================== */
   el.addEventListener(
     "click",
     () => {
-      if (moved)
-        return
-
       openTableDialog(row)
     }
   )
 }
 
 /* ========================================
-   ДВИЖЕНИЕ МЫШИ
-======================================== */
-document.addEventListener(
-  "mousemove",
-  e => {
-    if (!dragging)
-      return
-
-    dragging.style.left =
-      e.clientX - offsetX + "px"
-
-    dragging.style.top =
-      e.clientY - offsetY + "px"
-  }
-)
-
-/* ========================================
-   ОТПУСТИЛИ МЫШЬ
-   Сохраняем новые координаты в базу
-======================================== */
-document.addEventListener(
-  "mouseup",
-  async () => {
-
-    if (!dragging)
-      return
-
-    const table_id =
-      dragging.dataset.tableId
-
-    const x =
-      parseInt(
-        dragging.style.left,
-        10
-      )
-
-    const y =
-      parseInt(
-        dragging.style.top,
-        10
-      )
-
-    const { data, error } =
-      await supabase
-        .from("tables")
-        .update({
-          x,
-          y
-        })
-        .eq(
-          "table_id",
-          table_id
-        )
-        .select()
-        .single()
-
-    console.log(
-      "COORD UPDATE DATA:",
-      data
-    )
-
-    console.log(
-      "COORD UPDATE ERROR:",
-      error
-    )
-
-    if (error) {
-      console.error(error)
-      dragging = null
-      return
-    }
-
-    if (data) {
-      updateTable(data)
-    }
-
-    dragging = null
-
-  }
-)
-
-/* ========================================
-   REALTIME ПОДПИСКА НА ТАБЛИЦУ TABLES
-======================================== */
-let tablesChannel
-
-function subscribeTablesRealtime() {
-
-  if (tablesChannel) {
-    supabase.removeChannel(tablesChannel)
-  }
-
-  tablesChannel =
-    supabase
-      .channel("tables-realtime")
-
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "tables"
-        },
-        payload => {
-
-          console.log(
-            "TABLES REALTIME:",
-            payload
-          )
-
-          if (payload.eventType === "DELETE") {
-            removeTable(payload.old)
-            return
-          }
-
-          const row =
-            payload.new
-
-          if (!row)
-            return
-
-          updateTable(row)
-        }
-      )
-
-      .subscribe(status => {
-        console.log(
-          "TABLES REALTIME STATUS:",
-          status
-        )
-      })
-}
-
-subscribeTablesRealtime()
-
-/* ========================================
-   ОБНОВЛЕНИЕ СТОЛА НА ЭКРАНЕ
+   ОБНОВЛЕНИЕ ОДНОГО СТОЛА В HTML
 ======================================== */
 function updateTable(row) {
+
   let el =
     document.querySelector(
       `[data-table-id="${row.table_id}"]`
@@ -502,9 +334,10 @@ function updateTable(row) {
 }
 
 /* ========================================
-   УДАЛЕНИЕ СТОЛА ИЗ DOM
+   УДАЛЕНИЕ СТОЛА
 ======================================== */
 function removeTable(row) {
+
   const el =
     document.querySelector(
       `[data-table-id="${row.table_id}"]`
@@ -518,6 +351,7 @@ function removeTable(row) {
    ОТРИСОВКА ТЕЛА ОКНА
 ======================================== */
 function renderDialogBody(row) {
+
   dialogBody.innerHTML =
     "Статус: " + (row.table_status || "free") + "<br>" +
     "Мест: " + (row.seats ?? 0) + "<br>" +
@@ -528,6 +362,7 @@ function renderDialogBody(row) {
    ОТКРЫТЬ ДИАЛОГОВОЕ ОКНО
 ======================================== */
 function openTableDialog(row) {
+
   activeTable = row
 
   dialogTitle.textContent =
@@ -536,6 +371,22 @@ function openTableDialog(row) {
   renderDialogBody(row)
 
   dialog.classList.remove("hidden")
+
+  /* ========================================
+     ПОКАЗЫВАЕМ НУЖНЫЕ КНОПКИ
+     Если стол свободен — показываем "Открыть стол"
+     Если стол занят — показываем "Закрыть заказ"
+  ======================================== */
+  if ((row.table_status || "free") === "free") {
+    dialogOpenBtn.style.display = "inline-block"
+    dialogCloseOrderBtn.style.display = "none"
+  } else if (row.table_status === "occupied") {
+    dialogOpenBtn.style.display = "none"
+    dialogCloseOrderBtn.style.display = "inline-block"
+  } else {
+    dialogOpenBtn.style.display = "none"
+    dialogCloseOrderBtn.style.display = "none"
+  }
 }
 
 /* ========================================
@@ -547,7 +398,7 @@ function closeTableDialog() {
 }
 
 /* ========================================
-   ЗАКРЫТЬ ОКНО ПО КНОПКЕ
+   КНОПКА "ЗАКРЫТЬ ОКНО"
 ======================================== */
 dialogCloseBtn.addEventListener(
   "click",
@@ -555,7 +406,7 @@ dialogCloseBtn.addEventListener(
 )
 
 /* ========================================
-   ЗАКРЫТЬ ОКНО ПО КЛИКУ НА ТЁМНЫЙ ФОН
+   КЛИК ПО ТЁМНОМУ ФОНУ
 ======================================== */
 dialog.addEventListener(
   "click",
@@ -568,11 +419,13 @@ dialog.addEventListener(
 /* ========================================
    ОТКРЫТЬ СТОЛ
    1. Создать заказ
-   2. Поменять стол на occupied
+   2. Изменить статус стола на occupied
+   3. Сразу обновить HTML
 ======================================== */
 dialogOpenBtn.addEventListener(
   "click",
   async () => {
+
     if (!activeTable)
       return
 
@@ -629,13 +482,15 @@ dialogOpenBtn.addEventListener(
 
 /* ========================================
    ЗАКРЫТЬ ЗАКАЗ
-   1. Найти открытый заказ этого стола
-   2. Перевести заказ в closed
+   1. Найти открытый заказ
+   2. Закрыть его
    3. Освободить стол
+   4. Сразу обновить HTML
 ======================================== */
 dialogCloseOrderBtn.addEventListener(
   "click",
   async () => {
+
     if (!activeTable)
       return
 
@@ -705,7 +560,57 @@ dialogCloseOrderBtn.addEventListener(
 )
 
 /* ========================================
-   ПЕРВИЧНАЯ ЗАГРУЗКА
+   REALTIME ДЛЯ ДРУГИХ ВКЛАДОК / УСТРОЙСТВ
+   Это не для локального клика, а для внешних изменений.
+======================================== */
+let tablesChannel
+
+function subscribeTablesRealtime() {
+
+  if (tablesChannel) {
+    supabase.removeChannel(tablesChannel)
+  }
+
+  tablesChannel =
+    supabase
+      .channel("tables-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tables"
+        },
+        payload => {
+
+          console.log("TABLES REALTIME:", payload)
+
+          if (payload.eventType === "DELETE") {
+            removeTable(payload.old)
+            return
+          }
+
+          const row =
+            payload.new
+
+          if (!row)
+            return
+
+          updateTable(row)
+        }
+      )
+      .subscribe(status => {
+        console.log(
+          "TABLES REALTIME STATUS:",
+          status
+        )
+      })
+}
+
+subscribeTablesRealtime()
+
+/* ========================================
+   ПЕРВАЯ ЗАГРУЗКА
 ======================================== */
 loadTables()
 
@@ -717,7 +622,7 @@ loadTables()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    two ways realtime without refresh | v2.2.1
+    hall no-drag | v2.3.0
   </div>
 
   <div class="row" id="build-down">
@@ -728,6 +633,7 @@ loadTables()
 
 <script>
 (function () {
+
   const now = new Date();
 
   const pad = n =>
@@ -749,6 +655,7 @@ loadTables()
     .getElementById('build-down')
     .textContent =
       'deploy: ' + date + ' ' + time;
+
 })();
 </script>
 
