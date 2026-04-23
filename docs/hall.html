@@ -496,21 +496,22 @@ document.addEventListener(
       Обновляем координаты стола в таблице tables.
       .eq("table_id", table_id) — обновляем только нужный стол.
     */
-    const { error } =
-      await supabase
-        .from("tables")
-        .update({
-          x,
-          y
-        })
-        .eq("table_id", table_id)
+   const { data, error } =
+  await supabase
+    .from("tables")
+    .update({
+      x,
+      y
+    })
+    .eq("table_id", table_id)
+    .select()
 
-    /*
-      Если ошибка — пишем её в консоль.
-    */
-    if (error) {
-      console.error("UPDATE ERROR:", error)
-    }
+console.log("COORD UPDATE DATA:", data)
+console.log("COORD UPDATE ERROR:", error)
+
+if (error) {
+  console.error("UPDATE ERROR:", error)
+}
 
     /*
       Завершаем drag.
@@ -727,26 +728,15 @@ dialogOpenBtn.addEventListener(
   "click",
   async () => {
 
-    /*
-      Если активного стола нет — выходим.
-    */
     if (!activeTable)
       return
 
-    /*
-      Если стол уже занят — не открываем заново.
-    */
     if (activeTable.table_status === "occupied") {
       alert("Стол уже открыт")
       return
     }
 
-    /*
-      Создаём новый заказ.
-      guest_count пока ставим 2 как тестовое значение.
-      Потом можно сделать поле ввода в окне.
-    */
-    const { error: orderError } =
+    const { data: orderData, error: orderError } =
       await supabase
         .from("orders")
         .insert({
@@ -756,34 +746,33 @@ dialogOpenBtn.addEventListener(
           guest_count: 2,
           shift_id: activeTable.current_shift_id
         })
+        .select()
+
+    console.log("ORDER DATA:", orderData)
+    console.log("ORDER ERROR:", orderError)
 
     if (orderError) {
-      console.error("ORDER ERROR:", orderError)
       alert("Не удалось открыть заказ")
       return
     }
 
-    /*
-      Теперь меняем статус самого стола.
-    */
-    const { error: tableError } =
+    const { data: tableData, error: tableError } =
       await supabase
         .from("tables")
         .update({
           table_status: "occupied"
         })
         .eq("table_id", activeTable.table_id)
+        .select()
+
+    console.log("TABLE DATA:", tableData)
+    console.log("TABLE ERROR:", tableError)
 
     if (tableError) {
-      console.error("TABLE ERROR:", tableError)
       alert("Заказ создан, но статус стола не обновился")
       return
     }
 
-    /*
-      Закрываем окно.
-      Realtime сам обновит цвет стола.
-    */
     closeTableDialog()
   }
 )
@@ -804,7 +793,7 @@ loadTables()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    hall dialog realtime | v2.0.0
+    open table/ drag&drop  | v2.1.0
   </div>
 
   <div class="row" id="build-down">
