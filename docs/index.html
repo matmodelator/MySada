@@ -1878,26 +1878,39 @@ function sizeByShape(shape) {
 ========================================
 */
 async function getProjectAndHall() {
-  const { data: project, error: projectError } =
+
+  const { data: projects, error: projectError } =
     await supabase
       .from('projects')
       .select('*')
+      .order('created_at', { ascending: true })
       .limit(1)
-      .single()
 
   if (projectError)
     throw projectError
 
-  const { data: hall, error: hallError } =
+  if (!projects || !projects.length)
+    throw new Error('Project not found')
+
+  const project =
+    projects[0]
+
+  const { data: halls, error: hallError } =
     await supabase
       .from('halls')
       .select('*')
       .eq('project_id', project.project_id)
+      .order('created_at', { ascending: true })
       .limit(1)
-      .single()
 
   if (hallError)
     throw hallError
+
+  if (!halls || !halls.length)
+    throw new Error('Hall not found')
+
+  const hall =
+    halls[0]
 
   return {
     project,
@@ -2049,7 +2062,7 @@ draw()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    set layout upload to supabase | v2.0.0
+    fix function getProjectAndHall | v2.0.1
   </div>
 
   <div class="row" id="build-down">
