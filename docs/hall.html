@@ -12,19 +12,11 @@
       href="styles/console.css" />
 
 <style>
-/* ========================================
-   ОБЩИЕ СТИЛИ СТРАНИЦЫ
-======================================== */
-
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #eef1f6;
 }
-
-/* ========================================
-   ПОЛЕ ПЛАНА ЗАЛА
-======================================== */
 
 #hall {
   position: relative;
@@ -35,46 +27,170 @@ body {
 }
 
 /* ========================================
-   СТОЛ
+   СТОЛЫ
 ======================================== */
 
-.table {
+.table-wrap {
   position: absolute;
+  width: 160px;
+  height: 160px;
+  cursor: pointer;
+}
+
+.table-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border-radius: 10px;
   color: white;
   font-weight: bold;
-  user-select: none;
-  cursor: pointer;
-  transition: background 0.2s;
   box-sizing: border-box;
+  text-align: center;
+  z-index: 2;
 }
 
-/* Свободный стол */
-.table.free {
+/* Круглый стол — 2 места */
+.table-wrap.round {
+  width: 150px;
+  height: 150px;
+}
+
+.table-wrap.round .table-core {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+}
+
+/* Квадратный стол — 4 места */
+.table-wrap.square {
+  width: 170px;
+  height: 170px;
+}
+
+.table-wrap.square .table-core {
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+}
+
+/* Прямоугольный стол — 6 мест */
+.table-wrap.rect {
+  width: 230px;
+  height: 160px;
+}
+
+.table-wrap.rect .table-core {
+  width: 140px;
+  height: 82px;
+  border-radius: 12px;
+}
+
+/* Статусы */
+.table-wrap.free .table-core {
   background: #2ecc71;
 }
 
-/* Занятый стол */
-.table.occupied {
+.table-wrap.occupied .table-core {
   background: #e74c3c;
 }
 
-/* Резерв */
-.table.reserved {
+.table-wrap.reserved .table-core {
   background: #f1c40f;
 }
 
-/* Уборка */
-.table.cleaning {
+.table-wrap.cleaning .table-core {
   background: #95a5a6;
 }
 
 /* ========================================
-   ДИАЛОГОВОЕ ОКНО
+   СТУЛЬЯ
+======================================== */
+
+.chair {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: #374151;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* 2 стула */
+.seats-2 .chair-1 {
+  left: 50%;
+  top: 4px;
+  transform: translateX(-50%);
+}
+
+.seats-2 .chair-2 {
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+}
+
+/* 4 стула */
+.seats-4 .chair-1 {
+  left: 50%;
+  top: 2px;
+  transform: translateX(-50%);
+}
+
+.seats-4 .chair-2 {
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.seats-4 .chair-3 {
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+}
+
+.seats-4 .chair-4 {
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 6 стульев */
+.seats-6 .chair-1 {
+  left: 70px;
+  top: 0;
+}
+
+.seats-6 .chair-2 {
+  right: 70px;
+  top: 0;
+}
+
+.seats-6 .chair-3 {
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.seats-6 .chair-4 {
+  right: 70px;
+  bottom: 0;
+}
+
+.seats-6 .chair-5 {
+  left: 70px;
+  bottom: 0;
+}
+
+.seats-6 .chair-6 {
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ========================================
+   ДИАЛОГ
 ======================================== */
 
 .dialog {
@@ -92,7 +208,7 @@ body {
 }
 
 .dialog-box {
-  width: 360px;
+  width: 380px;
   max-width: calc(100vw - 32px);
   background: white;
   border-radius: 14px;
@@ -110,49 +226,50 @@ body {
 #dialog-body {
   margin-bottom: 16px;
   line-height: 1.5;
+  font-size: 14px;
 }
 
 .dialog-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
 .dialog-actions button {
   border: 0;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 11px 12px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: bold;
 }
 
-#dialog-open-btn {
+#btn-open-order {
   background: #2563eb;
   color: white;
 }
 
-#dialog-close-order-btn {
-  background: #dc2626;
+#btn-close-order {
+  background: #16a34a;
   color: white;
 }
 
-#dialog-close-btn {
-  background: #e5e7eb;
+#btn-reserve-table {
+  background: #facc15;
   color: #111827;
+}
+
+#btn-clean-table {
+  background: #6b7280;
+  color: white;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ========================================
-     ПЛАН ЗАЛА
-======================================== -->
 <div id="hall"></div>
 
-<!-- ========================================
-     ДИАЛОГОВОЕ ОКНО
-======================================== -->
 <div id="table-dialog" class="dialog hidden">
   <div class="dialog-box">
 
@@ -164,32 +281,32 @@ body {
 
     <div class="dialog-actions">
 
-      <button id="dialog-open-btn">
-        Открыть стол
+      <button id="btn-open-order">
+        Открыть заказ
       </button>
 
-      <button id="dialog-close-order-btn">
+      <button id="btn-close-order">
         Закрыть заказ
       </button>
 
-      <button id="dialog-close-btn">
-        Закрыть окно
+      <button id="btn-reserve-table">
+        Зарезервировать стол
+      </button>
+
+      <button id="btn-clean-table">
+        Уборка стола
       </button>
 
     </div>
+
   </div>
 </div>
 
 <script type="module">
-/* ========================================
-   ПОДКЛЮЧАЕМ SUPABASE ИЗ config.js
-======================================== */
+
 import { supabase }
 from "./scripts/config.js"
 
-/* ========================================
-   ОСНОВНЫЕ ЭЛЕМЕНТЫ
-======================================== */
 const hall =
   document.getElementById("hall")
 
@@ -202,23 +319,24 @@ const dialogTitle =
 const dialogBody =
   document.getElementById("dialog-body")
 
-const dialogOpenBtn =
-  document.getElementById("dialog-open-btn")
+const btnOpenOrder =
+  document.getElementById("btn-open-order")
 
-const dialogCloseOrderBtn =
-  document.getElementById("dialog-close-order-btn")
+const btnCloseOrder =
+  document.getElementById("btn-close-order")
 
-const dialogCloseBtn =
-  document.getElementById("dialog-close-btn")
+const btnReserveTable =
+  document.getElementById("btn-reserve-table")
 
-/* ========================================
-   АКТИВНЫЙ СТОЛ В ДИАЛОГЕ
-======================================== */
+const btnCleanTable =
+  document.getElementById("btn-clean-table")
+
 let activeTable = null
 
 /* ========================================
-   ЗАГРУЗКА СТОЛОВ ИЗ БАЗЫ
+   ЗАГРУЗКА СТОЛОВ
 ======================================== */
+
 async function loadTables() {
 
   const { data, error } =
@@ -241,198 +359,182 @@ async function loadTables() {
 }
 
 /* ========================================
-   СОЗДАНИЕ СТОЛА НА ЭКРАНЕ
+   ОТРИСОВКА СТОЛА
 ======================================== */
+
 function createTable(row) {
 
-  const el =
+  const shape =
+    getShape(row)
+
+  const seats =
+    getSeats(row)
+
+  const wrap =
     document.createElement("div")
 
-  el.className =
-    "table " + (row.table_status || "free")
+  wrap.className =
+    "table-wrap " +
+    shape + " " +
+    (row.table_status || "free") + " " +
+    "seats-" + seats
 
-  el.dataset.tableId =
+  wrap.dataset.tableId =
     row.table_id
 
-  el.textContent =
-    row.name || "Table"
-
-  el.style.left =
+  wrap.style.left =
     (row.x ?? 0) + "px"
 
-  el.style.top =
+  wrap.style.top =
     (row.y ?? 0) + "px"
 
-  el.style.width =
-    (row.width ?? 120) + "px"
+  const core =
+    document.createElement("div")
 
-  el.style.height =
-    (row.height ?? 120) + "px"
+  core.className =
+    "table-core"
 
-  hall.appendChild(el)
+  core.textContent =
+    row.name || "Table"
 
-  /* ========================================
-     КЛИК ПО СТОЛУ
-     Открывает внутреннее окно
-  ======================================== */
-  el.addEventListener(
+  wrap.appendChild(core)
+
+  for (let i = 1; i <= seats; i++) {
+    const chair =
+      document.createElement("div")
+
+    chair.className =
+      "chair chair-" + i
+
+    wrap.appendChild(chair)
+  }
+
+  wrap.addEventListener(
     "click",
     () => {
-      openTableDialog(row)
+      openDialog(row)
     }
   )
+
+  hall.appendChild(wrap)
 }
 
 /* ========================================
-   ОБНОВЛЕНИЕ ОДНОГО СТОЛА В HTML
+   ФОРМА СТОЛА
 ======================================== */
+
+function getShape(row) {
+
+  if (row.shape === "round")
+    return "round"
+
+  if (row.shape === "rect")
+    return "rect"
+
+  if (row.seats === 2)
+    return "round"
+
+  if (row.seats === 6)
+    return "rect"
+
+  return "square"
+}
+
+/* ========================================
+   КОЛИЧЕСТВО СТУЛЬЕВ
+======================================== */
+
+function getSeats(row) {
+
+  if (row.seats === 2)
+    return 2
+
+  if (row.seats === 6)
+    return 6
+
+  return 4
+}
+
+/* ========================================
+   ОБНОВИТЬ СТОЛ НА ЭКРАНЕ
+======================================== */
+
 function updateTable(row) {
 
-  let el =
+  const oldEl =
     document.querySelector(
       `[data-table-id="${row.table_id}"]`
     )
 
-  if (!el) {
-    createTable(row)
-    return
-  }
+  if (oldEl)
+    oldEl.remove()
 
-  el.textContent =
-    row.name || "Table"
-
-  el.classList.remove(
-    "free",
-    "occupied",
-    "reserved",
-    "cleaning"
-  )
-
-  el.classList.add(
-    row.table_status || "free"
-  )
-
-  el.style.left =
-    (row.x ?? 0) + "px"
-
-  el.style.top =
-    (row.y ?? 0) + "px"
-
-  el.style.width =
-    (row.width ?? 120) + "px"
-
-  el.style.height =
-    (row.height ?? 120) + "px"
+  createTable(row)
 
   if (
     activeTable &&
     activeTable.table_id === row.table_id
   ) {
     activeTable = row
-    renderDialogBody(row)
+    renderDialog(row)
   }
 }
 
 /* ========================================
-   УДАЛЕНИЕ СТОЛА
+   ОТКРЫТЬ ДИАЛОГ
 ======================================== */
-function removeTable(row) {
 
-  const el =
-    document.querySelector(
-      `[data-table-id="${row.table_id}"]`
-    )
-
-  if (el)
-    el.remove()
-}
-
-/* ========================================
-   ОТРИСОВКА ТЕЛА ОКНА
-======================================== */
-function renderDialogBody(row) {
-
-  dialogBody.innerHTML =
-    "Статус: " + (row.table_status || "free") + "<br>" +
-    "Мест: " + (row.seats ?? 0) + "<br>" +
-    "X: " + (row.x ?? 0) + " | Y: " + (row.y ?? 0)
-}
-
-/* ========================================
-   ОТКРЫТЬ ДИАЛОГОВОЕ ОКНО
-======================================== */
-function openTableDialog(row) {
+function openDialog(row) {
 
   activeTable = row
+
+  renderDialog(row)
+
+  dialog.classList.remove("hidden")
+}
+
+/* ========================================
+   ОТРИСОВАТЬ ДИАЛОГ
+======================================== */
+
+function renderDialog(row) {
 
   dialogTitle.textContent =
     row.name || "Стол"
 
-  renderDialogBody(row)
-
-  dialog.classList.remove("hidden")
-
-  /* ========================================
-     ПОКАЗЫВАЕМ НУЖНЫЕ КНОПКИ
-     Если стол свободен — показываем "Открыть стол"
-     Если стол занят — показываем "Закрыть заказ"
-  ======================================== */
-  if ((row.table_status || "free") === "free") {
-    dialogOpenBtn.style.display = "inline-block"
-    dialogCloseOrderBtn.style.display = "none"
-  } else if (row.table_status === "occupied") {
-    dialogOpenBtn.style.display = "none"
-    dialogCloseOrderBtn.style.display = "inline-block"
-  } else {
-    dialogOpenBtn.style.display = "none"
-    dialogCloseOrderBtn.style.display = "none"
-  }
+  dialogBody.innerHTML =
+    "Статус: " + (row.table_status || "free") + "<br>" +
+    "Мест: " + (row.seats ?? 4) + "<br>" +
+    "Форма: " + (getShape(row)) + "<br>" +
+    "table_id: " + row.table_id
 }
 
 /* ========================================
-   ЗАКРЫТЬ ДИАЛОГОВОЕ ОКНО
+   ЗАКРЫТЬ ДИАЛОГ ПО ФОНУ
 ======================================== */
-function closeTableDialog() {
-  dialog.classList.add("hidden")
-  activeTable = null
-}
 
-/* ========================================
-   КНОПКА "ЗАКРЫТЬ ОКНО"
-======================================== */
-dialogCloseBtn.addEventListener(
-  "click",
-  closeTableDialog
-)
-
-/* ========================================
-   КЛИК ПО ТЁМНОМУ ФОНУ
-======================================== */
 dialog.addEventListener(
   "click",
   e => {
-    if (e.target === dialog)
-      closeTableDialog()
+    if (e.target === dialog) {
+      dialog.classList.add("hidden")
+      activeTable = null
+    }
   }
 )
 
 /* ========================================
-   ОТКРЫТЬ СТОЛ
-   1. Создать заказ
-   2. Изменить статус стола на occupied
-   3. Сразу обновить HTML
+   1. ОТКРЫТЬ ЗАКАЗ
+   orders = open
+   tables = occupied
 ======================================== */
-dialogOpenBtn.addEventListener(
+
+btnOpenOrder.addEventListener(
   "click",
   async () => {
 
     if (!activeTable)
       return
-
-    if (activeTable.table_status === "occupied") {
-      alert("Стол уже открыт")
-      return
-    }
 
     const { data: orderData, error: orderError } =
       await supabase
@@ -446,48 +548,28 @@ dialogOpenBtn.addEventListener(
         })
         .select()
 
-    console.log("ORDER DATA:", orderData)
-    console.log("ORDER ERROR:", orderError)
+    console.log("OPEN ORDER DATA:", orderData)
+    console.log("OPEN ORDER ERROR:", orderError)
 
     if (orderError) {
       alert("Не удалось открыть заказ")
       return
     }
 
-    const { data: tableData, error: tableError } =
-      await supabase
-        .from("tables")
-        .update({
-          table_status: "occupied"
-        })
-        .eq("table_id", activeTable.table_id)
-        .select()
-        .single()
-
-    console.log("OPEN TABLE DATA:", tableData)
-    console.log("OPEN TABLE ERROR:", tableError)
-
-    if (tableError) {
-      alert("Заказ создан, но статус стола не обновился")
-      return
-    }
-
-    if (tableData) {
-      updateTable(tableData)
-    }
-
-    closeTableDialog()
+    await setTableStatus(
+      activeTable.table_id,
+      "occupied"
+    )
   }
 )
 
 /* ========================================
-   ЗАКРЫТЬ ЗАКАЗ
-   1. Найти открытый заказ
-   2. Закрыть его
-   3. Освободить стол
-   4. Сразу обновить HTML
+   2. ЗАКРЫТЬ ЗАКАЗ
+   orders = closed
+   tables = free
 ======================================== */
-dialogCloseOrderBtn.addEventListener(
+
+btnCloseOrder.addEventListener(
   "click",
   async () => {
 
@@ -504,20 +586,15 @@ dialogCloseOrderBtn.addEventListener(
         .limit(1)
         .maybeSingle()
 
-    console.log("OPEN ORDER:", openOrder)
+    console.log("FIND ORDER DATA:", openOrder)
     console.log("FIND ORDER ERROR:", findError)
 
-    if (findError) {
-      alert("Не удалось найти открытый заказ")
+    if (findError || !openOrder) {
+      alert("Открытый заказ не найден")
       return
     }
 
-    if (!openOrder) {
-      alert("Для этого стола нет открытого заказа")
-      return
-    }
-
-    const { error: closeOrderError } =
+    const { error: closeError } =
       await supabase
         .from("orders")
         .update({
@@ -526,103 +603,139 @@ dialogCloseOrderBtn.addEventListener(
         })
         .eq("order_id", openOrder.order_id)
 
-    console.log("CLOSE ORDER ERROR:", closeOrderError)
+    console.log("CLOSE ORDER ERROR:", closeError)
 
-    if (closeOrderError) {
+    if (closeError) {
       alert("Не удалось закрыть заказ")
       return
     }
 
-    const { data: freeTableData, error: freeTableError } =
-      await supabase
-        .from("tables")
-        .update({
-          table_status: "free"
-        })
-        .eq("table_id", activeTable.table_id)
-        .select()
-        .single()
-
-    console.log("FREE TABLE DATA:", freeTableData)
-    console.log("FREE TABLE ERROR:", freeTableError)
-
-    if (freeTableError) {
-      alert("Заказ закрыт, но стол не освободился")
-      return
-    }
-
-    if (freeTableData) {
-      updateTable(freeTableData)
-    }
-
-    closeTableDialog()
+    await setTableStatus(
+      activeTable.table_id,
+      "free"
+    )
   }
 )
 
 /* ========================================
-   REALTIME ДЛЯ ДРУГИХ ВКЛАДОК / УСТРОЙСТВ
-   Это не для локального клика, а для внешних изменений.
+   3. ЗАРЕЗЕРВИРОВАТЬ СТОЛ
+   tables = reserved
 ======================================== */
-let tablesChannel
 
-function subscribeTablesRealtime() {
+btnReserveTable.addEventListener(
+  "click",
+  async () => {
 
-  if (tablesChannel) {
-    supabase.removeChannel(tablesChannel)
+    if (!activeTable)
+      return
+
+    await setTableStatus(
+      activeTable.table_id,
+      "reserved"
+    )
   }
-
-  tablesChannel =
-    supabase
-      .channel("tables-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "tables"
-        },
-        payload => {
-
-          console.log("TABLES REALTIME:", payload)
-
-          if (payload.eventType === "DELETE") {
-            removeTable(payload.old)
-            return
-          }
-
-          const row =
-            payload.new
-
-          if (!row)
-            return
-
-          updateTable(row)
-        }
-      )
-      .subscribe(status => {
-        console.log(
-          "TABLES REALTIME STATUS:",
-          status
-        )
-      })
-}
-
-subscribeTablesRealtime()
+)
 
 /* ========================================
-   ПЕРВАЯ ЗАГРУЗКА
+   4. УБОРКА СТОЛА
+   tables = cleaning
 ======================================== */
+
+btnCleanTable.addEventListener(
+  "click",
+  async () => {
+
+    if (!activeTable)
+      return
+
+    await setTableStatus(
+      activeTable.table_id,
+      "cleaning"
+    )
+  }
+)
+
+/* ========================================
+   ОБЩАЯ ФУНКЦИЯ СМЕНЫ СТАТУСА СТОЛА
+======================================== */
+
+async function setTableStatus(
+  table_id,
+  table_status
+) {
+
+  const { data, error } =
+    await supabase
+      .from("tables")
+      .update({
+        table_status
+      })
+      .eq("table_id", table_id)
+      .select()
+      .single()
+
+  console.log("TABLE STATUS DATA:", data)
+  console.log("TABLE STATUS ERROR:", error)
+
+  if (error) {
+    alert("Не удалось изменить статус стола")
+    return
+  }
+
+  if (data) {
+    updateTable(data)
+  }
+
+  dialog.classList.add("hidden")
+  activeTable = null
+}
+
+/* ========================================
+   REALTIME ДЛЯ ДРУГИХ ЭКРАНОВ
+======================================== */
+
+supabase
+  .channel("tables-realtime")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "tables"
+    },
+    payload => {
+
+      console.log("TABLES REALTIME:", payload)
+
+      if (payload.eventType === "DELETE") {
+        const el =
+          document.querySelector(
+            `[data-table-id="${payload.old.table_id}"]`
+          )
+
+        if (el)
+          el.remove()
+
+        return
+      }
+
+      if (payload.new) {
+        updateTable(payload.new)
+      }
+    }
+  )
+  .subscribe(status => {
+    console.log("TABLES REALTIME STATUS:", status)
+  })
+
 loadTables()
 
 </script>
 
-<!-- ========================================
-     SERVICE CONSOLE
-======================================== -->
 <div id="service-console">
 
   <div class="row" id="build-top">
-    hall no-drag | v2.3.0
+    tables & orders | v2.3.1
   </div>
 
   <div class="row" id="build-down">
