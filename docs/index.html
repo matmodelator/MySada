@@ -1,51 +1,60 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Адаптация под мобильные -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0" />
+
   <title>План зала — canvas</title>
 
-<!-- СТИЛЬ КОНСОЛИ -->
-
+  <!-- СТИЛЬ КОНСОЛИ -->
   <link rel="stylesheet"
         href="styles/console.css" />
-  
-
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #eef1f6;
-  color: #243447;
-  min-height: 100vh;
-}
-      .app {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef1f6;
+      color: #243447;
+      min-height: 100vh;
+    }
+
+    .app {
       max-width: 1720px;
       margin: 0 auto;
       padding: 16px;
     }
+
     .layout {
       display: grid;
       grid-template-columns: minmax(980px, 1fr) 340px;
       gap: 16px;
       align-items: start;
     }
+
     .left-col {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
+
     .toolbar {
       display: flex;
       gap: 12px;
       align-items: center;
       flex-wrap: wrap;
     }
+
     .toolbar button,
-    .side-actions button {
+    .side-actions button,
+    .upload-db {
       border: 1px solid #b8c2cf;
       background: linear-gradient(180deg, #ffffff 0%, #eef3f8 100%);
       border-radius: 10px;
@@ -56,40 +65,49 @@
       box-shadow: 0 2px 0 #c5cfdb, 0 6px 14px rgba(0,0,0,0.08);
       transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
     }
+
     .toolbar button:hover,
-    .side-actions button:hover {
+    .side-actions button:hover,
+    .upload-db:hover:not(:disabled) {
       background: linear-gradient(180deg, #ffffff 0%, #e8eef6 100%);
     }
+
     .toolbar button:active,
     .toolbar button.is-active,
     .side-actions button:active,
-    .side-actions button.is-active {
+    .side-actions button.is-active,
+    .upload-db:active,
+    .upload-db.is-active {
       transform: translateY(2px);
       box-shadow: 0 1px 0 #c5cfdb, 0 3px 8px rgba(0,0,0,0.08);
       background: linear-gradient(180deg, #e5edf7 0%, #dce7f4 100%);
     }
+
     .toolbar .hint {
       color: #5b6b7f;
       font-size: 14px;
     }
+
     .wrap {
-  background: white;
-  border: 1px solid #c3ccd8;
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  overflow: visible;
-  position: relative;
-}
-   canvas {
-  display: block;
-  width: 100%;
-  max-width: 1460px;
-  height: auto;
-  border-radius: 10px;
-  background: #f7f9fc;
-  touch-action: pan-x pan-y;
-}
+      background: white;
+      border: 1px solid #c3ccd8;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      overflow: visible;
+      position: relative;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 1460px;
+      height: auto;
+      border-radius: 10px;
+      background: #f7f9fc;
+      touch-action: pan-x pan-y;
+    }
+
     .side {
       display: flex;
       flex-direction: column;
@@ -97,11 +115,13 @@
       position: sticky;
       top: 16px;
     }
+
     .side-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
+
     .legend {
       color: #5b6b7f;
       font-size: 14px;
@@ -111,6 +131,7 @@
       padding: 12px 14px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
+
     .console {
       background: #10151c;
       color: #dbe7f5;
@@ -121,11 +142,13 @@
       min-height: 560px;
       overflow: auto;
     }
+
     .console-title {
       font-size: 14px;
       color: #8fb7ff;
       margin-bottom: 8px;
     }
+
     .console-total {
       font-size: 13px;
       color: #ffe28a;
@@ -136,21 +159,25 @@
       margin-bottom: 10px;
       font-weight: 700;
     }
+
     .console-line {
       padding: 4px 0;
       white-space: pre-wrap;
       word-break: break-word;
       line-height: 1.4;
     }
+
     .console-line.error {
       color: #ff8b8b;
       font-weight: 700;
     }
+
     .json-title {
       font-size: 14px;
       color: #8fb7ff;
       margin-bottom: 8px;
     }
+
     .json-meta {
       font-size: 13px;
       color: #9ed0a5;
@@ -161,6 +188,7 @@
       margin-bottom: 10px;
       font-weight: 700;
     }
+
     .json-box {
       background: #10151c;
       color: #dbe7f5;
@@ -172,10 +200,28 @@
       overflow: auto;
       display: none;
     }
+
     .json-box.active,
     .console.active {
       display: block;
     }
+
+    .upload-db {
+      width: 100%;
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+
+    .upload-db:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .upload-db.ready {
+      background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+    }
+
     .context-menu {
       position: fixed;
       z-index: 1000;
@@ -187,9 +233,11 @@
       overflow: hidden;
       display: none;
     }
+
     .context-menu.active {
       display: block;
     }
+
     .context-menu button {
       width: 100%;
       border: 0;
@@ -200,26 +248,32 @@
       font-size: 14px;
       color: #243447;
     }
+
     .context-menu button:hover {
       background: #eef3f8;
     }
+
     code {
       background: #eef3f8;
       padding: 2px 6px;
       border-radius: 6px;
     }
+
     pre {
       margin: 0;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
+
     @media (max-width: 1380px) {
       .layout {
         grid-template-columns: 1fr;
       }
+
       .side {
         position: static;
       }
+
       .console,
       .json-box {
         min-height: 0;
@@ -227,790 +281,1808 @@
     }
   </style>
 </head>
+
 <body>
-  <div class="app">
-    <div class="layout">
-      <div class="left-col">
-        <div class="toolbar">
-          <button id="undo">Undo</button>
-          <button id="reset">Reset</button>
-          <button id="apply">Apply</button>
-          <span class="hint">Left click table — change number. Right click table — menu. Throw to white area outside workspace to delete.</span>
-        </div>
 
-        <div class="wrap">
-          <canvas id="plan" width="1460" height="1180"></canvas>
-        </div>
+<div class="app">
+  <div class="layout">
+
+    <div class="left-col">
+
+      <div class="toolbar">
+        <button id="undo">Undo</button>
+        <button id="reset">Reset</button>
+        <button id="apply">Apply</button>
+
+        <span class="hint">
+          Left click table — change number. Right click table — menu. Throw to white area outside workspace to delete.
+        </span>
       </div>
 
-      <div class="side">
-        <div class="side-actions">
-          <button id="toggleView">JSON</button>
-          <button id="save">Save</button>
-        </div>
-
-        <div class="legend">
-          Zones: <code>hall</code>, <code>terrace_top</code>, <code>terrace_bottom</code>, <code>terrace_left</code>, <code>terrace_right</code>, <code>bar</code>, <code>vip</code>, <code>pool</code>, <code>sauna</code>
-        </div>
-
-        <div class="console" id="consoleBox">
-          <div class="console-title">Table Console</div>
-          <div class="console-total" id="consoleTotal">Total tables: 0</div>
-          <div id="consoleLines"></div>
-        </div>
-
-        <div class="json-box" id="jsonBox" style="display:none;">
-          <div class="json-title">JSON file</div>
-          <div class="json-meta" id="jsonMeta">Saved rows: 0</div>
-          <pre id="jsonPre">[]</pre>
-        </div>
+      <div class="wrap">
+        <canvas id="plan" width="1460" height="1180"></canvas>
       </div>
+
     </div>
+
+    <div class="side">
+
+      <div class="side-actions">
+        <button id="toggleView">JSON</button>
+        <button id="save">Save JSON file</button>
+      </div>
+
+      <div class="legend">
+        Zones:
+        <code>hall</code>,
+        <code>terrace_top</code>,
+        <code>terrace_bottom</code>,
+        <code>terrace_left</code>,
+        <code>terrace_right</code>,
+        <code>bar</code>,
+        <code>vip</code>,
+        <code>pool</code>,
+        <code>sauna</code>
+      </div>
+
+      <div class="console" id="consoleBox">
+        <div class="console-title">Table Console</div>
+        <div class="console-total" id="consoleTotal">Total tables: 0</div>
+        <div id="consoleLines"></div>
+      </div>
+
+      <div class="json-box" id="jsonBox" style="display:none;">
+        <div class="json-title">JSON file</div>
+        <div class="json-meta" id="jsonMeta">Saved rows: 0</div>
+        <pre id="jsonPre">[]</pre>
+      </div>
+
+      <!--
+        Кнопка загрузки схемы в базу.
+        Она неактивна, пока не нажата Save JSON file.
+      -->
+      <button id="uploadDb" class="upload-db" disabled>
+        UpLoad Project to DataBase
+      </button>
+
+    </div>
+
   </div>
+</div>
 
-  <div class="context-menu" id="contextMenu"></div>
+<div class="context-menu" id="contextMenu"></div>
 
-  <script>
-    // ========================================
-    // ССЫЛКИ НА ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
-    // ========================================
-    const canvas = document.getElementById('plan');
-    const ctx = canvas.getContext('2d');
-    const consoleLines = document.getElementById('consoleLines');
-    const consoleTotal = document.getElementById('consoleTotal');
-    const consoleBox = document.getElementById('consoleBox');
-    const jsonBox = document.getElementById('jsonBox');
-    const jsonPre = document.getElementById('jsonPre');
-    const jsonMeta = document.getElementById('jsonMeta');
-    const contextMenu = document.getElementById('contextMenu');
-    const toggleViewBtn = document.getElementById('toggleView');
+<script type="module">
 
-    // ========================================
-    // БАЗОВАЯ ГЕОМЕТРИЯ ПЛАНА
-    // ========================================
-    const base = {
-      outer: { x: 40, y: 40, w: 1380, h: 1100 },
-      ring: { x: 120, y: 140, w: 1120, h: 700 },
-      hall: { x: 300, y: 250, w: 760, h: 480 },
-      stock: { x: 1248, y: 140, w: 146, h: 700 },
-      extraRowY: 870,
-      extraRowH: 170,
-      extraGap: 0,
-      extraW: 280
-    };
+/*
+========================================
+ПОДКЛЮЧАЕМ SUPABASE
+Файл scripts/config.js должен экспортировать:
+export const supabase = createClient(...)
+========================================
+*/
+import { supabase }
+from "./scripts/config.js"
 
-    // ========================================
-    // ОСНОВНЫЕ ЗОНЫ
-    // ========================================
-    const zones = {
-      hall: { x: base.hall.x, y: base.hall.y, w: base.hall.w, h: base.hall.h },
-      terrace_top: {
-        x: base.ring.x,
-        y: base.ring.y,
-        w: base.ring.w,
-        h: base.hall.y - base.ring.y
-      },
-      terrace_bottom: {
-        x: base.ring.x,
-        y: base.hall.y + base.hall.h,
-        w: base.ring.w,
-        h: base.ring.y + base.ring.h - (base.hall.y + base.hall.h)
-      },
-      terrace_left: {
-        x: base.ring.x,
-        y: base.hall.y,
-        w: base.hall.x - base.ring.x,
-        h: base.hall.h
-      },
-      terrace_right: {
-        x: base.hall.x + base.hall.w,
-        y: base.hall.y,
-        w: base.ring.x + base.ring.w - (base.hall.x + base.hall.w),
-        h: base.hall.h
-      },
-      bar: { x: 120, y: base.extraRowY, w: base.extraW, h: base.extraRowH },
-      vip: { x: 120 + base.extraW, y: base.extraRowY, w: base.extraW, h: base.extraRowH },
-      pool: { x: 120 + base.extraW * 2, y: base.extraRowY, w: base.extraW, h: base.extraRowH },
-      sauna: { x: 120 + base.extraW * 3, y: base.extraRowY, w: base.extraW, h: base.extraRowH }
-    };
+/*
+========================================
+ССЫЛКИ НА ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
+========================================
+*/
+const canvas =
+  document.getElementById('plan')
 
-    // ========================================
-    // СКЛАД СТОЛОВ
-    // ========================================
-    const stockItems = [
-      { id: 'stock_round', type: 'round', x: 1321, y: 260, size: 54, seats: 2, label: 'round' },
-      { id: 'stock_square', type: 'square', x: 1321, y: 430, size: 52, seats: 4, label: 'square' },
-      { id: 'stock_half_square', type: 'half_square', x: 1321, y: 620, size: 68, seats: 6, label: 'half square' }
-    ];
+const ctx =
+  canvas.getContext('2d')
 
-    // ========================================
-    // НАСТРОЙКИ ТИПОВ СТОЛОВ
-    // ========================================
-    const typeMeta = {
-      round: { size: 54, seats: 2, label: 'round' },
-      square: { size: 52, seats: 4, label: 'square' },
-      half_square: { size: 68, seats: 6, label: 'half square' }
-    };
-    const contextTypes = [
-      { type: 'round', label: 'Round / 2 seats' },
-      { type: 'square', label: 'Square / 4 seats' },
-      { type: 'half_square', label: 'Half square / 6 seats' }
-    ];
+const consoleLines =
+  document.getElementById('consoleLines')
 
-    // ========================================
-    // СОСТОЯНИЕ
-    // ========================================
-    let scale = 1;
-    let tables = [
-      { id: 1, type: 'square', x: 390, y: 360, size: 52, seats: 4 },
-      { id: 2, type: 'round', x: 690, y: 420, size: 54, seats: 2 },
-      { id: 3, type: 'half_square', x: 180, y: 180, size: 68, seats: 6 },
-      { id: 4, type: 'round', x: 1140, y: 780, size: 54, seats: 2 }
-    ];
-    let appliedTables = JSON.parse(JSON.stringify(tables));
-    let drag = null;
-    let nextId = 5;
-    let history = [];
-    let movedDuringDrag = false;
-    let currentView = 'console';
-    let contextTargetIndex = -1;
+const consoleTotal =
+  document.getElementById('consoleTotal')
 
-    // ========================================
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-    // ========================================
-    function cloneTables(source = tables) {
-      return JSON.parse(JSON.stringify(source));
-    }
+const consoleBox =
+  document.getElementById('consoleBox')
 
-    function pushHistory() {
-      history.push(cloneTables());
-      if (history.length > 80) history.shift();
-    }
+const jsonBox =
+  document.getElementById('jsonBox')
 
-    function screenToWorld(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      const x = (clientX - rect.left) * (canvas.width / rect.width) / scale;
-      const y = (clientY - rect.top) * (canvas.height / rect.height) / scale;
-      return { x, y };
-    }
+const jsonPre =
+  document.getElementById('jsonPre')
 
-    function pointInRect(p, r) {
-      return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
-    }
+const jsonMeta =
+  document.getElementById('jsonMeta')
 
-    function getZoneName(table) {
-      const p = { x: table.x, y: table.y };
-      for (const [name, rect] of Object.entries(zones)) {
-        if (pointInRect(p, rect)) return name;
+const contextMenu =
+  document.getElementById('contextMenu')
+
+const toggleViewBtn =
+  document.getElementById('toggleView')
+
+const uploadDbBtn =
+  document.getElementById('uploadDb')
+
+/*
+========================================
+ЗДЕСЬ ХРАНИМ ПОСЛЕДНИЙ СОХРАНЁННЫЙ JSON
+Кнопка Upload становится активной только после Save JSON file.
+========================================
+*/
+let savedLayoutForUpload = null
+
+/*
+========================================
+БАЗОВАЯ ГЕОМЕТРИЯ ПЛАНА
+========================================
+*/
+const base = {
+  outer: { x: 40, y: 40, w: 1380, h: 1100 },
+  ring: { x: 120, y: 140, w: 1120, h: 700 },
+  hall: { x: 300, y: 250, w: 760, h: 480 },
+  stock: { x: 1248, y: 140, w: 146, h: 700 },
+  extraRowY: 870,
+  extraRowH: 170,
+  extraGap: 0,
+  extraW: 280
+}
+
+/*
+========================================
+ОСНОВНЫЕ ЗОНЫ
+========================================
+*/
+const zones = {
+  hall: {
+    x: base.hall.x,
+    y: base.hall.y,
+    w: base.hall.w,
+    h: base.hall.h
+  },
+
+  terrace_top: {
+    x: base.ring.x,
+    y: base.ring.y,
+    w: base.ring.w,
+    h: base.hall.y - base.ring.y
+  },
+
+  terrace_bottom: {
+    x: base.ring.x,
+    y: base.hall.y + base.hall.h,
+    w: base.ring.w,
+    h: base.ring.y + base.ring.h - (base.hall.y + base.hall.h)
+  },
+
+  terrace_left: {
+    x: base.ring.x,
+    y: base.hall.y,
+    w: base.hall.x - base.ring.x,
+    h: base.hall.h
+  },
+
+  terrace_right: {
+    x: base.hall.x + base.hall.w,
+    y: base.hall.y,
+    w: base.ring.x + base.ring.w - (base.hall.x + base.hall.w),
+    h: base.hall.h
+  },
+
+  bar: {
+    x: 120,
+    y: base.extraRowY,
+    w: base.extraW,
+    h: base.extraRowH
+  },
+
+  vip: {
+    x: 120 + base.extraW,
+    y: base.extraRowY,
+    w: base.extraW,
+    h: base.extraRowH
+  },
+
+  pool: {
+    x: 120 + base.extraW * 2,
+    y: base.extraRowY,
+    w: base.extraW,
+    h: base.extraRowH
+  },
+
+  sauna: {
+    x: 120 + base.extraW * 3,
+    y: base.extraRowY,
+    w: base.extraW,
+    h: base.extraRowH
+  }
+}
+
+/*
+========================================
+СКЛАД СТОЛОВ
+РОВНО 3 ТИПА:
+round  = круглый, 2 места
+square = квадратный, 4 места
+rect   = прямоугольный, 6 мест
+========================================
+*/
+const stockItems = [
+  {
+    id: 'stock_round',
+    type: 'round',
+    x: 1321,
+    y: 260,
+    size: 54,
+    seats: 2,
+    label: 'round'
+  },
+
+  {
+    id: 'stock_square',
+    type: 'square',
+    x: 1321,
+    y: 430,
+    size: 52,
+    seats: 4,
+    label: 'square'
+  },
+
+  {
+    id: 'stock_rect',
+    type: 'rect',
+    x: 1321,
+    y: 620,
+    size: 84,
+    seats: 6,
+    label: 'rect'
+  }
+]
+
+/*
+========================================
+НАСТРОЙКИ ТИПОВ СТОЛОВ
+========================================
+*/
+const typeMeta = {
+  round: {
+    size: 54,
+    seats: 2,
+    label: 'round'
+  },
+
+  square: {
+    size: 52,
+    seats: 4,
+    label: 'square'
+  },
+
+  rect: {
+    size: 84,
+    seats: 6,
+    label: 'rect'
+  }
+}
+
+/*
+========================================
+ПУНКТЫ КОНТЕКСТНОГО МЕНЮ
+========================================
+*/
+const contextTypes = [
+  {
+    type: 'round',
+    label: 'Round / 2 seats'
+  },
+
+  {
+    type: 'square',
+    label: 'Square / 4 seats'
+  },
+
+  {
+    type: 'rect',
+    label: 'Rect / 6 seats'
+  }
+]
+
+/*
+========================================
+СОСТОЯНИЕ РЕДАКТОРА
+========================================
+*/
+let scale = 1
+
+let tables = [
+  {
+    id: 1,
+    type: 'square',
+    x: 390,
+    y: 360,
+    size: 52,
+    seats: 4
+  },
+
+  {
+    id: 2,
+    type: 'round',
+    x: 690,
+    y: 420,
+    size: 54,
+    seats: 2
+  },
+
+  {
+    id: 3,
+    type: 'rect',
+    x: 180,
+    y: 180,
+    size: 84,
+    seats: 6
+  }
+]
+
+let appliedTables =
+  JSON.parse(JSON.stringify(tables))
+
+let drag = null
+let nextId = 4
+let history = []
+let movedDuringDrag = false
+let currentView = 'console'
+let contextTargetIndex = -1
+
+/*
+========================================
+ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+========================================
+*/
+function cloneTables(source = tables) {
+  return JSON.parse(JSON.stringify(source))
+}
+
+function pushHistory() {
+  history.push(cloneTables())
+
+  if (history.length > 80)
+    history.shift()
+}
+
+function screenToWorld(clientX, clientY) {
+  const rect =
+    canvas.getBoundingClientRect()
+
+  const x =
+    (clientX - rect.left) *
+    (canvas.width / rect.width) /
+    scale
+
+  const y =
+    (clientY - rect.top) *
+    (canvas.height / rect.height) /
+    scale
+
+  return { x, y }
+}
+
+function pointInRect(p, r) {
+  return (
+    p.x >= r.x &&
+    p.x <= r.x + r.w &&
+    p.y >= r.y &&
+    p.y <= r.y + r.h
+  )
+}
+
+function getZoneName(table) {
+  const p = {
+    x: table.x,
+    y: table.y
+  }
+
+  for (const [name, rect] of Object.entries(zones)) {
+    if (pointInRect(p, rect))
+      return name
+  }
+
+  return 'outside'
+}
+
+function isInsideWorkArea(p) {
+  return (
+    pointInRect(p, base.ring) ||
+    pointInRect(p, zones.bar) ||
+    pointInRect(p, zones.vip) ||
+    pointInRect(p, zones.pool) ||
+    pointInRect(p, zones.sauna)
+  )
+}
+
+function syncTypeProps(table, type) {
+  const meta =
+    typeMeta[type]
+
+  table.type =
+    type
+
+  table.size =
+    meta.size
+
+  table.seats =
+    meta.seats
+}
+
+function getDuplicateIds(source = tables) {
+  const counts = {}
+
+  source.forEach(t => {
+    const key =
+      String(t.id)
+
+    counts[key] =
+      (counts[key] || 0) + 1
+  })
+
+  return new Set(
+    Object
+      .keys(counts)
+      .filter(key => counts[key] > 1)
+  )
+}
+
+function pulseButton(button) {
+  button.classList.add('is-active')
+
+  setTimeout(
+    () => button.classList.remove('is-active'),
+    120
+  )
+}
+
+/*
+========================================
+ОБНОВЛЕНИЕ JSON-ПАНЕЛИ
+========================================
+*/
+function updateJsonPanel() {
+  const data =
+    appliedTables.map(t => ({
+      ...t,
+      zone: getZoneName(t)
+    }))
+
+  jsonPre.textContent =
+    JSON.stringify(data, null, 2)
+
+  jsonMeta.textContent =
+    'Saved rows: ' + data.length + ' tables'
+}
+
+function setView(mode) {
+  currentView =
+    mode
+
+  if (mode === 'json') {
+    consoleBox.style.display =
+      'none'
+
+    jsonBox.style.display =
+      'block'
+
+    toggleViewBtn.textContent =
+      'Console'
+
+    updateJsonPanel()
+  } else {
+    jsonBox.style.display =
+      'none'
+
+    consoleBox.style.display =
+      'block'
+
+    toggleViewBtn.textContent =
+      'JSON'
+  }
+}
+
+function openContextMenu(x, y, index) {
+  contextTargetIndex =
+    index
+
+  contextMenu.innerHTML =
+    contextTypes
+      .map(item =>
+        '<button data-type="' +
+        item.type +
+        '">' +
+        item.label +
+        '</button>'
+      )
+      .join('')
+
+  contextMenu.style.left =
+    x + 'px'
+
+  contextMenu.style.top =
+    y + 'px'
+
+  contextMenu.classList.add('active')
+}
+
+function closeContextMenu() {
+  contextTargetIndex =
+    -1
+
+  contextMenu.classList.remove('active')
+}
+
+/*
+========================================
+РИСОВАНИЕ ОСНОВНЫХ ЗОН
+========================================
+*/
+function drawTileArea(r) {
+  ctx.fillStyle = '#d9dde3'
+  ctx.fillRect(r.x, r.y, r.w, r.h)
+
+  ctx.strokeStyle = '#b9c1cb'
+  ctx.lineWidth = 1
+
+  for (let x = r.x; x <= r.x + r.w; x += 40) {
+    ctx.beginPath()
+    ctx.moveTo(x, r.y)
+    ctx.lineTo(x, r.y + r.h)
+    ctx.stroke()
+  }
+
+  for (let y = r.y; y <= r.y + r.h; y += 40) {
+    ctx.beginPath()
+    ctx.moveTo(r.x, y)
+    ctx.lineTo(r.x + r.w, y)
+    ctx.stroke()
+  }
+}
+
+function drawWoodArea(r) {
+  ctx.fillStyle = '#efd8b4'
+  ctx.fillRect(r.x, r.y, r.w, r.h)
+
+  ctx.strokeStyle = '#e0c39a'
+  ctx.lineWidth = 1
+
+  for (let y = r.y; y <= r.y + r.h; y += 18) {
+    ctx.beginPath()
+    ctx.moveTo(r.x, y)
+    ctx.lineTo(r.x + r.w, y)
+    ctx.stroke()
+  }
+
+  for (let x = r.x; x <= r.x + r.w; x += 110) {
+    ctx.beginPath()
+    ctx.moveTo(x, r.y)
+    ctx.lineTo(x, r.y + r.h)
+    ctx.stroke()
+  }
+}
+
+function drawZoneLabel(text, x, y) {
+  ctx.fillStyle =
+    '#67788d'
+
+  ctx.font =
+    'bold 24px Arial'
+
+  ctx.textAlign =
+    'center'
+
+  ctx.fillText(text, x, y)
+}
+
+function roundRect(x, y, w, h, r, fill, stroke) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + w, y, x + w, y + h, r)
+  ctx.arcTo(x + w, y + h, x, y + h, r)
+  ctx.arcTo(x, y + h, x, y, r)
+  ctx.arcTo(x, y, x + w, y, r)
+  ctx.closePath()
+
+  if (fill)
+    ctx.fill()
+
+  if (stroke)
+    ctx.stroke()
+}
+
+/*
+========================================
+ПРЯМОУГОЛЬНЫЙ СТОЛ
+rect = 6 мест
+========================================
+*/
+function drawRectTableShape(x, y, size) {
+  const w =
+    size
+
+  const h =
+    Math.round(size * 0.58)
+
+  roundRect(
+    x - w / 2,
+    y - h / 2,
+    w,
+    h,
+    10,
+    true,
+    false
+  )
+}
+
+/*
+========================================
+ОТРИСОВКА ФИГУРЫ СТОЛА
+========================================
+*/
+function drawTableShape(t, fillColor) {
+  ctx.fillStyle =
+    fillColor
+
+  if (t.type === 'square') {
+    ctx.fillRect(
+      t.x - t.size / 2,
+      t.y - t.size / 2,
+      t.size,
+      t.size
+    )
+  } else if (t.type === 'round') {
+    ctx.beginPath()
+    ctx.arc(
+      t.x,
+      t.y,
+      t.size / 2,
+      0,
+      Math.PI * 2
+    )
+    ctx.fill()
+  } else if (t.type === 'rect') {
+    drawRectTableShape(
+      t.x,
+      t.y,
+      t.size
+    )
+  }
+}
+
+/*
+========================================
+РИСОВАНИЕ СКЛАДСКОГО СТОЛА
+========================================
+*/
+function drawStockItem(item) {
+  ctx.save()
+
+  ctx.shadowColor =
+    'rgba(0,0,0,0.12)'
+
+  ctx.shadowBlur =
+    8
+
+  ctx.shadowOffsetY =
+    3
+
+  const color =
+    item.type === 'round'
+      ? '#7aa65a'
+      : item.type === 'square'
+        ? '#4d87c7'
+        : '#9b7bd1'
+
+  drawTableShape(item, color)
+
+  ctx.restore()
+
+  ctx.fillStyle =
+    '#243447'
+
+  ctx.font =
+    'bold 12px Arial'
+
+  ctx.textAlign =
+    'center'
+
+  ctx.fillText(
+    item.label,
+    item.x,
+    item.y + item.size / 2 + 14
+  )
+
+  ctx.font =
+    '11px Arial'
+
+  ctx.fillText(
+    item.seats + ' seats',
+    item.x,
+    item.y + item.size / 2 + 29
+  )
+}
+
+function drawExtraZone(rect, title, fill, stroke) {
+  ctx.fillStyle =
+    fill
+
+  roundRect(
+    rect.x,
+    rect.y,
+    rect.w,
+    rect.h,
+    16,
+    true,
+    false
+  )
+
+  ctx.strokeStyle =
+    stroke
+
+  ctx.lineWidth =
+    3
+
+  roundRect(
+    rect.x,
+    rect.y,
+    rect.w,
+    rect.h,
+    16,
+    false,
+    true
+  )
+
+  ctx.fillStyle =
+    '#35506f'
+
+  ctx.font =
+    'bold 24px Arial'
+
+  ctx.textAlign =
+    'center'
+
+  ctx.fillText(
+    title,
+    rect.x + rect.w / 2,
+    rect.y + rect.h / 2 + 8
+  )
+}
+
+/*
+========================================
+РИСОВАНИЕ СТОЛА НА ПЛАНЕ
+========================================
+*/
+function drawTable(t) {
+  const zone =
+    getZoneName(t)
+
+  const isOutside =
+    zone === 'outside'
+
+  const duplicateIds =
+    getDuplicateIds()
+
+  const isDuplicate =
+    duplicateIds.has(String(t.id))
+
+  ctx.save()
+
+  ctx.shadowColor =
+    'rgba(0,0,0,0.18)'
+
+  ctx.shadowBlur =
+    10
+
+  ctx.shadowOffsetY =
+    4
+
+  let color =
+    '#4d87c7'
+
+  if (t.type === 'round')
+    color = '#7aa65a'
+
+  if (t.type === 'rect')
+    color = '#9b7bd1'
+
+  if (isOutside)
+    color = '#d95f5f'
+
+  if (isDuplicate)
+    color = '#e24848'
+
+  drawTableShape(t, color)
+
+  ctx.restore()
+
+  ctx.fillStyle =
+    '#ffffff'
+
+  ctx.font =
+    'bold 20px Arial'
+
+  ctx.textAlign =
+    'center'
+
+  ctx.textBaseline =
+    'middle'
+
+  ctx.fillText(
+    String(t.id),
+    t.x,
+    t.y
+  )
+
+  ctx.fillStyle =
+    isDuplicate ? '#e24848' : '#243447'
+
+  ctx.font =
+    '13px Arial'
+
+  ctx.fillText(
+    zone,
+    t.x,
+    t.y + t.size / 2 + 18
+  )
+}
+
+/*
+========================================
+ОСНОВНАЯ ОТРИСОВКА CANVAS
+========================================
+*/
+function draw() {
+  ctx.setTransform(scale, 0, 0, scale, 0, 0)
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  ctx.fillStyle = '#eef1f6'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  ctx.fillStyle = '#f7f9fc'
+
+  roundRect(
+    base.outer.x,
+    base.outer.y,
+    base.outer.w,
+    base.outer.h,
+    18,
+    true,
+    false
+  )
+
+  ctx.strokeStyle = '#bcc6d3'
+  ctx.lineWidth = 3
+
+  roundRect(
+    base.outer.x,
+    base.outer.y,
+    base.outer.w,
+    base.outer.h,
+    18,
+    false,
+    true
+  )
+
+  drawTileArea(base.ring)
+
+  ctx.fillStyle = '#f7f9fc'
+
+  ctx.fillRect(
+    base.hall.x - 4,
+    base.hall.y - 4,
+    base.hall.w + 8,
+    base.hall.h + 8
+  )
+
+  drawWoodArea(base.hall)
+
+  ctx.strokeStyle = '#4b5563'
+  ctx.lineWidth = 8
+
+  ctx.strokeRect(
+    base.hall.x,
+    base.hall.y,
+    base.hall.w,
+    base.hall.h
+  )
+
+  drawExtraZone(zones.bar, 'BAR', '#efe7d7', '#bea77b')
+  drawExtraZone(zones.vip, 'VIP', '#efe0f2', '#b486c1')
+  drawExtraZone(zones.pool, 'POOL', '#dff1fb', '#6db7dc')
+  drawExtraZone(zones.sauna, 'SAUNA', '#f6e2d8', '#d39975')
+
+  ctx.fillStyle = '#35506f'
+  ctx.font = 'bold 34px Arial'
+  ctx.textAlign = 'left'
+  ctx.fillText('Hall Plan', 90, 105)
+
+  ctx.fillStyle = '#f3f6fb'
+
+  roundRect(
+    base.stock.x,
+    base.stock.y,
+    base.stock.w,
+    base.stock.h,
+    14,
+    true,
+    false
+  )
+
+  ctx.strokeStyle = '#c0cad7'
+  ctx.lineWidth = 2
+
+  roundRect(
+    base.stock.x,
+    base.stock.y,
+    base.stock.w,
+    base.stock.h,
+    14,
+    false,
+    true
+  )
+
+  ctx.fillStyle = '#35506f'
+  ctx.font = 'bold 18px Arial'
+  ctx.textAlign = 'center'
+
+  ctx.fillText(
+    'Table Stock',
+    base.stock.x + base.stock.w / 2,
+    base.stock.y + 28
+  )
+
+  drawZoneLabel('TOP TERRACE', 680, 195)
+  drawZoneLabel('BOTTOM TERRACE', 680, 820)
+
+  ctx.save()
+  ctx.translate(175, 490)
+  ctx.rotate(-Math.PI / 2)
+  drawZoneLabel('LEFT TERRACE', 0, 0)
+  ctx.restore()
+
+  ctx.save()
+  ctx.translate(1185, 490)
+  ctx.rotate(Math.PI / 2)
+  drawZoneLabel('RIGHT TERRACE', 0, 0)
+  ctx.restore()
+
+  ctx.fillStyle =
+    'rgba(122,90,45,0.35)'
+
+  ctx.font =
+    'bold 52px Arial'
+
+  ctx.textAlign =
+    'center'
+
+  ctx.fillText('HALL', 680, 505)
+
+  stockItems.forEach(drawStockItem)
+  tables.forEach(drawTable)
+  renderConsole()
+}
+
+/*
+========================================
+ПРОВЕРКА ПОПАДАНИЯ В ПРЯМОУГОЛЬНЫЙ СТОЛ
+========================================
+*/
+function isInsideRectTable(p, t) {
+  const w =
+    t.size
+
+  const h =
+    Math.round(t.size * 0.58)
+
+  return (
+    p.x >= t.x - w / 2 &&
+    p.x <= t.x + w / 2 &&
+    p.y >= t.y - h / 2 &&
+    p.y <= t.y + h / 2
+  )
+}
+
+/*
+========================================
+ПОИСК СТОЛА ПОД КУРСОРОМ
+========================================
+*/
+function findTable(p) {
+  for (let i = tables.length - 1; i >= 0; i--) {
+    const t =
+      tables[i]
+
+    if (t.type === 'square') {
+      const half =
+        t.size / 2
+
+      if (
+        p.x >= t.x - half &&
+        p.x <= t.x + half &&
+        p.y >= t.y - half &&
+        p.y <= t.y + half
+      ) {
+        return i
       }
-      return 'outside';
-    }
+    } else if (t.type === 'round') {
+      const dx =
+        p.x - t.x
 
-    function isInsideWorkArea(p) {
-      return pointInRect(p, base.ring)
-        || pointInRect(p, zones.bar)
-        || pointInRect(p, zones.vip)
-        || pointInRect(p, zones.pool)
-        || pointInRect(p, zones.sauna);
-    }
+      const dy =
+        p.y - t.y
 
-    function syncTypeProps(table, type) {
-      const meta = typeMeta[type];
-      table.type = type;
-      table.size = meta.size;
-      table.seats = meta.seats;
-    }
-
-    function getDuplicateIds(source = tables) {
-      const counts = {};
-      source.forEach(t => {
-        const key = String(t.id);
-        counts[key] = (counts[key] || 0) + 1;
-      });
-      return new Set(Object.keys(counts).filter(key => counts[key] > 1));
-    }
-
-    function pulseButton(button) {
-      button.classList.add('is-active');
-      setTimeout(() => button.classList.remove('is-active'), 120);
-    }
-
-    function updateJsonPanel() {
-      const data = appliedTables.map(t => ({ ...t, zone: getZoneName(t) }));
-      jsonPre.textContent = JSON.stringify(data, null, 2);
-      jsonMeta.textContent = 'Saved rows: ' + data.length + ' tables';
-    }
-
-    function setView(mode) {
-      currentView = mode;
-      if (mode === 'json') {
-        consoleBox.style.display = 'none';
-        jsonBox.style.display = 'block';
-        toggleViewBtn.textContent = 'Console';
-        updateJsonPanel();
-      } else {
-        jsonBox.style.display = 'none';
-        consoleBox.style.display = 'block';
-        toggleViewBtn.textContent = 'JSON';
+      if (
+        Math.sqrt(dx * dx + dy * dy) <= t.size / 2
+      ) {
+        return i
       }
+    } else if (t.type === 'rect') {
+      if (isInsideRectTable(p, t))
+        return i
     }
+  }
 
-    function openContextMenu(x, y, index) {
-      contextTargetIndex = index;
-      contextMenu.innerHTML = contextTypes.map(item => '<button data-type="' + item.type + '">' + item.label + '</button>').join('');
-      contextMenu.style.left = x + 'px';
-      contextMenu.style.top = y + 'px';
-      contextMenu.classList.add('active');
-    }
+  return -1
+}
 
-    function closeContextMenu() {
-      contextTargetIndex = -1;
-      contextMenu.classList.remove('active');
-    }
+/*
+========================================
+ПОИСК СТОЛА НА СКЛАДЕ
+========================================
+*/
+function findStockItem(p) {
+  for (let i = stockItems.length - 1; i >= 0; i--) {
+    const t =
+      stockItems[i]
 
-    // ========================================
-    // РИСОВАНИЕ ОСНОВНЫХ ЗОН
-    // ========================================
-    function drawTileArea(r) {
-      ctx.fillStyle = '#d9dde3';
-      ctx.fillRect(r.x, r.y, r.w, r.h);
-      ctx.strokeStyle = '#b9c1cb';
-      ctx.lineWidth = 1;
-      for (let x = r.x; x <= r.x + r.w; x += 40) {
-        ctx.beginPath();
-        ctx.moveTo(x, r.y);
-        ctx.lineTo(x, r.y + r.h);
-        ctx.stroke();
+    if (t.type === 'square') {
+      const half =
+        t.size / 2
+
+      if (
+        p.x >= t.x - half &&
+        p.x <= t.x + half &&
+        p.y >= t.y - half &&
+        p.y <= t.y + half
+      ) {
+        return i
       }
-      for (let y = r.y; y <= r.y + r.h; y += 40) {
-        ctx.beginPath();
-        ctx.moveTo(r.x, y);
-        ctx.lineTo(r.x + r.w, y);
-        ctx.stroke();
+    } else if (t.type === 'round') {
+      const dx =
+        p.x - t.x
+
+      const dy =
+        p.y - t.y
+
+      if (
+        Math.sqrt(dx * dx + dy * dy) <= t.size / 2
+      ) {
+        return i
       }
+    } else if (t.type === 'rect') {
+      if (isInsideRectTable(p, t))
+        return i
+    }
+  }
+
+  return -1
+}
+
+/*
+========================================
+КОНСОЛЬ СПРАВА
+========================================
+*/
+function renderConsole() {
+  const duplicateIds =
+    getDuplicateIds()
+
+  const groups = {
+    round: [],
+    square: [],
+    rect: []
+  }
+
+  tables.forEach(t => {
+    groups[t.type].push(t)
+  })
+
+  Object
+    .values(groups)
+    .forEach(arr => {
+      arr.sort(
+        (a, b) => Number(a.id) - Number(b.id)
+      )
+    })
+
+  const roundCount =
+    groups.round.length
+
+  const squareCount =
+    groups.square.length
+
+  const rectCount =
+    groups.rect.length
+
+  const totalCount =
+    tables.length
+
+  consoleTotal.textContent =
+    'Total tables: ' + totalCount
+
+  const lines = []
+
+  lines.push({
+    text:
+      'round / 2 seats: ' +
+      (
+        roundCount
+          ? groups.round.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ')
+          : '—'
+      ) +
+      ' | count: ' + roundCount
+  })
+
+  lines.push({
+    text:
+      'square / 4 seats: ' +
+      (
+        squareCount
+          ? groups.square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ')
+          : '—'
+      ) +
+      ' | count: ' + squareCount
+  })
+
+  lines.push({
+    text:
+      'rect / 6 seats: ' +
+      (
+        rectCount
+          ? groups.rect.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ')
+          : '—'
+      ) +
+      ' | count: ' + rectCount
+  })
+
+  const checkStatus =
+    duplicateIds.size ? 'ERROR' : 'OK'
+
+  lines.push({
+    text:
+      'CHECK | unique table numbers | ' + checkStatus,
+    error:
+      duplicateIds.size > 0
+  })
+
+  if (duplicateIds.size) {
+    lines.push({
+      text:
+        'ERROR: duplicate number -> ' + Array.from(duplicateIds).join(', '),
+      error:
+        true
+    })
+  }
+
+  const outsideCount =
+    tables.filter(t => getZoneName(t) === 'outside').length
+
+  if (outsideCount) {
+    lines.push({
+      text:
+        'ERROR: outside valid zones -> ' + outsideCount,
+      error:
+        true
+    })
+  }
+
+  lines.push({
+    text:
+      'Applied in JSON: ' + appliedTables.length
+  })
+
+  consoleLines.innerHTML =
+    lines
+      .map(line =>
+        '<div class="console-line' +
+        (line.error ? ' error' : '') +
+        '">' +
+        escapeHtml(line.text) +
+        '</div>'
+      )
+      .join('')
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+/*
+========================================
+РАБОТА С МЫШЬЮ / POINTER
+========================================
+*/
+canvas.addEventListener('pointerdown', e => {
+  closeContextMenu()
+
+  const p =
+    screenToWorld(e.clientX, e.clientY)
+
+  movedDuringDrag =
+    false
+
+  const index =
+    findTable(p)
+
+  if (index >= 0 && e.button === 0) {
+    pushHistory()
+
+    drag = {
+      index,
+      dx: p.x - tables[index].x,
+      dy: p.y - tables[index].y
     }
 
-    function drawWoodArea(r) {
-      ctx.fillStyle = '#efd8b4';
-      ctx.fillRect(r.x, r.y, r.w, r.h);
-      ctx.strokeStyle = '#e0c39a';
-      ctx.lineWidth = 1;
-      for (let y = r.y; y <= r.y + r.h; y += 18) {
-        ctx.beginPath();
-        ctx.moveTo(r.x, y);
-        ctx.lineTo(r.x + r.w, y);
-        ctx.stroke();
-      }
-      for (let x = r.x; x <= r.x + r.w; x += 110) {
-        ctx.beginPath();
-        ctx.moveTo(x, r.y);
-        ctx.lineTo(x, r.y + r.h);
-        ctx.stroke();
-      }
+    canvas.setPointerCapture(e.pointerId)
+    return
+  }
+
+  const stockIndex =
+    findStockItem(p)
+
+  if (stockIndex >= 0 && e.button === 0) {
+    pushHistory()
+
+    const item =
+      stockItems[stockIndex]
+
+    const newTable = {
+      id: nextId++,
+      type: item.type,
+      x: p.x,
+      y: p.y,
+      size: item.size,
+      seats: item.seats
     }
 
-    function drawZoneLabel(text, x, y) {
-      ctx.fillStyle = '#67788d';
-      ctx.font = 'bold 24px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(text, x, y);
+    tables.push(newTable)
+
+    drag = {
+      index: tables.length - 1,
+      dx: 0,
+      dy: 0
     }
 
-    function roundRect(x, y, w, h, r, fill, stroke) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-      if (fill) ctx.fill();
-      if (stroke) ctx.stroke();
+    canvas.setPointerCapture(e.pointerId)
+
+    draw()
+  }
+})
+
+canvas.addEventListener('pointermove', e => {
+  if (!drag)
+    return
+
+  const p =
+    screenToWorld(e.clientX, e.clientY)
+
+  tables[drag.index].x =
+    p.x - drag.dx
+
+  tables[drag.index].y =
+    p.y - drag.dy
+
+  movedDuringDrag =
+    true
+
+  draw()
+})
+
+canvas.addEventListener('pointerup', e => {
+  if (!drag)
+    return
+
+  const p =
+    screenToWorld(e.clientX, e.clientY)
+
+  const outsideWorkArea =
+    !isInsideWorkArea(p)
+
+  if (outsideWorkArea) {
+    tables.splice(drag.index, 1)
+  }
+
+  drag =
+    null
+
+  draw()
+})
+
+/*
+========================================
+ЛЕВЫЙ КЛИК ПО СТОЛУ = ИЗМЕНИТЬ НОМЕР
+========================================
+*/
+canvas.addEventListener('click', e => {
+  if (e.button !== 0)
+    return
+
+  closeContextMenu()
+
+  const p =
+    screenToWorld(e.clientX, e.clientY)
+
+  const index =
+    findTable(p)
+
+  if (index < 0 || movedDuringDrag)
+    return
+
+  const current =
+    tables[index]
+
+  const value =
+    prompt('Table number', String(current.id))
+
+  if (value === null)
+    return
+
+  const clean =
+    value.trim()
+
+  if (!clean)
+    return
+
+  pushHistory()
+
+  current.id =
+    clean
+
+  draw()
+})
+
+/*
+========================================
+ПРАВЫЙ КЛИК = МЕНЮ ТИПОВ СТОЛА
+========================================
+*/
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault()
+
+  const p =
+    screenToWorld(e.clientX, e.clientY)
+
+  const index =
+    findTable(p)
+
+  if (index < 0) {
+    closeContextMenu()
+    return
+  }
+
+  openContextMenu(
+    e.clientX,
+    e.clientY,
+    index
+  )
+})
+
+document.addEventListener('click', e => {
+  if (!contextMenu.contains(e.target))
+    closeContextMenu()
+})
+
+/*
+========================================
+ДЕЙСТВИЯ КОНТЕКСТНОГО МЕНЮ
+========================================
+*/
+contextMenu.addEventListener('click', e => {
+  const button =
+    e.target.closest('button[data-type]')
+
+  if (!button || contextTargetIndex < 0)
+    return
+
+  const selectedType =
+    button.dataset.type
+
+  pushHistory()
+
+  syncTypeProps(
+    tables[contextTargetIndex],
+    selectedType
+  )
+
+  closeContextMenu()
+
+  draw()
+})
+
+/*
+========================================
+КНОПКИ УПРАВЛЕНИЯ
+========================================
+*/
+document.getElementById('undo').addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+
+  if (!history.length)
+    return
+
+  tables =
+    history.pop()
+
+  const ids =
+    tables
+      .map(t => parseInt(t.id, 10))
+      .filter(n => !Number.isNaN(n))
+
+  nextId =
+    ids.length
+      ? Math.max(...ids) + 1
+      : tables.length + 1
+
+  draw()
+})
+
+document.getElementById('reset').addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+
+  pushHistory()
+
+  scale =
+    1
+
+  tables =
+    []
+
+  nextId =
+    1
+
+  draw()
+})
+
+document.getElementById('apply').addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+
+  appliedTables =
+    cloneTables()
+
+  updateJsonPanel()
+
+  draw()
+})
+
+toggleViewBtn.addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+
+  setView(
+    currentView === 'console'
+      ? 'json'
+      : 'console'
+  )
+})
+
+/*
+========================================
+SAVE JSON FILE
+1. Берёт appliedTables
+2. Добавляет zone
+3. Сохраняет файл tables-layout.json
+4. Активирует кнопку Upload
+========================================
+*/
+document.getElementById('save').addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+
+  const data =
+    appliedTables.map(t => ({
+      ...t,
+      zone: getZoneName(t)
+    }))
+
+  savedLayoutForUpload =
+    data
+
+  const blob =
+    new Blob(
+      [JSON.stringify(data, null, 2)],
+      { type: 'application/json' }
+    )
+
+  const url =
+    URL.createObjectURL(blob)
+
+  const a =
+    document.createElement('a')
+
+  a.href =
+    url
+
+  a.download =
+    'tables-layout.json'
+
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+
+  setTimeout(
+    () => URL.revokeObjectURL(url),
+    1000
+  )
+
+  uploadDbBtn.disabled =
+    false
+
+  uploadDbBtn.classList.add('ready')
+
+  jsonMeta.textContent =
+    'Saved rows: ' + data.length + ' tables | ready to upload'
+})
+
+/*
+========================================
+МАППИНГ ТИПА ИЗ CANVAS В shape ДЛЯ БАЗЫ
+========================================
+*/
+function mapTypeToShape(type) {
+  if (type === 'round')
+    return 'round'
+
+  if (type === 'square')
+    return 'square'
+
+  if (type === 'rect')
+    return 'rect'
+
+  return 'square'
+}
+
+function sizeByShape(shape) {
+  if (shape === 'round') {
+    return {
+      width: 120,
+      height: 120,
+      seats: 2
+    }
+  }
+
+  if (shape === 'rect') {
+    return {
+      width: 180,
+      height: 110,
+      seats: 6
+    }
+  }
+
+  return {
+    width: 120,
+    height: 120,
+    seats: 4
+  }
+}
+
+/*
+========================================
+ПОЛУЧАЕМ ПЕРВЫЙ PROJECT И ПЕРВЫЙ HALL
+Для текущего MVP этого достаточно.
+========================================
+*/
+async function getProjectAndHall() {
+  const { data: project, error: projectError } =
+    await supabase
+      .from('projects')
+      .select('*')
+      .limit(1)
+      .single()
+
+  if (projectError)
+    throw projectError
+
+  const { data: hall, error: hallError } =
+    await supabase
+      .from('halls')
+      .select('*')
+      .eq('project_id', project.project_id)
+      .limit(1)
+      .single()
+
+  if (hallError)
+    throw hallError
+
+  return {
+    project,
+    hall
+  }
+}
+
+/*
+========================================
+ЗАГРУЗКА ОДНОГО СТОЛА В БАЗУ
+Если стол с таким name уже есть — UPDATE.
+Если нет — INSERT.
+========================================
+*/
+async function uploadTableToDatabase(row, project, hall) {
+  const shape =
+    mapTypeToShape(row.type)
+
+  const size =
+    sizeByShape(shape)
+
+  const name =
+    'Table ' + row.id
+
+  const payload = {
+    project_id: project.project_id,
+    hall_id: hall.hall_id,
+    name: name,
+    seats: size.seats,
+    shape: shape,
+    table_status: 'free',
+    x: Math.round(row.x || 0),
+    y: Math.round(row.y || 0),
+    width: size.width,
+    height: size.height
+  }
+
+  const { data: existing, error: findError } =
+    await supabase
+      .from('tables')
+      .select('table_id')
+      .eq('name', name)
+      .maybeSingle()
+
+  if (findError)
+    throw findError
+
+  if (existing) {
+    const { error: updateError } =
+      await supabase
+        .from('tables')
+        .update(payload)
+        .eq('table_id', existing.table_id)
+
+    if (updateError)
+      throw updateError
+
+    return 'Updated: ' + name
+  }
+
+  const { error: insertError } =
+    await supabase
+      .from('tables')
+      .insert(payload)
+
+  if (insertError)
+    throw insertError
+
+  return 'Inserted: ' + name
+}
+
+/*
+========================================
+UPLOAD PROJECT TO DATABASE
+Кнопка активна только после Save JSON file.
+========================================
+*/
+uploadDbBtn.addEventListener('click', async e => {
+  pulseButton(e.currentTarget)
+
+  if (!savedLayoutForUpload) {
+    alert('Сначала нажми Save JSON file')
+    return
+  }
+
+  uploadDbBtn.disabled =
+    true
+
+  try {
+    const { project, hall } =
+      await getProjectAndHall()
+
+    console.log('UPLOAD PROJECT:', project)
+    console.log('UPLOAD HALL:', hall)
+
+    for (const row of savedLayoutForUpload) {
+      const result =
+        await uploadTableToDatabase(row, project, hall)
+
+      console.log(result)
     }
 
-    function drawHalfSquareShape(x, y, size) {
-      const w = size;
-      const h = Math.round(size * 0.62);
-      roundRect(x - w / 2, y - h / 2, w, h, 10, true, false);
-    }
+    alert('Project uploaded to DataBase')
+  } catch (err) {
+    console.error(err)
+    alert('Upload error: ' + err.message)
+  } finally {
+    uploadDbBtn.disabled =
+      false
+  }
+})
 
-    function drawTableShape(t, fillColor) {
-      ctx.fillStyle = fillColor;
-      if (t.type === 'square') {
-        ctx.fillRect(t.x - t.size / 2, t.y - t.size / 2, t.size, t.size);
-      } else if (t.type === 'round') {
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, t.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        drawHalfSquareShape(t.x, t.y, t.size);
-      }
-    }
+/*
+========================================
+МАСШТАБИРОВАНИЕ
+========================================
+*/
+canvas.addEventListener(
+  'wheel',
+  e => {
+    e.preventDefault()
 
-    function drawStockItem(item) {
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.12)';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 3;
-      const color = item.type === 'round' ? '#7aa65a' : item.type === 'square' ? '#4d87c7' : '#9b7bd1';
-      drawTableShape(item, color);
-      ctx.restore();
+    scale +=
+      e.deltaY < 0 ? 0.05 : -0.05
 
-      ctx.fillStyle = '#243447';
-      ctx.font = 'bold 12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(item.label, item.x, item.y + item.size / 2 + 14);
-      ctx.font = '11px Arial';
-      ctx.fillText(item.seats + ' seats', item.x, item.y + item.size / 2 + 29);
-    }
+    scale =
+      Math.max(
+        0.6,
+        Math.min(1.6, scale)
+      )
 
-    function drawExtraZone(rect, title, fill, stroke) {
-      ctx.fillStyle = fill;
-      roundRect(rect.x, rect.y, rect.w, rect.h, 16, true, false);
-      ctx.strokeStyle = stroke;
-      ctx.lineWidth = 3;
-      roundRect(rect.x, rect.y, rect.w, rect.h, 16, false, true);
-      ctx.fillStyle = '#35506f';
-      ctx.font = 'bold 24px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(title, rect.x + rect.w / 2, rect.y + rect.h / 2 + 8);
-    }
+    draw()
+  },
+  { passive: false }
+)
 
-    function drawTable(t) {
-      const zone = getZoneName(t);
-      const isOutside = zone === 'outside';
-      const duplicateIds = getDuplicateIds();
-      const isDuplicate = duplicateIds.has(String(t.id));
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.18)';
-      ctx.shadowBlur = 10;
-      ctx.shadowOffsetY = 4;
-      let color = '#4d87c7';
-      if (t.type === 'round') color = '#7aa65a';
-      if (t.type === 'half_square') color = '#9b7bd1';
-      if (isOutside) color = '#d95f5f';
-      if (isDuplicate) color = '#e24848';
-      drawTableShape(t, color);
-      ctx.restore();
+/*
+========================================
+ПЕРВЫЙ РЕНДЕР
+========================================
+*/
+updateJsonPanel()
+setView('console')
+draw()
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 20px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(t.id), t.x, t.y);
+</script>
 
-      ctx.fillStyle = isDuplicate ? '#e24848' : '#243447';
-      ctx.font = '13px Arial';
-      ctx.fillText(zone, t.x, t.y + t.size / 2 + 18);
-    }
-
-    // ========================================
-    // ОСНОВНАЯ ОТРИСОВКА
-    // ========================================
-    function draw() {
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = '#eef1f6';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = '#f7f9fc';
-      roundRect(base.outer.x, base.outer.y, base.outer.w, base.outer.h, 18, true, false);
-      ctx.strokeStyle = '#bcc6d3';
-      ctx.lineWidth = 3;
-      roundRect(base.outer.x, base.outer.y, base.outer.w, base.outer.h, 18, false, true);
-
-      drawTileArea(base.ring);
-
-      ctx.fillStyle = '#f7f9fc';
-      ctx.fillRect(base.hall.x - 4, base.hall.y - 4, base.hall.w + 8, base.hall.h + 8);
-      drawWoodArea(base.hall);
-      ctx.strokeStyle = '#4b5563';
-      ctx.lineWidth = 8;
-      ctx.strokeRect(base.hall.x, base.hall.y, base.hall.w, base.hall.h);
-
-      drawExtraZone(zones.bar, 'BAR', '#efe7d7', '#bea77b');
-      drawExtraZone(zones.vip, 'VIP', '#efe0f2', '#b486c1');
-      drawExtraZone(zones.pool, 'POOL', '#dff1fb', '#6db7dc');
-      drawExtraZone(zones.sauna, 'SAUNA', '#f6e2d8', '#d39975');
-
-      ctx.fillStyle = '#35506f';
-      ctx.font = 'bold 34px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText('Hall Plan', 90, 105);
-
-      ctx.fillStyle = '#f3f6fb';
-      roundRect(base.stock.x, base.stock.y, base.stock.w, base.stock.h, 14, true, false);
-      ctx.strokeStyle = '#c0cad7';
-      ctx.lineWidth = 2;
-      roundRect(base.stock.x, base.stock.y, base.stock.w, base.stock.h, 14, false, true);
-      ctx.fillStyle = '#35506f';
-      ctx.font = 'bold 18px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('Table Stock', base.stock.x + base.stock.w / 2, base.stock.y + 28);
-
-      drawZoneLabel('TOP TERRACE', 680, 195);
-      drawZoneLabel('BOTTOM TERRACE', 680, 820);
-
-      ctx.save();
-      ctx.translate(175, 490);
-      ctx.rotate(-Math.PI / 2);
-      drawZoneLabel('LEFT TERRACE', 0, 0);
-      ctx.restore();
-
-      ctx.save();
-      ctx.translate(1185, 490);
-      ctx.rotate(Math.PI / 2);
-      drawZoneLabel('RIGHT TERRACE', 0, 0);
-      ctx.restore();
-
-      ctx.fillStyle = 'rgba(122,90,45,0.35)';
-      ctx.font = 'bold 52px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('HALL', 680, 505);
-
-      stockItems.forEach(drawStockItem);
-      tables.forEach(drawTable);
-      renderConsole();
-    }
-
-    // ========================================
-    // ПРОВЕРКА ПОПАДАНИЯ В ФИГУРЫ
-    // ========================================
-    function isInsideHalfSquare(p, t) {
-      const w = t.size;
-      const h = Math.round(t.size * 0.62);
-      return p.x >= t.x - w / 2 && p.x <= t.x + w / 2 && p.y >= t.y - h / 2 && p.y <= t.y + h / 2;
-    }
-
-    function findTable(p) {
-      for (let i = tables.length - 1; i >= 0; i--) {
-        const t = tables[i];
-        if (t.type === 'square') {
-          const half = t.size / 2;
-          if (p.x >= t.x - half && p.x <= t.x + half && p.y >= t.y - half && p.y <= t.y + half) return i;
-        } else if (t.type === 'round') {
-          const dx = p.x - t.x;
-          const dy = p.y - t.y;
-          if (Math.sqrt(dx * dx + dy * dy) <= t.size / 2) return i;
-        } else if (isInsideHalfSquare(p, t)) {
-          return i;
-        }
-      }
-      return -1;
-    }
-
-    function findStockItem(p) {
-      for (let i = stockItems.length - 1; i >= 0; i--) {
-        const t = stockItems[i];
-        if (t.type === 'square') {
-          const half = t.size / 2;
-          if (p.x >= t.x - half && p.x <= t.x + half && p.y >= t.y - half && p.y <= t.y + half) return i;
-        } else if (t.type === 'round') {
-          const dx = p.x - t.x;
-          const dy = p.y - t.y;
-          if (Math.sqrt(dx * dx + dy * dy) <= t.size / 2) return i;
-        } else {
-          if (isInsideHalfSquare(p, t)) return i;
-        }
-      }
-      return -1;
-    }
-
-    // ========================================
-    // ОТРИСОВКА КОНСОЛИ
-    // ========================================
-    function renderConsole() {
-      const duplicateIds = getDuplicateIds();
-      const groups = { round: [], square: [], half_square: [] };
-      tables.forEach(t => groups[t.type].push(t));
-      Object.values(groups).forEach(arr => arr.sort((a, b) => Number(a.id) - Number(b.id)));
-
-      const roundCount = groups.round.length;
-      const squareCount = groups.square.length;
-      const halfSquareCount = groups.half_square.length;
-      const totalCount = tables.length;
-      consoleTotal.textContent = 'Total tables: ' + totalCount;
-
-      const lines = [];
-      lines.push({ text: 'round / 2 seats: ' + (roundCount ? groups.round.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') + ' | count: ' + roundCount });
-      lines.push({ text: 'square / 4 seats: ' + (squareCount ? groups.square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') + ' | count: ' + squareCount });
-      lines.push({ text: 'half square / 6 seats: ' + (halfSquareCount ? groups.half_square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ') : '—') + ' | count: ' + halfSquareCount });
-
-      const checkStatus = duplicateIds.size ? 'ERROR' : 'OK';
-      lines.push({ text: 'CHECK | unique table numbers | ' + checkStatus, error: duplicateIds.size > 0 });
-
-      if (duplicateIds.size) {
-        lines.push({ text: 'ERROR: duplicate number -> ' + Array.from(duplicateIds).join(', '), error: true });
-      }
-
-      const outsideCount = tables.filter(t => getZoneName(t) === 'outside').length;
-      if (outsideCount) {
-        lines.push({ text: 'ERROR: outside valid zones -> ' + outsideCount, error: true });
-      }
-
-      lines.push({ text: 'Applied in JSON: ' + appliedTables.length });
-
-      consoleLines.innerHTML = lines.map(line => '<div class="console-line' + (line.error ? ' error' : '') + '">' + escapeHtml(line.text) + '</div>').join('');
-    }
-
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    // ========================================
-    // РАБОТА С УКАЗАТЕЛЕМ / МЫШЬЮ
-    // ========================================
-    canvas.addEventListener('pointerdown', (e) => {
-      closeContextMenu();
-      const p = screenToWorld(e.clientX, e.clientY);
-      movedDuringDrag = false;
-
-      const index = findTable(p);
-      if (index >= 0 && e.button === 0) {
-        pushHistory();
-        drag = { index, dx: p.x - tables[index].x, dy: p.y - tables[index].y };
-        canvas.setPointerCapture(e.pointerId);
-        return;
-      }
-
-      const stockIndex = findStockItem(p);
-      if (stockIndex >= 0 && e.button === 0) {
-        pushHistory();
-        const item = stockItems[stockIndex];
-        const newTable = {
-          id: nextId++,
-          type: item.type,
-          x: p.x,
-          y: p.y,
-          size: item.size,
-          seats: item.seats
-        };
-        tables.push(newTable);
-        drag = { index: tables.length - 1, dx: 0, dy: 0 };
-        canvas.setPointerCapture(e.pointerId);
-        draw();
-      }
-    });
-
-    canvas.addEventListener('pointermove', (e) => {
-      if (!drag) return;
-      const p = screenToWorld(e.clientX, e.clientY);
-      tables[drag.index].x = p.x - drag.dx;
-      tables[drag.index].y = p.y - drag.dy;
-      movedDuringDrag = true;
-      draw();
-    });
-
-    canvas.addEventListener('pointerup', (e) => {
-      if (!drag) return;
-      const p = screenToWorld(e.clientX, e.clientY);
-      const outsideWorkArea = !isInsideWorkArea(p);
-      if (outsideWorkArea) {
-        tables.splice(drag.index, 1);
-      }
-      drag = null;
-      draw();
-    });
-
-    canvas.addEventListener('click', (e) => {
-      if (e.button !== 0) return;
-      closeContextMenu();
-      const p = screenToWorld(e.clientX, e.clientY);
-      const index = findTable(p);
-      if (index < 0 || movedDuringDrag) return;
-
-      const current = tables[index];
-      const value = prompt('Table number', String(current.id));
-      if (value === null) return;
-      const clean = value.trim();
-      if (!clean) return;
-
-      pushHistory();
-      current.id = clean;
-      draw();
-    });
-
-    canvas.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      const p = screenToWorld(e.clientX, e.clientY);
-      const index = findTable(p);
-      if (index < 0) {
-        closeContextMenu();
-        return;
-      }
-      openContextMenu(e.clientX, e.clientY, index);
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!contextMenu.contains(e.target)) closeContextMenu();
-    });
-
-    // ========================================
-    // ДЕЙСТВИЯ КОНТЕКСТНОГО МЕНЮ
-    // ========================================
-    contextMenu.addEventListener('click', (e) => {
-      const button = e.target.closest('button[data-type]');
-      if (!button || contextTargetIndex < 0) return;
-      const selectedType = button.dataset.type;
-      pushHistory();
-      syncTypeProps(tables[contextTargetIndex], selectedType);
-      closeContextMenu();
-      draw();
-    });
-
-    // ========================================
-    // КНОПКИ УПРАВЛЕНИЯ
-    // ========================================
-    document.getElementById('undo').addEventListener('click', (e) => {
-      pulseButton(e.currentTarget);
-      if (!history.length) return;
-      tables = history.pop();
-      const ids = tables.map(t => parseInt(t.id, 10)).filter(n => !Number.isNaN(n));
-      nextId = ids.length ? Math.max(...ids) + 1 : tables.length + 1;
-      draw();
-    });
-
-    document.getElementById('reset').addEventListener('click', (e) => {
-      pulseButton(e.currentTarget);
-      pushHistory();
-      scale = 1;
-      tables = [];
-      nextId = 1;
-      draw();
-    });
-
-    document.getElementById('apply').addEventListener('click', (e) => {
-      pulseButton(e.currentTarget);
-      appliedTables = cloneTables();
-      updateJsonPanel();
-      draw();
-    });
-
-    toggleViewBtn.addEventListener('click', (e) => {
-      pulseButton(e.currentTarget);
-      setView(currentView === 'console' ? 'json' : 'console');
-    });
-
-    document.getElementById('save').addEventListener('click', (e) => {
-      pulseButton(e.currentTarget);
-      const data = appliedTables.map(t => ({ ...t, zone: getZoneName(t) }));
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'tables-layout.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    });
-
-    // ========================================
-    // МАСШТАБИРОВАНИЕ
-    // ========================================
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      scale += e.deltaY < 0 ? 0.05 : -0.05;
-      scale = Math.max(0.6, Math.min(1.6, scale));
-      draw();
-    }, { passive: false });
-
-    // ========================================
-    // ПЕРВЫЙ РЕНДЕР
-    // ========================================
-    updateJsonPanel();
-    setView('console');
-    draw();
-  </script>
-
-
-
-
-
-
-<!-- ========================================
-     SERVICE CONSOLE
-     Верхняя строка редактируется вручную
-     Здесь задается:
-     - название страницы
-     - номер версии
-======================================== -->
-
+<!-- SERVICE CONSOLE -->
 <div id="service-console">
 
   <div class="row" id="build-top">
-
-    <!-- ВВОД ВРУЧНУЮ -->
-
-scroll mobile fix | v1.2.3
-
+    set layout upload to supabase | v2.0.0
   </div>
 
   <div class="row" id="build-down">
-
     deploy: --
-
   </div>
 
 </div>
 
-<!-- ========================================
-     SCRIPT
-     Автоматически выводит:
-     - дату
-     - время
-     Момент загрузки страницы
-======================================== -->
-
 <script>
-
 (function () {
-
-  /* Текущая дата и время */
-
-  const now = new Date();
-
-  /* Добавляет ведущий ноль */
+  const now = new Date()
 
   const pad = n =>
-    String(n).padStart(2, '0');
-
-  /* Формат даты */
+    String(n).padStart(2, '0')
 
   const date =
       pad(now.getDate())
     + '.'
     + pad(now.getMonth() + 1)
     + '.'
-    + now.getFullYear();
-
-  /* Формат времени */
+    + now.getFullYear()
 
   const time =
       pad(now.getHours())
     + ':'
-    + pad(now.getMinutes());
-
-  /* Вывод в нижнюю строку */
+    + pad(now.getMinutes())
 
   document
     .getElementById('build-down')
     .textContent =
-      'deploy: '
-      + date
-      + ' '
-      + time;
-
-})();
-
+      'deploy: ' + date + ' ' + time
+})()
 </script>
 
 </body>
 </html>
-  
