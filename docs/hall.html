@@ -340,6 +340,7 @@ document.addEventListener(
 document.addEventListener(
   "mouseup",
   async () => {
+
     if (!dragging)
       return
 
@@ -347,10 +348,16 @@ document.addEventListener(
       dragging.dataset.tableId
 
     const x =
-      parseInt(dragging.style.left, 10)
+      parseInt(
+        dragging.style.left,
+        10
+      )
 
     const y =
-      parseInt(dragging.style.top, 10)
+      parseInt(
+        dragging.style.top,
+        10
+      )
 
     const { data, error } =
       await supabase
@@ -359,54 +366,91 @@ document.addEventListener(
           x,
           y
         })
-        .eq("table_id", table_id)
+        .eq(
+          "table_id",
+          table_id
+        )
         .select()
         .single()
 
-    console.log("COORD UPDATE DATA:", data)
-    console.log("COORD UPDATE ERROR:", error)
+    console.log(
+      "COORD UPDATE DATA:",
+      data
+    )
+
+    console.log(
+      "COORD UPDATE ERROR:",
+      error
+    )
 
     if (error) {
-      console.error("UPDATE ERROR:", error)
-    } else if (data) {
+      console.error(error)
+      dragging = null
+      return
+    }
+
+    if (data) {
       updateTable(data)
     }
 
     dragging = null
+
   }
 )
 
 /* ========================================
    REALTIME ПОДПИСКА НА ТАБЛИЦУ TABLES
 ======================================== */
-const tablesChannel = supabase
-  .channel("tables-realtime")
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "tables"
-    },
-    payload => {
-      console.log("TABLES REALTIME:", payload)
+let tablesChannel
 
-      if (payload.eventType === "DELETE") {
-        removeTable(payload.old)
-        return
-      }
+function subscribeTablesRealtime() {
 
-      const row = payload.new
+  if (tablesChannel) {
+    supabase.removeChannel(tablesChannel)
+  }
 
-      if (!row)
-        return
+  tablesChannel =
+    supabase
+      .channel("tables-realtime")
 
-      updateTable(row)
-    }
-  )
-  .subscribe((status) => {
-    console.log("TABLES REALTIME STATUS:", status)
-  })
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tables"
+        },
+        payload => {
+
+          console.log(
+            "TABLES REALTIME:",
+            payload
+          )
+
+          if (payload.eventType === "DELETE") {
+            removeTable(payload.old)
+            return
+          }
+
+          const row =
+            payload.new
+
+          if (!row)
+            return
+
+          updateTable(row)
+        }
+      )
+
+      .subscribe(status => {
+        console.log(
+          "TABLES REALTIME STATUS:",
+          status
+        )
+      })
+}
+
+subscribeTablesRealtime()
 
 /* ========================================
    ОБНОВЛЕНИЕ СТОЛА НА ЭКРАНЕ
@@ -673,7 +717,7 @@ loadTables()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    two ways realtime | v2.2.0
+    two ways realtime without refresh | v2.2.1
   </div>
 
   <div class="row" id="build-down">
