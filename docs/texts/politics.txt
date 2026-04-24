@@ -221,6 +221,8 @@ Project
           ├── zones
           └── tables
 
+
+table users
 роли:
 
 developer — полный доступ ко всем проектам
@@ -228,6 +230,17 @@ owner     — владелец конкретного проекта
 admin     — администратор проекта
 manager   — управление залом
 staff     — работа с заказами
+
+Полный состав полей — окончательный
+id
+project_id
+name
+tel
+email
+role
+status
+created_at
+updated_at
 
 Итоговая логика
 ✅ Project — постоянный ресторан, не редактируется клиентом
