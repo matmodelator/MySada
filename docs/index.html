@@ -12,9 +12,7 @@
       href="styles/console.css" />
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -50,9 +48,7 @@ body {
   flex-wrap: wrap;
 }
 
-.toolbar button,
-.side-actions button,
-.upload-db {
+button {
   border: 1px solid #b8c2cf;
   background: linear-gradient(180deg, #ffffff 0%, #eef3f8 100%);
   border-radius: 10px;
@@ -63,24 +59,23 @@ body {
   box-shadow: 0 2px 0 #c5cfdb, 0 6px 14px rgba(0,0,0,0.08);
 }
 
-.toolbar button:hover,
-.side-actions button:hover,
-.upload-db:hover:not(:disabled) {
+button:hover {
   background: linear-gradient(180deg, #ffffff 0%, #e8eef6 100%);
 }
 
-.toolbar button:active,
-.toolbar button.is-active,
-.side-actions button:active,
-.side-actions button.is-active,
-.upload-db:active,
-.upload-db.is-active {
+button.is-active,
+button:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 #c5cfdb, 0 3px 8px rgba(0,0,0,0.08);
   background: linear-gradient(180deg, #e5edf7 0%, #dce7f4 100%);
 }
 
-.toolbar .hint {
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hint {
   color: #5b6b7f;
   font-size: 14px;
 }
@@ -91,8 +86,6 @@ body {
   border-radius: 16px;
   padding: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  overflow: visible;
-  position: relative;
 }
 
 canvas {
@@ -146,6 +139,13 @@ canvas {
   color: #243447;
 }
 
+.info-line {
+  font-family: Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #243447;
+}
+
 .console {
   background: #10151c;
   color: #dbe7f5;
@@ -186,11 +186,6 @@ canvas {
   font-weight: 700;
 }
 
-.console-line.success {
-  color: #9ed0a5;
-  font-weight: 700;
-}
-
 .upload-progress {
   color: #9ed0a5;
   background: rgba(158,208,165,0.1);
@@ -199,18 +194,6 @@ canvas {
   padding: 10px;
   margin-bottom: 10px;
   white-space: pre-wrap;
-}
-
-.upload-db {
-  width: auto;
-  padding: 10px 14px;
-  font-weight: 700;
-}
-
-.upload-db:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .upload-db.ready {
@@ -229,9 +212,7 @@ canvas {
   display: none;
 }
 
-.context-menu.active {
-  display: block;
-}
+.context-menu.active { display: block; }
 
 .context-menu button {
   width: 100%;
@@ -242,6 +223,8 @@ canvas {
   cursor: pointer;
   font-size: 14px;
   color: #243447;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .context-menu button:hover {
@@ -301,20 +284,17 @@ pre {
 
     <div class="side">
 
-      <!-- ВЕРХНИЙ РЯД: ТРИ РЕЖИМА ОДНОГО ОКНА -->
+      <!-- ВЕРХНИЙ РЯД: ТРИ РЕЖИМА ОКНА -->
       <div class="side-actions three">
         <button id="viewConsole">Console</button>
         <button id="viewJson">JSON</button>
         <button id="viewSetup">Set Up</button>
       </div>
 
-      <!-- ВТОРОЙ РЯД: ФАЙЛЫ И ЗАГРУЗКА В БАЗУ -->
+      <!-- ВТОРОЙ РЯД: ФАЙЛЫ И БАЗА -->
       <div class="side-actions three">
         <button id="loadJson">Load JSON file</button>
-
-        <button id="save">
-          Save JSON file
-        </button>
+        <button id="save">Save JSON file</button>
 
         <button id="uploadDb"
                 class="upload-db"
@@ -323,7 +303,7 @@ pre {
         </button>
       </div>
 
-      <!-- СКАЧИВАНИЕ ЖУРНАЛА КОНСОЛИ -->
+      <!-- СКАЧАТЬ ЖУРНАЛ -->
       <div class="side-actions one">
         <button id="downloadLog">Download log.txt</button>
       </div>
@@ -333,13 +313,34 @@ pre {
              accept=".json,application/json"
              style="display:none;" />
 
-      <!-- PROJECT: НЕ РЕДАКТИРУЕТСЯ -->
+      <!-- ПРОСТОЙ ВХОД ПО ИМЕНИ -->
+      <div class="legend">
+        <b>User login:</b>
+
+        <input id="loginName"
+               type="text"
+               value="Igor"
+               placeholder="User name" />
+
+        <input id="loginPassword"
+               type="password"
+               value=""
+               placeholder="Password empty"
+               style="margin-top:8px;" />
+
+        <button id="loginBtn"
+                style="width:100%;margin-top:8px;">
+          Login
+        </button>
+      </div>
+
+      <!-- PROJECT НЕ РЕДАКТИРУЕТСЯ -->
       <div class="legend">
         <b>Project:</b>
         <span id="projectLabel">loading...</span>
       </div>
 
-      <!-- HALL: РЕДАКТИРУЕТСЯ -->
+      <!-- HALL РЕДАКТИРУЕТСЯ И ИДЁТ В JSON -->
       <div class="legend">
         <label for="hallName">
           <b>Hall name:</b>
@@ -348,6 +349,15 @@ pre {
         <input id="hallName"
                type="text"
                value="Main Hall" />
+      </div>
+
+      <!-- СТРОКА СОСТОЯНИЯ НАД КОНСОЛЬЮ -->
+      <div class="legend">
+        <div class="info-line" id="sideInfoLine">
+          Project: -<br>
+          User: - / -<br>
+          Hall: -
+        </div>
       </div>
 
       <div class="legend">
@@ -363,7 +373,7 @@ pre {
         <code>sauna</code>
       </div>
 
-      <!-- ОДНО ОКНО ДЛЯ ТРЁХ РЕЖИМОВ -->
+      <!-- ОДНО ОКНО ДЛЯ CONSOLE / JSON / SET UP -->
       <div class="console" id="outputBox">
         <div class="console-title" id="outputTitle">Console</div>
         <div class="console-total" id="outputMeta">Ready</div>
@@ -406,9 +416,6 @@ const contextMenu =
 ЭЛЕМЕНТЫ ПРАВОЙ ПАНЕЛИ
 ========================================
 */
-const outputBox =
-  document.getElementById('outputBox')
-
 const outputTitle =
   document.getElementById('outputTitle')
 
@@ -436,6 +443,9 @@ const projectLabel =
 const hallNameInput =
   document.getElementById('hallName')
 
+const sideInfoLine =
+  document.getElementById('sideInfoLine')
+
 const uploadDbBtn =
   document.getElementById('uploadDb')
 
@@ -445,9 +455,18 @@ const loadJsonBtn =
 const jsonFileInput =
   document.getElementById('jsonFileInput')
 
+const loginNameInput =
+  document.getElementById('loginName')
+
+const loginPasswordInput =
+  document.getElementById('loginPassword')
+
+const loginBtn =
+  document.getElementById('loginBtn')
+
 /*
 ========================================
-СОСТОЯНИЕ PROJECT / HALL
+СОСТОЯНИЕ PROJECT / USER / HALL
 ========================================
 */
 let currentProject =
@@ -459,12 +478,18 @@ let currentProjectName =
 let currentProjectId =
   null
 
+let currentUser =
+  null
+
+let currentUserName =
+  ''
+
 let savedLayoutForUpload =
   null
 
 /*
 ========================================
-СОСТОЯНИЕ КОНСОЛИ И РЕЖИМОВ ВЫВОДА
+СОСТОЯНИЕ КОНСОЛИ
 ========================================
 */
 let outputMode =
@@ -485,7 +510,7 @@ let uploadState = {
 /*
 ========================================
 НАТИВНЫЕ ДИАЛОГИ
-Дублируем alert / confirm / prompt в Console history
+Дублируются в Console history
 ========================================
 */
 const nativeAlert =
@@ -547,7 +572,6 @@ const base = {
   stock: { x: 1248, y: 140, w: 146, h: 700 },
   extraRowY: 870,
   extraRowH: 170,
-  extraGap: 0,
   extraW: 280
 }
 
@@ -789,6 +813,35 @@ function normalizeTableRow(row) {
 
 /*
 ========================================
+ОБНОВИТЬ СТРОКУ НАД КОНСОЛЬЮ
+Project / User / Hall
+========================================
+*/
+function updateSideInfoLine() {
+  const project =
+    currentProjectName || '-'
+
+  const user =
+    currentUser
+      ? currentUser.name
+      : '-'
+
+  const role =
+    currentUser
+      ? currentUser.role
+      : '-'
+
+  const hall =
+    getHallName()
+
+  sideInfoLine.innerHTML =
+    'Project: ' + escapeHtml(project) + '<br>' +
+    'User: ' + escapeHtml(user) + ' / ' + escapeHtml(role) + '<br>' +
+    'Hall: ' + escapeHtml(hall)
+}
+
+/*
+========================================
 ДАННЫЕ ДЛЯ JSON И SET UP
 ========================================
 */
@@ -804,6 +857,8 @@ function getJsonData() {
     project_name: currentProjectName || '',
     project_id: currentProjectId || '',
     hall_name: getHallName(),
+    user_name: currentUser ? currentUser.name : '',
+    user_role: currentUser ? currentUser.role : '',
     zones: zones,
     tables: getAppliedRows()
   }
@@ -830,6 +885,8 @@ function getSetupData() {
   return {
     project_name: currentProjectName || '',
     hall_name: getHallName(),
+    user_name: currentUser ? currentUser.name : '',
+    user_role: currentUser ? currentUser.role : '',
     total_tables: tables.length,
     round: groups.round,
     square: groups.square,
@@ -868,7 +925,7 @@ function systemMessage(text, isError = false) {
 
 /*
 ========================================
-РЕНДЕР ТРЁХ РЕЖИМОВ ОДНОГО ОКНА
+РЕНДЕР ТРЁХ РЕЖИМОВ
 ========================================
 */
 function setOutputMode(mode) {
@@ -879,17 +936,12 @@ function setOutputMode(mode) {
   viewJsonBtn.classList.toggle('is-active', mode === 'json')
   viewSetupBtn.classList.toggle('is-active', mode === 'setup')
 
-  if (mode === 'console')
-    renderConsoleMode()
-
-  if (mode === 'json')
-    renderJsonMode()
-
-  if (mode === 'setup')
-    renderSetupMode()
+  renderCurrentOutput()
 }
 
 function renderCurrentOutput() {
+  updateSideInfoLine()
+
   if (outputMode === 'console')
     renderConsoleMode()
 
@@ -974,6 +1026,7 @@ function renderSetupMode() {
   const lines = []
 
   lines.push('Project: ' + data.project_name)
+  lines.push('User: ' + data.user_name + ' / ' + data.user_role)
   lines.push('Hall: ' + data.hall_name)
   lines.push('Total tables: ' + data.total_tables)
   lines.push('')
@@ -1049,7 +1102,7 @@ function renderSetupMode() {
 
 /*
 ========================================
-СКАЧИВАНИЕ LOG.TXT
+СКАЧАТЬ LOG.TXT
 ========================================
 */
 function downloadLogFile() {
@@ -1088,6 +1141,80 @@ function downloadLogFile() {
     () => URL.revokeObjectURL(url),
     1000
   )
+}
+
+/*
+========================================
+ПРОСТОЙ ВХОД ПО ИМЕНИ
+Пароль по умолчанию пустой
+========================================
+*/
+async function loginByName() {
+  const name =
+    loginNameInput.value.trim()
+
+  const password =
+    loginPasswordInput.value
+
+  if (!name) {
+    systemMessage(
+      'Login error: user name is empty',
+      true
+    )
+    return
+  }
+
+  if (password !== '') {
+    systemMessage(
+      'Login error: password must be empty',
+      true
+    )
+    return
+  }
+
+  const { data, error } =
+    await supabase
+      .from('users')
+      .select('user_id, project_id, name, role, status')
+      .eq('name', name)
+      .maybeSingle()
+
+  if (error) {
+    systemMessage(
+      'Login error: ' + error.message,
+      true
+    )
+    return
+  }
+
+  if (!data) {
+    systemMessage(
+      'Login error: user not found: ' + name,
+      true
+    )
+    return
+  }
+
+  if (data.status !== 'on') {
+    systemMessage(
+      'Login error: user switched off: ' + name,
+      true
+    )
+    return
+  }
+
+  currentUser =
+    data
+
+  currentUserName =
+    data.name
+
+  addConsoleMessage(
+    'User login: ' + data.name + ' | role: ' + data.role
+  )
+
+  updateSideInfoLine()
+  renderCurrentOutput()
 }
 
 /*
@@ -1262,47 +1389,19 @@ function drawStockItem(item) {
 
   ctx.restore()
 
-  ctx.fillStyle =
-    '#ffffff'
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 24px Arial'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('N', item.x, item.y)
 
-  ctx.font =
-    'bold 24px Arial'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = '#243447'
+  ctx.font = 'bold 16px Arial'
+  ctx.fillText(item.label, item.x, item.y + item.size / 2 + 20)
 
-  ctx.textAlign =
-    'center'
-
-  ctx.textBaseline =
-    'middle'
-
-  ctx.fillText(
-    'N',
-    item.x,
-    item.y
-  )
-
-  ctx.textBaseline =
-    'alphabetic'
-
-  ctx.fillStyle =
-    '#243447'
-
-  ctx.font =
-    'bold 16px Arial'
-
-  ctx.fillText(
-    item.label,
-    item.x,
-    item.y + item.size / 2 + 20
-  )
-
-  ctx.font =
-    'bold 14px Arial'
-
-  ctx.fillText(
-    item.seats + ' seats',
-    item.x,
-    item.y + item.size / 2 + 39
-  )
+  ctx.font = 'bold 14px Arial'
+  ctx.fillText(item.seats + ' seats', item.x, item.y + item.size / 2 + 39)
 }
 
 function drawExtraZone(rect, title, fill, stroke) {
@@ -1348,15 +1447,9 @@ function drawTable(t) {
     color = '#e24848'
 
   ctx.save()
-
-  ctx.shadowColor =
-    'rgba(0,0,0,0.18)'
-
-  ctx.shadowBlur =
-    10
-
-  ctx.shadowOffsetY =
-    4
+  ctx.shadowColor = 'rgba(0,0,0,0.18)'
+  ctx.shadowBlur = 10
+  ctx.shadowOffsetY = 4
 
   drawTableShape(t, color)
 
@@ -1405,6 +1498,13 @@ function draw() {
   drawExtraZone(zones.pool, 'POOL', '#dff1fb', '#6db7dc')
   drawExtraZone(zones.sauna, 'SAUNA', '#f6e2d8', '#d39975')
 
+  /*
+  ========================================
+  HALL PLAN НА CANVAS
+  Только имя зала рядом с заголовком
+  Project/User/Role здесь НЕ выводятся
+  ========================================
+  */
   ctx.fillStyle = '#35506f'
   ctx.font = 'bold 34px Arial'
   ctx.textAlign = 'left'
@@ -1737,6 +1837,11 @@ downloadLogBtn.addEventListener('click', e => {
   downloadLogFile()
 })
 
+loginBtn.addEventListener('click', async e => {
+  pulseButton(e.currentTarget)
+  await loginByName()
+})
+
 /*
 ========================================
 КНОПКИ РЕДАКТОРА
@@ -1803,7 +1908,7 @@ document.getElementById('apply').addEventListener('click', e => {
 })
 
 hallNameInput.addEventListener('input', () => {
-  renderCurrentOutput()
+  updateSideInfoLine()
   draw()
 })
 
@@ -1870,7 +1975,6 @@ LOAD JSON FILE
 */
 loadJsonBtn.addEventListener('click', e => {
   pulseButton(e.currentTarget)
-
   jsonFileInput.click()
 })
 
@@ -2002,9 +2106,8 @@ function sizeByShape(shape) {
 
 /*
 ========================================
-ПОЛУЧЕНИЕ PROJECT
-Project не создаём из HTML
-Берём существующий project из базы
+ЗАГРУЗКА PROJECT
+Project не редактируется на странице
 ========================================
 */
 async function loadCurrentProject() {
@@ -2037,13 +2140,13 @@ async function loadCurrentProject() {
     'Project loaded: ' + currentProjectName
   )
 
-  renderCurrentOutput()
+  updateSideInfoLine()
 }
 
 /*
 ========================================
-ПОЛУЧЕНИЕ ИЛИ СОЗДАНИЕ HALL
-Hall создаётся клиентом, но лимит должен контролироваться в базе
+ПОЛУЧИТЬ ИЛИ СОЗДАТЬ HALL
+Hall создаётся по введённому имени
 ========================================
 */
 async function getOrCreateHall(projectId, hallName) {
@@ -2166,27 +2269,16 @@ async function uploadTableToDatabase(row, project, hall) {
 
 /*
 ========================================
-ВИЗУАЛЬНАЯ ЗАГРУЗКА В БАЗУ
+ВИЗУАЛИЗАЦИЯ UPLOAD
 ========================================
 */
 function startUploadProgress(total) {
-  uploadState.active =
-    true
-
-  uploadState.status =
-    'uploading'
-
-  uploadState.total =
-    total
-
-  uploadState.done =
-    0
-
-  uploadState.current =
-    'Starting upload...'
-
-  uploadState.error =
-    ''
+  uploadState.active = true
+  uploadState.status = 'uploading'
+  uploadState.total = total
+  uploadState.done = 0
+  uploadState.current = 'Starting upload...'
+  uploadState.error = ''
 
   setOutputMode('console')
 }
@@ -2227,13 +2319,19 @@ function failUploadProgress(message) {
 /*
 ========================================
 UPLOAD PROJECT TO DATABASE
-Project остаётся существующим
-Hall создаётся / находится по hallName
-Tables грузятся в этот hall
+Console показывает Project / Hall / User
 ========================================
 */
 uploadDbBtn.addEventListener('click', async e => {
   pulseButton(e.currentTarget)
+
+  if (!currentUser) {
+    systemMessage(
+      'Upload error: user not logged in',
+      true
+    )
+    return
+  }
 
   if (!savedLayoutForUpload) {
     systemMessage(
@@ -2259,17 +2357,10 @@ uploadDbBtn.addEventListener('click', async e => {
   )
 
   try {
-    addConsoleMessage(
-      'Upload started'
-    )
-
-    addConsoleMessage(
-      'Project: ' + currentProjectName
-    )
-
-    addConsoleMessage(
-      'Hall: ' + getHallName()
-    )
+    addConsoleMessage('Upload started')
+    addConsoleMessage('Project: ' + currentProjectName)
+    addConsoleMessage('Hall: ' + getHallName())
+    addConsoleMessage('User: ' + currentUser.name + ' / ' + currentUser.role)
 
     const hall =
       await getOrCreateHall(
@@ -2375,6 +2466,8 @@ async function init() {
     )
   }
 
+  await loginByName()
+
   appliedTables =
     cloneTables()
 
@@ -2386,6 +2479,7 @@ async function init() {
 
   uploadDbBtn.classList.add('ready')
 
+  updateSideInfoLine()
   draw()
 }
 
@@ -2395,7 +2489,7 @@ init()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    NEW LOGIC:console json/ setup/ names/ zones/ buttons/ log/ progress bar | v3.0.0
+    log in | v4.0.0
   </div>
 
   <div class="row" id="build-down">
