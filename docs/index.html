@@ -324,6 +324,11 @@ pre {
                placeholder="password"
                style="margin-top:8px;" />
 
+         <button id="signupBtn"
+        style="width:100%;margin-top:6px;">
+  Sign Up
+</button>   
+            
         <button id="loginBtn"
                 style="width:100%;margin-top:8px;">
           Login
@@ -463,6 +468,9 @@ const loginBtn =
 
 const logoutBtn =
   document.getElementById('logoutBtn')
+
+const signupBtn =
+  document.getElementById('signupBtn')     
 
 /*
 ========================================
@@ -1900,6 +1908,34 @@ loginBtn.addEventListener('click', async e => {
   await loginWithAuth()
 })
 
+signupBtn.addEventListener('click', async e => {
+  pulseButton(e.currentTarget)
+
+  const email =
+    loginEmailInput.value.trim()
+
+  const password =
+    loginPasswordInput.value
+
+  const { data, error } =
+    await supabase.auth.signUp({
+      email,
+      password
+    })
+
+  if (error) {
+    systemMessage(
+      'Sign Up error: ' + error.message,
+      true
+    )
+    return
+  }
+
+  systemMessage(
+    'Sign Up OK. Now Login.'
+  )
+})
+      
 logoutBtn.addEventListener('click', async e => {
   pulseButton(e.currentTarget)
   await logoutAuth()
@@ -2546,7 +2582,7 @@ init()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    auth log in | v4.1.0
+    auth sign up | v4.2.0
   </div>
 
   <div class="row" id="build-down">
