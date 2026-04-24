@@ -32,7 +32,7 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(980px, 1fr) 340px;
+  grid-template-columns: minmax(980px, 1fr) 390px;
   gap: 16px;
   align-items: start;
 }
@@ -48,32 +48,6 @@ body {
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
-}
-
-.project-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #ffffff;
-  border: 1px solid #c3ccd8;
-  border-radius: 10px;
-  padding: 8px 10px;
-}
-
-.project-field label {
-  font-size: 14px;
-  font-weight: 700;
-  color: #35506f;
-  white-space: nowrap;
-}
-
-.project-field input {
-  width: 220px;
-  border: 1px solid #b8c2cf;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 14px;
-  color: #243447;
 }
 
 .toolbar button,
@@ -141,8 +115,15 @@ canvas {
 
 .side-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.side-actions.three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.side-actions.one {
+  grid-template-columns: 1fr;
 }
 
 .legend {
@@ -155,8 +136,17 @@ canvas {
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
-.console,
-.json-box {
+.legend input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 10px;
+  border: 1px solid #b8c2cf;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #243447;
+}
+
+.console {
   background: #10151c;
   color: #dbe7f5;
   border-radius: 14px;
@@ -167,15 +157,13 @@ canvas {
   overflow: auto;
 }
 
-.console-title,
-.json-title {
+.console-title {
   font-size: 14px;
   color: #8fb7ff;
   margin-bottom: 8px;
 }
 
-.console-total,
-.json-meta {
+.console-total {
   font-size: 13px;
   color: #ffe28a;
   background: rgba(255,226,138,0.12);
@@ -184,12 +172,6 @@ canvas {
   padding: 8px 10px;
   margin-bottom: 10px;
   font-weight: 700;
-}
-
-.json-meta {
-  color: #9ed0a5;
-  background: rgba(158,208,165,0.12);
-  border: 1px solid rgba(158,208,165,0.28);
 }
 
 .console-line {
@@ -204,8 +186,19 @@ canvas {
   font-weight: 700;
 }
 
-.json-box {
-  display: none;
+.console-line.success {
+  color: #9ed0a5;
+  font-weight: 700;
+}
+
+.upload-progress {
+  color: #9ed0a5;
+  background: rgba(158,208,165,0.1);
+  border: 1px solid rgba(158,208,165,0.3);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
 }
 
 .upload-db {
@@ -276,8 +269,7 @@ pre {
     position: static;
   }
 
-  .console,
-  .json-box {
+  .console {
     min-height: 0;
   }
 }
@@ -292,17 +284,6 @@ pre {
     <div class="left-col">
 
       <div class="toolbar">
-
-        <div class="project-field">
-          <label for="projectName">
-            Restaurant project
-          </label>
-
-          <input id="projectName"
-                 type="text"
-                 value="Restaurant Project" />
-        </div>
-
         <button id="undo">Undo</button>
         <button id="reset">Reset</button>
         <button id="apply">Apply</button>
@@ -320,23 +301,54 @@ pre {
 
     <div class="side">
 
-      <div class="side-actions">
-        <button id="toggleView">JSON</button>
+      <!-- ВЕРХНИЙ РЯД: ТРИ РЕЖИМА ОДНОГО ОКНА -->
+      <div class="side-actions three">
+        <button id="viewConsole">Console</button>
+        <button id="viewJson">JSON</button>
+        <button id="viewSetup">Set Up</button>
+      </div>
 
-        <button id="uploadDb" class="upload-db" disabled>
+      <!-- ВТОРОЙ РЯД: ФАЙЛЫ И ЗАГРУЗКА В БАЗУ -->
+      <div class="side-actions three">
+        <button id="loadJson">Load JSON file</button>
+
+        <button id="save">
+          Save JSON file
+        </button>
+
+        <button id="uploadDb"
+                class="upload-db"
+                disabled>
           UpLoad Project to DataBase
         </button>
       </div>
 
-      <div class="side-actions">
-        <button id="loadJson">Load JSON file</button>
-        <button id="save">Save JSON file</button>
+      <!-- СКАЧИВАНИЕ ЖУРНАЛА КОНСОЛИ -->
+      <div class="side-actions one">
+        <button id="downloadLog">Download log.txt</button>
       </div>
 
       <input id="jsonFileInput"
              type="file"
              accept=".json,application/json"
              style="display:none;" />
+
+      <!-- PROJECT: НЕ РЕДАКТИРУЕТСЯ -->
+      <div class="legend">
+        <b>Project:</b>
+        <span id="projectLabel">loading...</span>
+      </div>
+
+      <!-- HALL: РЕДАКТИРУЕТСЯ -->
+      <div class="legend">
+        <label for="hallName">
+          <b>Hall name:</b>
+        </label>
+
+        <input id="hallName"
+               type="text"
+               value="Main Hall" />
+      </div>
 
       <div class="legend">
         Zones:
@@ -351,16 +363,11 @@ pre {
         <code>sauna</code>
       </div>
 
-      <div class="console" id="consoleBox">
-        <div class="console-title">Table Set</div>
-        <div class="console-total" id="consoleTotal">Total tables: 0</div>
-        <div id="consoleLines"></div>
-      </div>
-
-      <div class="json-box" id="jsonBox">
-        <div class="json-title">JSON file</div>
-        <div class="json-meta" id="jsonMeta">Saved rows: 0</div>
-        <pre id="jsonPre">[]</pre>
+      <!-- ОДНО ОКНО ДЛЯ ТРЁХ РЕЖИМОВ -->
+      <div class="console" id="outputBox">
+        <div class="console-title" id="outputTitle">Console</div>
+        <div class="console-total" id="outputMeta">Ready</div>
+        <div id="outputLines"></div>
       </div>
 
     </div>
@@ -382,7 +389,7 @@ from "./scripts/config.js"
 
 /*
 ========================================
-ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
+ЭЛЕМЕНТЫ CANVAS
 ========================================
 */
 const canvas =
@@ -391,29 +398,43 @@ const canvas =
 const ctx =
   canvas.getContext('2d')
 
-const consoleLines =
-  document.getElementById('consoleLines')
-
-const consoleTotal =
-  document.getElementById('consoleTotal')
-
-const consoleBox =
-  document.getElementById('consoleBox')
-
-const jsonBox =
-  document.getElementById('jsonBox')
-
-const jsonPre =
-  document.getElementById('jsonPre')
-
-const jsonMeta =
-  document.getElementById('jsonMeta')
-
 const contextMenu =
   document.getElementById('contextMenu')
 
-const toggleViewBtn =
-  document.getElementById('toggleView')
+/*
+========================================
+ЭЛЕМЕНТЫ ПРАВОЙ ПАНЕЛИ
+========================================
+*/
+const outputBox =
+  document.getElementById('outputBox')
+
+const outputTitle =
+  document.getElementById('outputTitle')
+
+const outputMeta =
+  document.getElementById('outputMeta')
+
+const outputLines =
+  document.getElementById('outputLines')
+
+const viewConsoleBtn =
+  document.getElementById('viewConsole')
+
+const viewJsonBtn =
+  document.getElementById('viewJson')
+
+const viewSetupBtn =
+  document.getElementById('viewSetup')
+
+const downloadLogBtn =
+  document.getElementById('downloadLog')
+
+const projectLabel =
+  document.getElementById('projectLabel')
+
+const hallNameInput =
+  document.getElementById('hallName')
 
 const uploadDbBtn =
   document.getElementById('uploadDb')
@@ -424,16 +445,47 @@ const loadJsonBtn =
 const jsonFileInput =
   document.getElementById('jsonFileInput')
 
-const projectNameInput =
-  document.getElementById('projectName')
+/*
+========================================
+СОСТОЯНИЕ PROJECT / HALL
+========================================
+*/
+let currentProject =
+  null
 
-let savedLayoutForUpload = null
+let currentProjectName =
+  ''
 
-let databaseMessages = []
+let currentProjectId =
+  null
+
+let savedLayoutForUpload =
+  null
 
 /*
 ========================================
-НАТИВНЫЕ ДИАЛОГИ + ДУБЛИРОВАНИЕ В КОНСОЛЬ
+СОСТОЯНИЕ КОНСОЛИ И РЕЖИМОВ ВЫВОДА
+========================================
+*/
+let outputMode =
+  'console'
+
+let consoleHistory =
+  []
+
+let uploadState = {
+  active: false,
+  status: 'waiting',
+  total: 0,
+  done: 0,
+  current: '',
+  error: ''
+}
+
+/*
+========================================
+НАТИВНЫЕ ДИАЛОГИ
+Дублируем alert / confirm / prompt в Console history
 ========================================
 */
 const nativeAlert =
@@ -445,26 +497,8 @@ const nativeConfirm =
 const nativePrompt =
   window.prompt.bind(window)
 
-function addDatabaseMessage(text, isError = false) {
-  databaseMessages.push({
-    text,
-    isError
-  })
-
-  if (databaseMessages.length > 120) {
-    databaseMessages.shift()
-  }
-
-  renderConsole()
-}
-
-function systemMessage(text, isError = false) {
-  addDatabaseMessage(text, isError)
-  nativeAlert(text)
-}
-
 window.alert = function(message) {
-  addDatabaseMessage(
+  addConsoleMessage(
     'DIALOG ALERT: ' + String(message)
   )
 
@@ -472,14 +506,14 @@ window.alert = function(message) {
 }
 
 window.confirm = function(message) {
-  addDatabaseMessage(
+  addConsoleMessage(
     'DIALOG CONFIRM: ' + String(message)
   )
 
   const result =
     nativeConfirm(message)
 
-  addDatabaseMessage(
+  addConsoleMessage(
     'DIALOG CONFIRM RESULT: ' + String(result)
   )
 
@@ -487,14 +521,14 @@ window.confirm = function(message) {
 }
 
 window.prompt = function(message, value = '') {
-  addDatabaseMessage(
+  addConsoleMessage(
     'DIALOG PROMPT: ' + String(message)
   )
 
   const result =
     nativePrompt(message, value)
 
-  addDatabaseMessage(
+  addConsoleMessage(
     'DIALOG PROMPT RESULT: ' + String(result)
   )
 
@@ -556,7 +590,7 @@ const zones = {
 
 /*
 ========================================
-РОВНО 3 ТИПА СТОЛОВ
+СТОК СТОЛОВ
 ========================================
 */
 const stockItems = [
@@ -597,26 +631,20 @@ let drag = null
 let nextId = 4
 let history = []
 let movedDuringDrag = false
-let currentView = 'console'
 let contextTargetIndex = -1
-
-/*
-========================================
-НАЗВАНИЕ ПРОЕКТА
-========================================
-*/
-function getProjectName() {
-  const value =
-    projectNameInput.value.trim()
-
-  return value || 'Restaurant Project'
-}
 
 /*
 ========================================
 ОБЩИЕ ФУНКЦИИ
 ========================================
 */
+function getHallName() {
+  const value =
+    hallNameInput.value.trim()
+
+  return value || 'Main Hall'
+}
+
 function cloneTables(source = tables) {
   return JSON.parse(JSON.stringify(source))
 }
@@ -628,14 +656,29 @@ function pushHistory() {
     history.shift()
 }
 
-function screenToWorld(clientX, clientY) {
-  const rect =
-    canvas.getBoundingClientRect()
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 
-  return {
-    x: (clientX - rect.left) * (canvas.width / rect.width) / scale,
-    y: (clientY - rect.top) * (canvas.height / rect.height) / scale
-  }
+function pulseButton(button) {
+  button.classList.add('is-active')
+
+  setTimeout(
+    () => button.classList.remove('is-active'),
+    120
+  )
+}
+
+function safeFileName(name) {
+  return String(name || 'hall')
+    .trim()
+    .replace(/[^\wа-яА-ЯёЁ-]+/g, '_')
+    .replace(/_+/g, '_')
 }
 
 function pointInRect(p, r) {
@@ -647,13 +690,14 @@ function pointInRect(p, r) {
   )
 }
 
-function isHallPlanTitleClick(p) {
-  return (
-    p.x >= 80 &&
-    p.x <= 260 &&
-    p.y >= 70 &&
-    p.y <= 120
-  )
+function screenToWorld(clientX, clientY) {
+  const rect =
+    canvas.getBoundingClientRect()
+
+  return {
+    x: (clientX - rect.left) * (canvas.width / rect.width) / scale,
+    y: (clientY - rect.top) * (canvas.height / rect.height) / scale
+  }
 }
 
 function getZoneName(table) {
@@ -710,15 +754,6 @@ function getDuplicateIds(source = tables) {
   )
 }
 
-function pulseButton(button) {
-  button.classList.add('is-active')
-
-  setTimeout(
-    () => button.classList.remove('is-active'),
-    120
-  )
-}
-
 function normalizeImportedType(type) {
   if (type === 'round')
     return 'round'
@@ -752,6 +787,11 @@ function normalizeTableRow(row) {
   }
 }
 
+/*
+========================================
+ДАННЫЕ ДЛЯ JSON И SET UP
+========================================
+*/
 function getAppliedRows() {
   return appliedTables.map(t => ({
     ...t,
@@ -759,20 +799,17 @@ function getAppliedRows() {
   }))
 }
 
-function getHallPlanData() {
+function getJsonData() {
   return {
-    project_name: getProjectName(),
-    zones,
-    stock: stockItems,
-    current_tables: tables.map(t => ({
-      ...t,
-      zone: getZoneName(t)
-    })),
-    applied_tables: getAppliedRows()
+    project_name: currentProjectName || '',
+    project_id: currentProjectId || '',
+    hall_name: getHallName(),
+    zones: zones,
+    tables: getAppliedRows()
   }
 }
 
-function getTableSetData() {
+function getSetupData() {
   const groups = {
     round: [],
     square: [],
@@ -786,80 +823,271 @@ function getTableSetData() {
     })
   })
 
+  Object.values(groups).forEach(arr => {
+    arr.sort((a, b) => Number(a.id) - Number(b.id))
+  })
+
   return {
-    project_name: getProjectName(),
+    project_name: currentProjectName || '',
+    hall_name: getHallName(),
     total_tables: tables.length,
-    groups
+    round: groups.round,
+    square: groups.square,
+    rect: groups.rect,
+    duplicate_ids: Array.from(getDuplicateIds()),
+    outside_count: tables.filter(t => getZoneName(t) === 'outside').length,
+    applied_in_json: appliedTables.length
   }
-}
-
-function getJsonData() {
-  return {
-    project_name: getProjectName(),
-    rows: getAppliedRows()
-  }
-}
-
-function pushConsoleObject(title, object, isError = false) {
-  addDatabaseMessage(
-    title + ': ' + JSON.stringify(object, null, 2),
-    isError
-  )
 }
 
 /*
 ========================================
-JSON-ПАНЕЛЬ
+CONSOLE HISTORY
 ========================================
 */
-function updateJsonPanel() {
+function addConsoleMessage(text, isError = false) {
+  consoleHistory.push({
+    time: new Date().toLocaleString('ru-RU'),
+    text,
+    isError
+  })
+
+  if (consoleHistory.length > 500) {
+    consoleHistory.shift()
+  }
+
+  if (outputMode === 'console') {
+    renderConsoleMode()
+  }
+}
+
+function systemMessage(text, isError = false) {
+  addConsoleMessage(text, isError)
+  nativeAlert(text)
+}
+
+/*
+========================================
+РЕНДЕР ТРЁХ РЕЖИМОВ ОДНОГО ОКНА
+========================================
+*/
+function setOutputMode(mode) {
+  outputMode =
+    mode
+
+  viewConsoleBtn.classList.toggle('is-active', mode === 'console')
+  viewJsonBtn.classList.toggle('is-active', mode === 'json')
+  viewSetupBtn.classList.toggle('is-active', mode === 'setup')
+
+  if (mode === 'console')
+    renderConsoleMode()
+
+  if (mode === 'json')
+    renderJsonMode()
+
+  if (mode === 'setup')
+    renderSetupMode()
+}
+
+function renderCurrentOutput() {
+  if (outputMode === 'console')
+    renderConsoleMode()
+
+  if (outputMode === 'json')
+    renderJsonMode()
+
+  if (outputMode === 'setup')
+    renderSetupMode()
+}
+
+function renderConsoleMode() {
+  outputTitle.textContent =
+    'Console'
+
+  outputMeta.textContent =
+    uploadState.active
+      ? 'Upload: ' + uploadState.status + ' | ' + uploadState.done + ' / ' + uploadState.total
+      : 'Messages: ' + consoleHistory.length
+
+  let html = ''
+
+  if (uploadState.active) {
+    const percent =
+      uploadState.total
+        ? Math.round(uploadState.done / uploadState.total * 100)
+        : 0
+
+    const blocks =
+      Math.floor(percent / 10)
+
+    html +=
+      '<div class="upload-progress">' +
+      'Upload progress: ' + percent + '%\n' +
+      '[' + '█'.repeat(blocks) + '░'.repeat(10 - blocks) + ']\n' +
+      uploadState.done + ' / ' + uploadState.total + '\n' +
+      'Status: ' + uploadState.status + '\n' +
+      'Current: ' + escapeHtml(uploadState.current || '-') +
+      (uploadState.error ? '\nError: ' + escapeHtml(uploadState.error) : '') +
+      '</div>'
+  }
+
+  html += consoleHistory
+    .map(row =>
+      '<div class="console-line' +
+      (row.isError ? ' error' : '') +
+      '">' +
+      escapeHtml('[' + row.time + '] ' + row.text) +
+      '</div>'
+    )
+    .join('')
+
+  outputLines.innerHTML =
+    html || '<div class="console-line">Console is empty</div>'
+}
+
+function renderJsonMode() {
   const data =
     getJsonData()
 
-  jsonPre.textContent =
-    JSON.stringify(data, null, 2)
+  outputTitle.textContent =
+    'JSON'
 
-  jsonMeta.textContent =
-    'Project: ' + data.project_name + ' | Saved rows: ' + data.rows.length + ' tables'
+  outputMeta.textContent =
+    'Hall: ' + data.hall_name + ' | Tables: ' + data.tables.length
+
+  outputLines.innerHTML =
+    '<pre>' +
+    escapeHtml(JSON.stringify(data, null, 2)) +
+    '</pre>'
 }
 
-function setView(mode) {
-  currentView =
-    mode
+function renderSetupMode() {
+  const data =
+    getSetupData()
 
-  if (mode === 'json') {
-    consoleBox.style.display =
-      'none'
+  outputTitle.textContent =
+    'Set Up'
 
-    jsonBox.style.display =
-      'block'
+  outputMeta.textContent =
+    'Hall: ' + data.hall_name + ' | Total tables: ' + data.total_tables
 
-    toggleViewBtn.textContent =
-      'Table Set'
+  const lines = []
 
-    updateJsonPanel()
+  lines.push('Project: ' + data.project_name)
+  lines.push('Hall: ' + data.hall_name)
+  lines.push('Total tables: ' + data.total_tables)
+  lines.push('')
 
-    pushConsoleObject(
-      'JSON',
-      getJsonData()
+  lines.push(
+    'round / 2 seats: ' +
+    (
+      data.round.length
+        ? data.round.map(t => '#' + t.id + ' [' + t.zone + ']').join(', ')
+        : '—'
+    ) +
+    ' | count: ' + data.round.length
+  )
+
+  lines.push(
+    'square / 4 seats: ' +
+    (
+      data.square.length
+        ? data.square.map(t => '#' + t.id + ' [' + t.zone + ']').join(', ')
+        : '—'
+    ) +
+    ' | count: ' + data.square.length
+  )
+
+  lines.push(
+    'rect / 6 seats: ' +
+    (
+      data.rect.length
+        ? data.rect.map(t => '#' + t.id + ' [' + t.zone + ']').join(', ')
+        : '—'
+    ) +
+    ' | count: ' + data.rect.length
+  )
+
+  lines.push('')
+  lines.push(
+    'CHECK | unique table numbers | ' +
+    (data.duplicate_ids.length ? 'ERROR' : 'OK')
+  )
+
+  if (data.duplicate_ids.length) {
+    lines.push(
+      'ERROR: duplicate number -> ' +
+      data.duplicate_ids.join(', ')
     )
-  } else {
-    jsonBox.style.display =
-      'none'
-
-    consoleBox.style.display =
-      'block'
-
-    toggleViewBtn.textContent =
-      'JSON'
-
-    pushConsoleObject(
-      'TABLE SET',
-      getTableSetData()
-    )
-
-    renderConsole()
   }
+
+  if (data.outside_count) {
+    lines.push(
+      'ERROR: outside valid zones -> ' +
+      data.outside_count
+    )
+  }
+
+  lines.push('Applied in JSON: ' + data.applied_in_json)
+
+  outputLines.innerHTML =
+    lines
+      .map(line =>
+        '<div class="console-line' +
+        (
+          line.startsWith('ERROR') ||
+          line.includes('| ERROR')
+            ? ' error'
+            : ''
+        ) +
+        '">' +
+        escapeHtml(line) +
+        '</div>'
+      )
+      .join('')
+}
+
+/*
+========================================
+СКАЧИВАНИЕ LOG.TXT
+========================================
+*/
+function downloadLogFile() {
+  const text =
+    consoleHistory
+      .map(row =>
+        '[' + row.time + '] ' +
+        (row.isError ? 'ERROR: ' : '') +
+        row.text
+      )
+      .join('\n')
+
+  const blob =
+    new Blob(
+      [text || 'Console is empty'],
+      { type: 'text/plain;charset=utf-8' }
+    )
+
+  const url =
+    URL.createObjectURL(blob)
+
+  const a =
+    document.createElement('a')
+
+  a.href =
+    url
+
+  a.download =
+    safeFileName(getHallName()) + '_log.txt'
+
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+
+  setTimeout(
+    () => URL.revokeObjectURL(url),
+    1000
+  )
 }
 
 /*
@@ -1184,8 +1412,7 @@ function draw() {
 
   ctx.fillStyle = '#35506f'
   ctx.font = 'bold 20px Arial'
-  ctx.textAlign = 'left'
-  ctx.fillText(getProjectName(), 300, 105)
+  ctx.fillText(getHallName(), 300, 105)
 
   ctx.fillStyle = '#f3f6fb'
   roundRect(base.stock.x, base.stock.y, base.stock.w, base.stock.h, 14, true, false)
@@ -1221,7 +1448,8 @@ function draw() {
 
   stockItems.forEach(drawStockItem)
   tables.forEach(drawTable)
-  renderConsole()
+
+  renderCurrentOutput()
 }
 
 /*
@@ -1311,142 +1539,6 @@ function findStockItem(p) {
 
 /*
 ========================================
-КОНСОЛЬ TABLE SET
-========================================
-*/
-function renderConsole() {
-  const duplicateIds =
-    getDuplicateIds()
-
-  const groups = {
-    round: [],
-    square: [],
-    rect: []
-  }
-
-  tables.forEach(t => {
-    groups[t.type].push(t)
-  })
-
-  Object.values(groups).forEach(arr => {
-    arr.sort((a, b) => Number(a.id) - Number(b.id))
-  })
-
-  const roundCount =
-    groups.round.length
-
-  const squareCount =
-    groups.square.length
-
-  const rectCount =
-    groups.rect.length
-
-  consoleTotal.textContent =
-    'Project: ' + getProjectName() + ' | Total tables: ' + tables.length
-
-  const lines = []
-
-  lines.push({
-    text:
-      'round / 2 seats: ' +
-      (
-        roundCount
-          ? groups.round.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ')
-          : '—'
-      ) +
-      ' | count: ' + roundCount
-  })
-
-  lines.push({
-    text:
-      'square / 4 seats: ' +
-      (
-        squareCount
-          ? groups.square.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ')
-          : '—'
-      ) +
-      ' | count: ' + squareCount
-  })
-
-  lines.push({
-    text:
-      'rect / 6 seats: ' +
-      (
-        rectCount
-          ? groups.rect.map(t => '#' + t.id + ' [' + getZoneName(t) + ']').join(', ')
-          : '—'
-      ) +
-      ' | count: ' + rectCount
-  })
-
-  lines.push({
-    text:
-      'CHECK | unique table numbers | ' + (duplicateIds.size ? 'ERROR' : 'OK'),
-    error:
-      duplicateIds.size > 0
-  })
-
-  if (duplicateIds.size) {
-    lines.push({
-      text: 'ERROR: duplicate number -> ' + Array.from(duplicateIds).join(', '),
-      error: true
-    })
-  }
-
-  const outsideCount =
-    tables.filter(t => getZoneName(t) === 'outside').length
-
-  if (outsideCount) {
-    lines.push({
-      text: 'ERROR: outside valid zones -> ' + outsideCount,
-      error: true
-    })
-  }
-
-  lines.push({
-    text: 'Applied in JSON: ' + appliedTables.length
-  })
-
-  lines.push({
-    text: '--- Console messages ---'
-  })
-
-  if (!databaseMessages.length) {
-    lines.push({
-      text: 'no messages'
-    })
-  } else {
-    databaseMessages.forEach(msg => {
-      lines.push({
-        text: msg.text,
-        error: msg.isError
-      })
-    })
-  }
-
-  consoleLines.innerHTML =
-    lines
-      .map(line =>
-        '<div class="console-line' +
-        (line.error ? ' error' : '') +
-        '">' +
-        escapeHtml(line.text) +
-        '</div>'
-      )
-      .join('')
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-}
-
-/*
-========================================
 МЫШЬ / POINTER
 ========================================
 */
@@ -1458,14 +1550,6 @@ canvas.addEventListener('pointerdown', e => {
 
   movedDuringDrag =
     false
-
-  if (isHallPlanTitleClick(p)) {
-    pushConsoleObject(
-      'HALL PLAN',
-      getHallPlanData()
-    )
-    return
-  }
 
   const index =
     findTable(p)
@@ -1559,10 +1643,6 @@ canvas.addEventListener('click', e => {
   const p =
     screenToWorld(e.clientX, e.clientY)
 
-  if (isHallPlanTitleClick(p)) {
-    return
-  }
-
   const index =
     findTable(p)
 
@@ -1634,7 +1714,32 @@ contextMenu.addEventListener('click', e => {
 
 /*
 ========================================
-КНОПКИ
+КНОПКИ РЕЖИМОВ
+========================================
+*/
+viewConsoleBtn.addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+  setOutputMode('console')
+})
+
+viewJsonBtn.addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+  setOutputMode('json')
+})
+
+viewSetupBtn.addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+  setOutputMode('setup')
+})
+
+downloadLogBtn.addEventListener('click', e => {
+  pulseButton(e.currentTarget)
+  downloadLogFile()
+})
+
+/*
+========================================
+КНОПКИ РЕДАКТОРА
 ========================================
 */
 document.getElementById('undo').addEventListener('click', e => {
@@ -1684,29 +1789,21 @@ document.getElementById('apply').addEventListener('click', e => {
   appliedTables =
     cloneTables()
 
-  updateJsonPanel()
+  savedLayoutForUpload =
+    getAppliedRows()
+
+  uploadDbBtn.disabled =
+    false
+
+  uploadDbBtn.classList.add('ready')
 
   systemMessage('Applied to JSON')
 
   draw()
 })
 
-toggleViewBtn.addEventListener('click', e => {
-  pulseButton(e.currentTarget)
-
-  setView(
-    currentView === 'console'
-      ? 'json'
-      : 'console'
-  )
-})
-
-projectNameInput.addEventListener('change', () => {
-  systemMessage(
-    'Project name changed: ' + getProjectName()
-  )
-
-  updateJsonPanel()
+hallNameInput.addEventListener('input', () => {
+  renderCurrentOutput()
   draw()
 })
 
@@ -1718,11 +1815,14 @@ SAVE JSON FILE
 document.getElementById('save').addEventListener('click', e => {
   pulseButton(e.currentTarget)
 
+  appliedTables =
+    cloneTables()
+
   const data =
     getJsonData()
 
   savedLayoutForUpload =
-    data.rows
+    data.tables
 
   const blob =
     new Blob(
@@ -1740,7 +1840,7 @@ document.getElementById('save').addEventListener('click', e => {
     url
 
   a.download =
-    getProjectName().replace(/[^\wа-яА-ЯёЁ-]+/g, '_') + '_tables-layout.json'
+    safeFileName(getHallName()) + '.json'
 
   document.body.appendChild(a)
   a.click()
@@ -1756,12 +1856,11 @@ document.getElementById('save').addEventListener('click', e => {
 
   uploadDbBtn.classList.add('ready')
 
-  jsonMeta.textContent =
-    'Project: ' + getProjectName() + ' | Saved rows: ' + data.rows.length + ' tables | ready to upload'
-
   systemMessage(
-    'JSON file saved. Layout ready to upload.'
+    'JSON file saved: ' + getHallName()
   )
+
+  renderCurrentOutput()
 })
 
 /*
@@ -1792,19 +1891,24 @@ jsonFileInput.addEventListener('change', async () => {
     let rows =
       parsed
 
-    if (parsed && !Array.isArray(parsed) && Array.isArray(parsed.rows)) {
-      rows =
-        parsed.rows
+    if (parsed && !Array.isArray(parsed)) {
+      if (parsed.hall_name) {
+        hallNameInput.value =
+          parsed.hall_name
+      }
 
-      if (parsed.project_name) {
-        projectNameInput.value =
-          parsed.project_name
+      if (Array.isArray(parsed.tables)) {
+        rows =
+          parsed.tables
+      } else if (Array.isArray(parsed.rows)) {
+        rows =
+          parsed.rows
       }
     }
 
     if (!Array.isArray(rows)) {
       systemMessage(
-        'JSON должен быть массивом или объектом с rows',
+        'JSON должен быть массивом или объектом с tables / rows',
         true
       )
       return
@@ -1834,12 +1938,11 @@ jsonFileInput.addEventListener('change', async () => {
 
     uploadDbBtn.classList.add('ready')
 
-    updateJsonPanel()
-    draw()
-
     systemMessage(
-      'JSON loaded'
+      'JSON loaded: ' + file.name
     )
+
+    draw()
   } catch (err) {
     console.error(err)
 
@@ -1854,7 +1957,7 @@ jsonFileInput.addEventListener('change', async () => {
 
 /*
 ========================================
-МАППИНГ В БАЗУ
+МАППИНГ СТОЛОВ В БАЗУ
 ========================================
 */
 function mapTypeToShape(type) {
@@ -1897,83 +2000,97 @@ function sizeByShape(shape) {
   }
 }
 
-async function getProjectAndHall() {
-  const projectName =
-    getProjectName()
-
-  let { data: project, error: projectFindError } =
+/*
+========================================
+ПОЛУЧЕНИЕ PROJECT
+Project не создаём из HTML
+Берём существующий project из базы
+========================================
+*/
+async function loadCurrentProject() {
+  const { data: projects, error } =
     await supabase
       .from('projects')
       .select('*')
-      .eq('name', projectName)
-      .maybeSingle()
+      .order('created_at', { ascending: true })
+      .limit(1)
 
-  if (projectFindError)
-    throw projectFindError
+  if (error)
+    throw error
 
-  if (!project) {
-    const { data: createdProject, error: createProjectError } =
-      await supabase
-        .from('projects')
-        .insert({
-          name: projectName
-        })
-        .select('*')
-        .single()
+  if (!projects || !projects.length)
+    throw new Error('Project not found')
 
-    if (createProjectError)
-      throw createProjectError
+  currentProject =
+    projects[0]
 
-    project =
-      createdProject
+  currentProjectId =
+    currentProject.project_id || currentProject.id
 
-    addDatabaseMessage(
-      'Created project: ' + projectName
-    )
-  }
+  currentProjectName =
+    currentProject.name || 'Project'
 
-  const projectId =
-    project.project_id || project.id
+  projectLabel.textContent =
+    currentProjectName + ' / ' + currentProjectId
 
-  let { data: hall, error: hallFindError } =
+  addConsoleMessage(
+    'Project loaded: ' + currentProjectName
+  )
+
+  renderCurrentOutput()
+}
+
+/*
+========================================
+ПОЛУЧЕНИЕ ИЛИ СОЗДАНИЕ HALL
+Hall создаётся клиентом, но лимит должен контролироваться в базе
+========================================
+*/
+async function getOrCreateHall(projectId, hallName) {
+  const { data: existingHall, error: findError } =
     await supabase
       .from('halls')
       .select('*')
       .eq('project_id', projectId)
-      .eq('name', 'Main Hall')
+      .eq('name', hallName)
       .maybeSingle()
 
-  if (hallFindError)
-    throw hallFindError
+  if (findError)
+    throw findError
 
-  if (!hall) {
-    const { data: createdHall, error: createHallError } =
-      await supabase
-        .from('halls')
-        .insert({
-          project_id: projectId,
-          name: 'Main Hall'
-        })
-        .select('*')
-        .single()
-
-    if (createHallError)
-      throw createHallError
-
-    hall =
-      createdHall
-
-    addDatabaseMessage(
-      'Created hall: Main Hall'
+  if (existingHall) {
+    addConsoleMessage(
+      'Hall found: ' + hallName
     )
+
+    return existingHall
   }
 
-  return {
-    project,
-    hall
-  }
+  const { data: createdHall, error: createError } =
+    await supabase
+      .from('halls')
+      .insert({
+        project_id: projectId,
+        name: hallName
+      })
+      .select('*')
+      .single()
+
+  if (createError)
+    throw createError
+
+  addConsoleMessage(
+    'Hall created: ' + hallName
+  )
+
+  return createdHall
 }
 
+/*
+========================================
+ЗАГРУЗКА ОДНОГО СТОЛА В БАЗУ
+========================================
+*/
 async function uploadTableToDatabase(row, project, hall) {
   const shape =
     mapTypeToShape(row.type)
@@ -1981,14 +2098,14 @@ async function uploadTableToDatabase(row, project, hall) {
   const size =
     sizeByShape(shape)
 
-  const name =
-    'Table ' + row.id
-
   const projectId =
     project.project_id || project.id
 
   const hallId =
     hall.hall_id || hall.id
+
+  const name =
+    'Table ' + row.id
 
   const payload = {
     project_id: projectId,
@@ -2012,14 +2129,11 @@ async function uploadTableToDatabase(row, project, hall) {
       .eq('name', name)
       .maybeSingle()
 
-  console.log("UPLOAD PAYLOAD:", payload)
-  console.log("EXISTING:", existing)
-
-  addDatabaseMessage(
+  addConsoleMessage(
     'UPLOAD PAYLOAD: ' + JSON.stringify(payload)
   )
 
-  addDatabaseMessage(
+  addConsoleMessage(
     'EXISTING: ' + JSON.stringify(existing)
   )
 
@@ -2036,8 +2150,6 @@ async function uploadTableToDatabase(row, project, hall) {
     if (updateError)
       throw updateError
 
-    addDatabaseMessage('Updated: ' + name)
-
     return 'Updated: ' + name
   }
 
@@ -2049,17 +2161,91 @@ async function uploadTableToDatabase(row, project, hall) {
   if (insertError)
     throw insertError
 
-  addDatabaseMessage('Inserted: ' + name)
-
   return 'Inserted: ' + name
 }
 
+/*
+========================================
+ВИЗУАЛЬНАЯ ЗАГРУЗКА В БАЗУ
+========================================
+*/
+function startUploadProgress(total) {
+  uploadState.active =
+    true
+
+  uploadState.status =
+    'uploading'
+
+  uploadState.total =
+    total
+
+  uploadState.done =
+    0
+
+  uploadState.current =
+    'Starting upload...'
+
+  uploadState.error =
+    ''
+
+  setOutputMode('console')
+}
+
+function updateUploadProgress(done, current) {
+  uploadState.done =
+    done
+
+  uploadState.current =
+    current
+
+  renderConsoleMode()
+}
+
+function finishUploadProgress() {
+  uploadState.status =
+    'done'
+
+  uploadState.current =
+    'Upload completed'
+
+  renderConsoleMode()
+}
+
+function failUploadProgress(message) {
+  uploadState.status =
+    'error'
+
+  uploadState.error =
+    message
+
+  uploadState.current =
+    'Upload failed'
+
+  renderConsoleMode()
+}
+
+/*
+========================================
+UPLOAD PROJECT TO DATABASE
+Project остаётся существующим
+Hall создаётся / находится по hallName
+Tables грузятся в этот hall
+========================================
+*/
 uploadDbBtn.addEventListener('click', async e => {
   pulseButton(e.currentTarget)
 
   if (!savedLayoutForUpload) {
     systemMessage(
-      'Сначала нажми Save JSON file или Load JSON file',
+      'Сначала нажми Apply, Save JSON file или Load JSON file',
+      true
+    )
+    return
+  }
+
+  if (!currentProject) {
+    systemMessage(
+      'Project not loaded',
       true
     )
     return
@@ -2068,37 +2254,70 @@ uploadDbBtn.addEventListener('click', async e => {
   uploadDbBtn.disabled =
     true
 
+  startUploadProgress(
+    savedLayoutForUpload.length
+  )
+
   try {
-    systemMessage(
-      'Upload started: ' + getProjectName()
+    addConsoleMessage(
+      'Upload started'
     )
 
-    const { project, hall } =
-      await getProjectAndHall()
-
-    console.log('UPLOAD PROJECT:', project)
-    console.log('UPLOAD HALL:', hall)
-
-    addDatabaseMessage(
-      'UPLOAD PROJECT: ' + JSON.stringify(project)
+    addConsoleMessage(
+      'Project: ' + currentProjectName
     )
 
-    addDatabaseMessage(
+    addConsoleMessage(
+      'Hall: ' + getHallName()
+    )
+
+    const hall =
+      await getOrCreateHall(
+        currentProjectId,
+        getHallName()
+      )
+
+    addConsoleMessage(
       'UPLOAD HALL: ' + JSON.stringify(hall)
     )
 
-    for (const row of savedLayoutForUpload) {
-      const result =
-        await uploadTableToDatabase(row, project, hall)
+    let done =
+      0
 
-      console.log(result)
+    for (const row of savedLayoutForUpload) {
+      updateUploadProgress(
+        done,
+        'Uploading Table ' + row.id
+      )
+
+      const result =
+        await uploadTableToDatabase(
+          row,
+          currentProject,
+          hall
+        )
+
+      done++
+
+      addConsoleMessage(result)
+
+      updateUploadProgress(
+        done,
+        result
+      )
     }
+
+    finishUploadProgress()
 
     systemMessage(
       'Project uploaded to DataBase'
     )
   } catch (err) {
     console.error(err)
+
+    failUploadProgress(
+      err.message
+    )
 
     systemMessage(
       'Upload error: ' + err.message,
@@ -2139,15 +2358,44 @@ canvas.addEventListener(
 СТАРТ
 ========================================
 */
-updateJsonPanel()
-setView('console')
-draw()
+async function init() {
+  setOutputMode('console')
+
+  try {
+    await loadCurrentProject()
+  } catch (err) {
+    console.error(err)
+
+    projectLabel.textContent =
+      'Project load error'
+
+    addConsoleMessage(
+      'Project load error: ' + err.message,
+      true
+    )
+  }
+
+  appliedTables =
+    cloneTables()
+
+  savedLayoutForUpload =
+    getAppliedRows()
+
+  uploadDbBtn.disabled =
+    false
+
+  uploadDbBtn.classList.add('ready')
+
+  draw()
+}
+
+init()
 
 </script>
 
 <div id="service-console">
   <div class="row" id="build-top">
-    button save project & console | v2.0.4
+    NEW LOGIC:console json/ setup/ names/ zones/ buttons/ log/ progress bar | v3.0.0
   </div>
 
   <div class="row" id="build-down">
