@@ -50,6 +50,32 @@ body {
   flex-wrap: wrap;
 }
 
+.project-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #c3ccd8;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.project-field label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #35506f;
+  white-space: nowrap;
+}
+
+.project-field input {
+  width: 220px;
+  border: 1px solid #b8c2cf;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #243447;
+}
+
 .toolbar button,
 .side-actions button,
 .upload-db {
@@ -266,6 +292,17 @@ pre {
     <div class="left-col">
 
       <div class="toolbar">
+
+        <div class="project-field">
+          <label for="projectName">
+            Restaurant project
+          </label>
+
+          <input id="projectName"
+                 type="text"
+                 value="Restaurant Project" />
+        </div>
+
         <button id="undo">Undo</button>
         <button id="reset">Reset</button>
         <button id="apply">Apply</button>
@@ -387,26 +424,81 @@ const loadJsonBtn =
 const jsonFileInput =
   document.getElementById('jsonFileInput')
 
+const projectNameInput =
+  document.getElementById('projectName')
+
 let savedLayoutForUpload = null
 
 let databaseMessages = []
 
 /*
 ========================================
-СООБЩЕНИЯ БАЗЫ В ПРАВУЮ КОНСОЛЬ
+НАТИВНЫЕ ДИАЛОГИ + ДУБЛИРОВАНИЕ В КОНСОЛЬ
 ========================================
 */
+const nativeAlert =
+  window.alert.bind(window)
+
+const nativeConfirm =
+  window.confirm.bind(window)
+
+const nativePrompt =
+  window.prompt.bind(window)
+
 function addDatabaseMessage(text, isError = false) {
   databaseMessages.push({
     text,
     isError
   })
 
-  if (databaseMessages.length > 80) {
+  if (databaseMessages.length > 120) {
     databaseMessages.shift()
   }
 
   renderConsole()
+}
+
+function systemMessage(text, isError = false) {
+  addDatabaseMessage(text, isError)
+  nativeAlert(text)
+}
+
+window.alert = function(message) {
+  addDatabaseMessage(
+    'DIALOG ALERT: ' + String(message)
+  )
+
+  nativeAlert(message)
+}
+
+window.confirm = function(message) {
+  addDatabaseMessage(
+    'DIALOG CONFIRM: ' + String(message)
+  )
+
+  const result =
+    nativeConfirm(message)
+
+  addDatabaseMessage(
+    'DIALOG CONFIRM RESULT: ' + String(result)
+  )
+
+  return result
+}
+
+window.prompt = function(message, value = '') {
+  addDatabaseMessage(
+    'DIALOG PROMPT: ' + String(message)
+  )
+
+  const result =
+    nativePrompt(message, value)
+
+  addDatabaseMessage(
+    'DIALOG PROMPT RESULT: ' + String(result)
+  )
+
+  return result
 }
 
 /*
@@ -465,9 +557,6 @@ const zones = {
 /*
 ========================================
 РОВНО 3 ТИПА СТОЛОВ
-round  — круглый, 2 места
-square — квадратный, 4 места
-rect   — прямоугольный, 6 мест
 ========================================
 */
 const stockItems = [
@@ -513,6 +602,18 @@ let contextTargetIndex = -1
 
 /*
 ========================================
+НАЗВАНИЕ ПРОЕКТА
+========================================
+*/
+function getProjectName() {
+  const value =
+    projectNameInput.value.trim()
+
+  return value || 'Restaurant Project'
+}
+
+/*
+========================================
 ОБЩИЕ ФУНКЦИИ
 ========================================
 */
@@ -543,6 +644,15 @@ function pointInRect(p, r) {
     p.x <= r.x + r.w &&
     p.y >= r.y &&
     p.y <= r.y + r.h
+  )
+}
+
+function isHallPlanTitleClick(p) {
+  return (
+    p.x >= 80 &&
+    p.x <= 260 &&
+    p.y >= 70 &&
+    p.y <= 120
   )
 }
 
@@ -642,6 +752,61 @@ function normalizeTableRow(row) {
   }
 }
 
+function getAppliedRows() {
+  return appliedTables.map(t => ({
+    ...t,
+    zone: getZoneName(t)
+  }))
+}
+
+function getHallPlanData() {
+  return {
+    project_name: getProjectName(),
+    zones,
+    stock: stockItems,
+    current_tables: tables.map(t => ({
+      ...t,
+      zone: getZoneName(t)
+    })),
+    applied_tables: getAppliedRows()
+  }
+}
+
+function getTableSetData() {
+  const groups = {
+    round: [],
+    square: [],
+    rect: []
+  }
+
+  tables.forEach(t => {
+    groups[t.type].push({
+      ...t,
+      zone: getZoneName(t)
+    })
+  })
+
+  return {
+    project_name: getProjectName(),
+    total_tables: tables.length,
+    groups
+  }
+}
+
+function getJsonData() {
+  return {
+    project_name: getProjectName(),
+    rows: getAppliedRows()
+  }
+}
+
+function pushConsoleObject(title, object, isError = false) {
+  addDatabaseMessage(
+    title + ': ' + JSON.stringify(object, null, 2),
+    isError
+  )
+}
+
 /*
 ========================================
 JSON-ПАНЕЛЬ
@@ -649,16 +814,13 @@ JSON-ПАНЕЛЬ
 */
 function updateJsonPanel() {
   const data =
-    appliedTables.map(t => ({
-      ...t,
-      zone: getZoneName(t)
-    }))
+    getJsonData()
 
   jsonPre.textContent =
     JSON.stringify(data, null, 2)
 
   jsonMeta.textContent =
-    'Saved rows: ' + data.length + ' tables'
+    'Project: ' + data.project_name + ' | Saved rows: ' + data.rows.length + ' tables'
 }
 
 function setView(mode) {
@@ -676,6 +838,11 @@ function setView(mode) {
       'Table Set'
 
     updateJsonPanel()
+
+    pushConsoleObject(
+      'JSON',
+      getJsonData()
+    )
   } else {
     jsonBox.style.display =
       'none'
@@ -685,6 +852,11 @@ function setView(mode) {
 
     toggleViewBtn.textContent =
       'JSON'
+
+    pushConsoleObject(
+      'TABLE SET',
+      getTableSetData()
+    )
 
     renderConsole()
   }
@@ -1010,6 +1182,11 @@ function draw() {
   ctx.textAlign = 'left'
   ctx.fillText('Hall Plan', 90, 105)
 
+  ctx.fillStyle = '#35506f'
+  ctx.font = 'bold 20px Arial'
+  ctx.textAlign = 'left'
+  ctx.fillText(getProjectName(), 300, 105)
+
   ctx.fillStyle = '#f3f6fb'
   roundRect(base.stock.x, base.stock.y, base.stock.w, base.stock.h, 14, true, false)
 
@@ -1165,7 +1342,7 @@ function renderConsole() {
     groups.rect.length
 
   consoleTotal.textContent =
-    'Total tables: ' + tables.length
+    'Project: ' + getProjectName() + ' | Total tables: ' + tables.length
 
   const lines = []
 
@@ -1231,12 +1408,12 @@ function renderConsole() {
   })
 
   lines.push({
-    text: '--- DataBase messages ---'
+    text: '--- Console messages ---'
   })
 
   if (!databaseMessages.length) {
     lines.push({
-      text: 'no database messages'
+      text: 'no messages'
     })
   } else {
     databaseMessages.forEach(msg => {
@@ -1260,7 +1437,7 @@ function renderConsole() {
 }
 
 function escapeHtml(str) {
-  return str
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -1281,6 +1458,14 @@ canvas.addEventListener('pointerdown', e => {
 
   movedDuringDrag =
     false
+
+  if (isHallPlanTitleClick(p)) {
+    pushConsoleObject(
+      'HALL PLAN',
+      getHallPlanData()
+    )
+    return
+  }
 
   const index =
     findTable(p)
@@ -1373,6 +1558,10 @@ canvas.addEventListener('click', e => {
 
   const p =
     screenToWorld(e.clientX, e.clientY)
+
+  if (isHallPlanTitleClick(p)) {
+    return
+  }
 
   const index =
     findTable(p)
@@ -1484,6 +1673,8 @@ document.getElementById('reset').addEventListener('click', e => {
   nextId =
     1
 
+  systemMessage('Plan reset')
+
   draw()
 })
 
@@ -1494,6 +1685,9 @@ document.getElementById('apply').addEventListener('click', e => {
     cloneTables()
 
   updateJsonPanel()
+
+  systemMessage('Applied to JSON')
+
   draw()
 })
 
@@ -1507,6 +1701,15 @@ toggleViewBtn.addEventListener('click', e => {
   )
 })
 
+projectNameInput.addEventListener('change', () => {
+  systemMessage(
+    'Project name changed: ' + getProjectName()
+  )
+
+  updateJsonPanel()
+  draw()
+})
+
 /*
 ========================================
 SAVE JSON FILE
@@ -1516,13 +1719,10 @@ document.getElementById('save').addEventListener('click', e => {
   pulseButton(e.currentTarget)
 
   const data =
-    appliedTables.map(t => ({
-      ...t,
-      zone: getZoneName(t)
-    }))
+    getJsonData()
 
   savedLayoutForUpload =
-    data
+    data.rows
 
   const blob =
     new Blob(
@@ -1540,7 +1740,7 @@ document.getElementById('save').addEventListener('click', e => {
     url
 
   a.download =
-    'tables-layout.json'
+    getProjectName().replace(/[^\wа-яА-ЯёЁ-]+/g, '_') + '_tables-layout.json'
 
   document.body.appendChild(a)
   a.click()
@@ -1557,9 +1757,9 @@ document.getElementById('save').addEventListener('click', e => {
   uploadDbBtn.classList.add('ready')
 
   jsonMeta.textContent =
-    'Saved rows: ' + data.length + ' tables | ready to upload'
+    'Project: ' + getProjectName() + ' | Saved rows: ' + data.rows.length + ' tables | ready to upload'
 
-  addDatabaseMessage(
+  systemMessage(
     'JSON file saved. Layout ready to upload.'
   )
 })
@@ -1586,28 +1786,38 @@ jsonFileInput.addEventListener('change', async () => {
     const text =
       await file.text()
 
-    const data =
+    const parsed =
       JSON.parse(text)
 
-    if (!Array.isArray(data)) {
-      addDatabaseMessage(
-        'JSON должен быть массивом',
+    let rows =
+      parsed
+
+    if (parsed && !Array.isArray(parsed) && Array.isArray(parsed.rows)) {
+      rows =
+        parsed.rows
+
+      if (parsed.project_name) {
+        projectNameInput.value =
+          parsed.project_name
+      }
+    }
+
+    if (!Array.isArray(rows)) {
+      systemMessage(
+        'JSON должен быть массивом или объектом с rows',
         true
       )
       return
     }
 
     tables =
-      data.map(normalizeTableRow)
+      rows.map(normalizeTableRow)
 
     appliedTables =
       cloneTables(tables)
 
     savedLayoutForUpload =
-      appliedTables.map(t => ({
-        ...t,
-        zone: getZoneName(t)
-      }))
+      getAppliedRows()
 
     const ids =
       tables
@@ -1627,13 +1837,13 @@ jsonFileInput.addEventListener('change', async () => {
     updateJsonPanel()
     draw()
 
-    addDatabaseMessage(
+    systemMessage(
       'JSON loaded'
     )
   } catch (err) {
     console.error(err)
 
-    addDatabaseMessage(
+    systemMessage(
       'Load JSON error: ' + err.message,
       true
     )
@@ -1688,39 +1898,79 @@ function sizeByShape(shape) {
 }
 
 async function getProjectAndHall() {
-  const { data: projects, error: projectError } =
+  const projectName =
+    getProjectName()
+
+  let { data: project, error: projectFindError } =
     await supabase
       .from('projects')
       .select('*')
-      .order('created_at', { ascending: true })
-      .limit(1)
+      .eq('name', projectName)
+      .maybeSingle()
 
-  if (projectError)
-    throw projectError
+  if (projectFindError)
+    throw projectFindError
 
-  if (!projects || !projects.length)
-    throw new Error('Project not found')
+  if (!project) {
+    const { data: createdProject, error: createProjectError } =
+      await supabase
+        .from('projects')
+        .insert({
+          name: projectName
+        })
+        .select('*')
+        .single()
 
-  const project =
-    projects[0]
+    if (createProjectError)
+      throw createProjectError
 
-  const { data: halls, error: hallError } =
+    project =
+      createdProject
+
+    addDatabaseMessage(
+      'Created project: ' + projectName
+    )
+  }
+
+  const projectId =
+    project.project_id || project.id
+
+  let { data: hall, error: hallFindError } =
     await supabase
       .from('halls')
       .select('*')
-      .eq('project_id', project.project_id)
-      .order('created_at', { ascending: true })
-      .limit(1)
+      .eq('project_id', projectId)
+      .eq('name', 'Main Hall')
+      .maybeSingle()
 
-  if (hallError)
-    throw hallError
+  if (hallFindError)
+    throw hallFindError
 
-  if (!halls || !halls.length)
-    throw new Error('Hall not found')
+  if (!hall) {
+    const { data: createdHall, error: createHallError } =
+      await supabase
+        .from('halls')
+        .insert({
+          project_id: projectId,
+          name: 'Main Hall'
+        })
+        .select('*')
+        .single()
+
+    if (createHallError)
+      throw createHallError
+
+    hall =
+      createdHall
+
+    addDatabaseMessage(
+      'Created hall: Main Hall'
+    )
+  }
 
   return {
     project,
-    hall: halls[0]
+    hall
   }
 }
 
@@ -1734,9 +1984,15 @@ async function uploadTableToDatabase(row, project, hall) {
   const name =
     'Table ' + row.id
 
+  const projectId =
+    project.project_id || project.id
+
+  const hallId =
+    hall.hall_id || hall.id
+
   const payload = {
-    project_id: project.project_id,
-    hall_id: hall.hall_id,
+    project_id: projectId,
+    hall_id: hallId,
     name: name,
     seats: size.seats,
     shape: shape,
@@ -1751,6 +2007,8 @@ async function uploadTableToDatabase(row, project, hall) {
     await supabase
       .from('tables')
       .select('table_id')
+      .eq('project_id', projectId)
+      .eq('hall_id', hallId)
       .eq('name', name)
       .maybeSingle()
 
@@ -1800,7 +2058,7 @@ uploadDbBtn.addEventListener('click', async e => {
   pulseButton(e.currentTarget)
 
   if (!savedLayoutForUpload) {
-    addDatabaseMessage(
+    systemMessage(
       'Сначала нажми Save JSON file или Load JSON file',
       true
     )
@@ -1811,6 +2069,10 @@ uploadDbBtn.addEventListener('click', async e => {
     true
 
   try {
+    systemMessage(
+      'Upload started: ' + getProjectName()
+    )
+
     const { project, hall } =
       await getProjectAndHall()
 
@@ -1818,11 +2080,11 @@ uploadDbBtn.addEventListener('click', async e => {
     console.log('UPLOAD HALL:', hall)
 
     addDatabaseMessage(
-      'UPLOAD PROJECT: ' + project.name
+      'UPLOAD PROJECT: ' + JSON.stringify(project)
     )
 
     addDatabaseMessage(
-      'UPLOAD HALL: ' + hall.name
+      'UPLOAD HALL: ' + JSON.stringify(hall)
     )
 
     for (const row of savedLayoutForUpload) {
@@ -1832,13 +2094,13 @@ uploadDbBtn.addEventListener('click', async e => {
       console.log(result)
     }
 
-    addDatabaseMessage(
+    systemMessage(
       'Project uploaded to DataBase'
     )
   } catch (err) {
     console.error(err)
 
-    addDatabaseMessage(
+    systemMessage(
       'Upload error: ' + err.message,
       true
     )
@@ -1885,7 +2147,7 @@ draw()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    button load & console | v2.0.3
+    button save project & console | v2.0.4
   </div>
 
   <div class="row" id="build-down">
