@@ -1,0 +1,169 @@
+Правильная структура:
+
+projects
+   └── halls
+          └── tables
+                 └── orders
+                        └── items
+1. projects — ресторан / проект
+
+Это верхний уровень.
+
+Хранит:
+
+project_id
+name
+owner_id
+max_halls
+created_at
+updated_at
+
+Политика:
+
+клиент может читать свой project
+клиент НЕ может создавать project
+клиент НЕ может удалять project
+project создаёшь ты
+2. halls — залы ресторана
+
+Один ресторан может иметь несколько залов.
+
+Примеры:
+
+Main Hall
+Terrace
+VIP
+Virtual Hall
+Delivery
+Summer
+
+Хранит:
+
+hall_id
+project_id
+name
+max_tables
+created_at
+updated_at
+
+Политика:
+
+клиент может читать свои halls
+клиент может создавать halls
+клиент может менять halls
+клиент может удалять halls
+но только внутри своего project
+количество halls ограничено max_halls
+3. tables — столы внутри зала
+
+Один зал содержит до 100 столов или другой лимит.
+
+Хранит:
+
+table_id
+project_id
+hall_id
+name
+seats
+shape
+x
+y
+width
+height
+rotation
+status
+created_at
+updated_at
+
+Политика:
+
+клиент может читать tables
+клиент может создавать tables
+клиент может менять tables
+клиент может удалять tables
+но только внутри своих halls
+количество tables ограничено max_tables
+4. orders — заказы по столу
+
+Заказ принадлежит конкретному столу.
+
+Хранит:
+
+order_id
+project_id
+hall_id
+table_id
+status
+total_amount
+opened_at
+closed_at
+created_at
+updated_at
+
+Статусы:
+
+open
+in_progress
+served
+paid
+cancelled
+
+Политика:
+
+клиент может читать orders
+клиент может создавать orders
+клиент может менять orders
+клиент может закрывать orders
+но только по своим tables
+5. items — позиции заказа
+
+Один заказ содержит много позиций.
+
+Хранит:
+
+item_id
+project_id
+order_id
+name
+quantity
+price
+total
+status
+created_at
+updated_at
+
+Статусы:
+
+new
+cooking
+ready
+served
+cancelled
+
+Политика:
+
+клиент может читать items
+клиент может создавать items
+клиент может менять items
+клиент может удалять / отменять items
+но только внутри своих orders
+Общая логика доступа
+project создаёшь ты
+hall создаёт клиент, но с лимитом
+table создаёт клиент, но с лимитом
+order создаёт клиент внутри своего table
+item создаёт клиент внутри своего order
+Главное правило RLS
+
+Каждая нижняя таблица должна проверяться через цепочку владельца:
+
+items → orders → tables → halls → projects → owner_id
+
+То есть клиент может работать только с теми данными, которые принадлежат его project.
+
+Итоговая модель
+projects — коммерческий объект, создаёшь ты
+halls — оперативные зоны, создаёт клиент ограниченно
+tables — схема зала, создаёт клиент ограниченно
+orders — заказы по столам
+items — строки заказа
