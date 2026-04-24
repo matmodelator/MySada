@@ -183,8 +183,8 @@ canvas {
 }
 
 .upload-db {
-  width: 100%;
-  padding: 12px 14px;
+  width: auto;
+  padding: 10px 14px;
   font-weight: 700;
 }
 
@@ -285,6 +285,13 @@ pre {
 
       <div class="side-actions">
         <button id="toggleView">JSON</button>
+
+        <button id="uploadDb" class="upload-db" disabled>
+          UpLoad Project to DataBase
+        </button>
+      </div>
+
+      <div class="side-actions">
         <button id="loadJson">Load JSON file</button>
         <button id="save">Save JSON file</button>
       </div>
@@ -308,7 +315,7 @@ pre {
       </div>
 
       <div class="console" id="consoleBox">
-        <div class="console-title">Table Console</div>
+        <div class="console-title">Table Set</div>
         <div class="console-total" id="consoleTotal">Total tables: 0</div>
         <div id="consoleLines"></div>
       </div>
@@ -318,10 +325,6 @@ pre {
         <div class="json-meta" id="jsonMeta">Saved rows: 0</div>
         <pre id="jsonPre">[]</pre>
       </div>
-
-      <button id="uploadDb" class="upload-db" disabled>
-        UpLoad Project to DataBase
-      </button>
 
     </div>
 
@@ -385,6 +388,26 @@ const jsonFileInput =
   document.getElementById('jsonFileInput')
 
 let savedLayoutForUpload = null
+
+let databaseMessages = []
+
+/*
+========================================
+СООБЩЕНИЯ БАЗЫ В ПРАВУЮ КОНСОЛЬ
+========================================
+*/
+function addDatabaseMessage(text, isError = false) {
+  databaseMessages.push({
+    text,
+    isError
+  })
+
+  if (databaseMessages.length > 80) {
+    databaseMessages.shift()
+  }
+
+  renderConsole()
+}
 
 /*
 ========================================
@@ -650,7 +673,7 @@ function setView(mode) {
       'block'
 
     toggleViewBtn.textContent =
-      'Console'
+      'Table Set'
 
     updateJsonPanel()
   } else {
@@ -662,6 +685,8 @@ function setView(mode) {
 
     toggleViewBtn.textContent =
       'JSON'
+
+    renderConsole()
   }
 }
 
@@ -828,7 +853,7 @@ function drawStockItem(item) {
 
   const color =
     item.type === 'round'
-      ? '#7aa65a'
+      ? '#38bdf8'
       : item.type === 'square'
         ? '#4d87c7'
         : '#9b7bd1'
@@ -837,13 +862,47 @@ function drawStockItem(item) {
 
   ctx.restore()
 
-  ctx.fillStyle = '#243447'
-  ctx.font = 'bold 12px Arial'
-  ctx.textAlign = 'center'
-  ctx.fillText(item.label, item.x, item.y + item.size / 2 + 14)
+  ctx.fillStyle =
+    '#ffffff'
 
-  ctx.font = '11px Arial'
-  ctx.fillText(item.seats + ' seats', item.x, item.y + item.size / 2 + 29)
+  ctx.font =
+    'bold 24px Arial'
+
+  ctx.textAlign =
+    'center'
+
+  ctx.textBaseline =
+    'middle'
+
+  ctx.fillText(
+    'N',
+    item.x,
+    item.y
+  )
+
+  ctx.textBaseline =
+    'alphabetic'
+
+  ctx.fillStyle =
+    '#243447'
+
+  ctx.font =
+    'bold 16px Arial'
+
+  ctx.fillText(
+    item.label,
+    item.x,
+    item.y + item.size / 2 + 20
+  )
+
+  ctx.font =
+    'bold 14px Arial'
+
+  ctx.fillText(
+    item.seats + ' seats',
+    item.x,
+    item.y + item.size / 2 + 39
+  )
 }
 
 function drawExtraZone(rect, title, fill, stroke) {
@@ -877,7 +936,7 @@ function drawTable(t) {
     '#4d87c7'
 
   if (t.type === 'round')
-    color = '#7aa65a'
+    color = '#38bdf8'
 
   if (t.type === 'rect')
     color = '#9b7bd1'
@@ -904,7 +963,7 @@ function drawTable(t) {
   ctx.restore()
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = 'bold 20px Arial'
+  ctx.font = 'bold 28px Arial'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(String(t.id), t.x, t.y)
@@ -959,9 +1018,9 @@ function draw() {
   roundRect(base.stock.x, base.stock.y, base.stock.w, base.stock.h, 14, false, true)
 
   ctx.fillStyle = '#35506f'
-  ctx.font = 'bold 18px Arial'
+  ctx.font = 'bold 24px Arial'
   ctx.textAlign = 'center'
-  ctx.fillText('Table Stock', base.stock.x + base.stock.w / 2, base.stock.y + 28)
+  ctx.fillText('Table Stock', base.stock.x + base.stock.w / 2, base.stock.y + 34)
 
   drawZoneLabel('TOP TERRACE', 680, 195)
   drawZoneLabel('BOTTOM TERRACE', 680, 820)
@@ -1075,7 +1134,7 @@ function findStockItem(p) {
 
 /*
 ========================================
-КОНСОЛЬ
+КОНСОЛЬ TABLE SET
 ========================================
 */
 function renderConsole() {
@@ -1170,6 +1229,23 @@ function renderConsole() {
   lines.push({
     text: 'Applied in JSON: ' + appliedTables.length
   })
+
+  lines.push({
+    text: '--- DataBase messages ---'
+  })
+
+  if (!databaseMessages.length) {
+    lines.push({
+      text: 'no database messages'
+    })
+  } else {
+    databaseMessages.forEach(msg => {
+      lines.push({
+        text: msg.text,
+        error: msg.isError
+      })
+    })
+  }
 
   consoleLines.innerHTML =
     lines
@@ -1482,6 +1558,10 @@ document.getElementById('save').addEventListener('click', e => {
 
   jsonMeta.textContent =
     'Saved rows: ' + data.length + ' tables | ready to upload'
+
+  addDatabaseMessage(
+    'JSON file saved. Layout ready to upload.'
+  )
 })
 
 /*
@@ -1510,7 +1590,10 @@ jsonFileInput.addEventListener('change', async () => {
       JSON.parse(text)
 
     if (!Array.isArray(data)) {
-      alert('JSON должен быть массивом')
+      addDatabaseMessage(
+        'JSON должен быть массивом',
+        true
+      )
       return
     }
 
@@ -1544,10 +1627,16 @@ jsonFileInput.addEventListener('change', async () => {
     updateJsonPanel()
     draw()
 
-    alert('JSON loaded')
+    addDatabaseMessage(
+      'JSON loaded'
+    )
   } catch (err) {
     console.error(err)
-    alert('Load JSON error: ' + err.message)
+
+    addDatabaseMessage(
+      'Load JSON error: ' + err.message,
+      true
+    )
   } finally {
     jsonFileInput.value = ''
   }
@@ -1668,6 +1757,14 @@ async function uploadTableToDatabase(row, project, hall) {
   console.log("UPLOAD PAYLOAD:", payload)
   console.log("EXISTING:", existing)
 
+  addDatabaseMessage(
+    'UPLOAD PAYLOAD: ' + JSON.stringify(payload)
+  )
+
+  addDatabaseMessage(
+    'EXISTING: ' + JSON.stringify(existing)
+  )
+
   if (findError)
     throw findError
 
@@ -1681,6 +1778,8 @@ async function uploadTableToDatabase(row, project, hall) {
     if (updateError)
       throw updateError
 
+    addDatabaseMessage('Updated: ' + name)
+
     return 'Updated: ' + name
   }
 
@@ -1692,6 +1791,8 @@ async function uploadTableToDatabase(row, project, hall) {
   if (insertError)
     throw insertError
 
+  addDatabaseMessage('Inserted: ' + name)
+
   return 'Inserted: ' + name
 }
 
@@ -1699,7 +1800,10 @@ uploadDbBtn.addEventListener('click', async e => {
   pulseButton(e.currentTarget)
 
   if (!savedLayoutForUpload) {
-    alert('Сначала нажми Save JSON file или Load JSON file')
+    addDatabaseMessage(
+      'Сначала нажми Save JSON file или Load JSON file',
+      true
+    )
     return
   }
 
@@ -1713,6 +1817,14 @@ uploadDbBtn.addEventListener('click', async e => {
     console.log('UPLOAD PROJECT:', project)
     console.log('UPLOAD HALL:', hall)
 
+    addDatabaseMessage(
+      'UPLOAD PROJECT: ' + project.name
+    )
+
+    addDatabaseMessage(
+      'UPLOAD HALL: ' + hall.name
+    )
+
     for (const row of savedLayoutForUpload) {
       const result =
         await uploadTableToDatabase(row, project, hall)
@@ -1720,10 +1832,16 @@ uploadDbBtn.addEventListener('click', async e => {
       console.log(result)
     }
 
-    alert('Project uploaded to DataBase')
+    addDatabaseMessage(
+      'Project uploaded to DataBase'
+    )
   } catch (err) {
     console.error(err)
-    alert('Upload error: ' + err.message)
+
+    addDatabaseMessage(
+      'Upload error: ' + err.message,
+      true
+    )
   } finally {
     uploadDbBtn.disabled =
       false
@@ -1767,7 +1885,7 @@ draw()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    set layout upload & load button | v2.0.2
+    button load & console | v2.0.3
   </div>
 
   <div class="row" id="build-down">
