@@ -284,14 +284,12 @@ pre {
 
     <div class="side">
 
-      <!-- ВЕРХНИЙ РЯД: ТРИ РЕЖИМА ОКНА -->
       <div class="side-actions three">
         <button id="viewConsole">Console</button>
         <button id="viewJson">JSON</button>
         <button id="viewSetup">Set Up</button>
       </div>
 
-      <!-- ВТОРОЙ РЯД: ФАЙЛЫ И БАЗА -->
       <div class="side-actions three">
         <button id="loadJson">Load JSON file</button>
         <button id="save">Save JSON file</button>
@@ -303,7 +301,6 @@ pre {
         </button>
       </div>
 
-      <!-- СКАЧАТЬ ЖУРНАЛ -->
       <div class="side-actions one">
         <button id="downloadLog">Download log.txt</button>
       </div>
@@ -313,34 +310,36 @@ pre {
              accept=".json,application/json"
              style="display:none;" />
 
-      <!-- ПРОСТОЙ ВХОД ПО ИМЕНИ -->
       <div class="legend">
-        <b>User login:</b>
+        <b>Supabase Auth Login:</b>
 
-        <input id="loginName"
-               type="text"
-               value="Igor"
-               placeholder="User name" />
+        <input id="loginEmail"
+               type="email"
+               value="igor@local"
+               placeholder="email" />
 
         <input id="loginPassword"
                type="password"
-               value=""
-               placeholder="Password empty"
+               value="123456"
+               placeholder="password"
                style="margin-top:8px;" />
 
         <button id="loginBtn"
                 style="width:100%;margin-top:8px;">
           Login
         </button>
+
+        <button id="logoutBtn"
+                style="width:100%;margin-top:6px;">
+          Logout
+        </button>
       </div>
 
-      <!-- PROJECT НЕ РЕДАКТИРУЕТСЯ -->
       <div class="legend">
         <b>Project:</b>
-        <span id="projectLabel">loading...</span>
+        <span id="projectLabel">not loaded</span>
       </div>
 
-      <!-- HALL РЕДАКТИРУЕТСЯ И ИДЁТ В JSON -->
       <div class="legend">
         <label for="hallName">
           <b>Hall name:</b>
@@ -351,7 +350,6 @@ pre {
                value="Main Hall" />
       </div>
 
-      <!-- СТРОКА СОСТОЯНИЯ НАД КОНСОЛЬЮ -->
       <div class="legend">
         <div class="info-line" id="sideInfoLine">
           Project: -<br>
@@ -373,7 +371,6 @@ pre {
         <code>sauna</code>
       </div>
 
-      <!-- ОДНО ОКНО ДЛЯ CONSOLE / JSON / SET UP -->
       <div class="console" id="outputBox">
         <div class="console-title" id="outputTitle">Console</div>
         <div class="console-total" id="outputMeta">Ready</div>
@@ -455,8 +452,8 @@ const loadJsonBtn =
 const jsonFileInput =
   document.getElementById('jsonFileInput')
 
-const loginNameInput =
-  document.getElementById('loginName')
+const loginEmailInput =
+  document.getElementById('loginEmail')
 
 const loginPasswordInput =
   document.getElementById('loginPassword')
@@ -464,11 +461,17 @@ const loginPasswordInput =
 const loginBtn =
   document.getElementById('loginBtn')
 
+const logoutBtn =
+  document.getElementById('logoutBtn')
+
 /*
 ========================================
 СОСТОЯНИЕ PROJECT / USER / HALL
 ========================================
 */
+let authUser =
+  null
+
 let currentProject =
   null
 
@@ -510,7 +513,6 @@ let uploadState = {
 /*
 ========================================
 НАТИВНЫЕ ДИАЛОГИ
-Дублируются в Console history
 ========================================
 */
 const nativeAlert =
@@ -523,39 +525,28 @@ const nativePrompt =
   window.prompt.bind(window)
 
 window.alert = function(message) {
-  addConsoleMessage(
-    'DIALOG ALERT: ' + String(message)
-  )
-
+  addConsoleMessage('DIALOG ALERT: ' + String(message))
   nativeAlert(message)
 }
 
 window.confirm = function(message) {
-  addConsoleMessage(
-    'DIALOG CONFIRM: ' + String(message)
-  )
+  addConsoleMessage('DIALOG CONFIRM: ' + String(message))
 
   const result =
     nativeConfirm(message)
 
-  addConsoleMessage(
-    'DIALOG CONFIRM RESULT: ' + String(result)
-  )
+  addConsoleMessage('DIALOG CONFIRM RESULT: ' + String(result))
 
   return result
 }
 
 window.prompt = function(message, value = '') {
-  addConsoleMessage(
-    'DIALOG PROMPT: ' + String(message)
-  )
+  addConsoleMessage('DIALOG PROMPT: ' + String(message))
 
   const result =
     nativePrompt(message, value)
 
-  addConsoleMessage(
-    'DIALOG PROMPT RESULT: ' + String(result)
-  )
+  addConsoleMessage('DIALOG PROMPT RESULT: ' + String(result))
 
   return result
 }
@@ -813,8 +804,7 @@ function normalizeTableRow(row) {
 
 /*
 ========================================
-ОБНОВИТЬ СТРОКУ НАД КОНСОЛЬЮ
-Project / User / Hall
+СТРОКА НАД КОНСОЛЬЮ
 ========================================
 */
 function updateSideInfoLine() {
@@ -842,7 +832,7 @@ function updateSideInfoLine() {
 
 /*
 ========================================
-ДАННЫЕ ДЛЯ JSON И SET UP
+ДАННЫЕ JSON / SET UP
 ========================================
 */
 function getAppliedRows() {
@@ -925,7 +915,7 @@ function systemMessage(text, isError = false) {
 
 /*
 ========================================
-РЕНДЕР ТРЁХ РЕЖИМОВ
+РЕНДЕР РЕЖИМОВ
 ========================================
 */
 function setOutputMode(mode) {
@@ -1145,39 +1135,21 @@ function downloadLogFile() {
 
 /*
 ========================================
-ПРОСТОЙ ВХОД ПО ИМЕНИ
-Пароль по умолчанию пустой
+SUPABASE AUTH LOGIN
 ========================================
 */
-async function loginByName() {
-  const name =
-    loginNameInput.value.trim()
+async function loginWithAuth() {
+  const email =
+    loginEmailInput.value.trim()
 
   const password =
     loginPasswordInput.value
 
-  if (!name) {
-    systemMessage(
-      'Login error: user name is empty',
-      true
-    )
-    return
-  }
-
-  if (password !== '') {
-    systemMessage(
-      'Login error: password must be empty',
-      true
-    )
-    return
-  }
-
   const { data, error } =
-    await supabase
-      .from('users')
-      .select('user_id, project_id, name, role, status')
-      .eq('name', name)
-      .maybeSingle()
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
 
   if (error) {
     systemMessage(
@@ -1187,9 +1159,103 @@ async function loginByName() {
     return
   }
 
+  authUser =
+    data.user
+
+  addConsoleMessage(
+    'Auth login: ' + authUser.email + ' / ' + authUser.id
+  )
+
+  await loadUserProfile()
+  await loadCurrentProject()
+
+  updateSideInfoLine()
+  renderCurrentOutput()
+  draw()
+}
+
+async function logoutAuth() {
+  await supabase.auth.signOut()
+
+  authUser =
+    null
+
+  currentUser =
+    null
+
+  currentUserName =
+    ''
+
+  currentProject =
+    null
+
+  currentProjectName =
+    ''
+
+  currentProjectId =
+    null
+
+  projectLabel.textContent =
+    'not loaded'
+
+  addConsoleMessage(
+    'User logged out'
+  )
+
+  updateSideInfoLine()
+  renderCurrentOutput()
+  draw()
+}
+
+async function checkExistingSession() {
+  const { data, error } =
+    await supabase.auth.getUser()
+
+  if (error || !data.user) {
+    addConsoleMessage(
+      'No auth session. Login required.'
+    )
+    return
+  }
+
+  authUser =
+    data.user
+
+  addConsoleMessage(
+    'Session restored: ' + authUser.email + ' / ' + authUser.id
+  )
+
+  await loadUserProfile()
+  await loadCurrentProject()
+}
+
+async function loadUserProfile() {
+  if (!authUser) {
+    systemMessage(
+      'User load error: no auth user',
+      true
+    )
+    return
+  }
+
+  const { data, error } =
+    await supabase
+      .from('users')
+      .select('user_id, project_id, name, role, status')
+      .eq('user_id', authUser.id)
+      .maybeSingle()
+
+  if (error) {
+    systemMessage(
+      'User load error: ' + error.message,
+      true
+    )
+    return
+  }
+
   if (!data) {
     systemMessage(
-      'Login error: user not found: ' + name,
+      'User not found in public.users',
       true
     )
     return
@@ -1197,7 +1263,7 @@ async function loginByName() {
 
   if (data.status !== 'on') {
     systemMessage(
-      'Login error: user switched off: ' + name,
+      'User switched off',
       true
     )
     return
@@ -1210,11 +1276,10 @@ async function loginByName() {
     data.name
 
   addConsoleMessage(
-    'User login: ' + data.name + ' | role: ' + data.role
+    'User profile: ' + data.name + ' / ' + data.role
   )
 
   updateSideInfoLine()
-  renderCurrentOutput()
 }
 
 /*
@@ -1498,13 +1563,6 @@ function draw() {
   drawExtraZone(zones.pool, 'POOL', '#dff1fb', '#6db7dc')
   drawExtraZone(zones.sauna, 'SAUNA', '#f6e2d8', '#d39975')
 
-  /*
-  ========================================
-  HALL PLAN НА CANVAS
-  Только имя зала рядом с заголовком
-  Project/User/Role здесь НЕ выводятся
-  ========================================
-  */
   ctx.fillStyle = '#35506f'
   ctx.font = 'bold 34px Arial'
   ctx.textAlign = 'left'
@@ -1814,7 +1872,7 @@ contextMenu.addEventListener('click', e => {
 
 /*
 ========================================
-КНОПКИ РЕЖИМОВ
+КНОПКИ
 ========================================
 */
 viewConsoleBtn.addEventListener('click', e => {
@@ -1839,14 +1897,14 @@ downloadLogBtn.addEventListener('click', e => {
 
 loginBtn.addEventListener('click', async e => {
   pulseButton(e.currentTarget)
-  await loginByName()
+  await loginWithAuth()
 })
 
-/*
-========================================
-КНОПКИ РЕДАКТОРА
-========================================
-*/
+logoutBtn.addEventListener('click', async e => {
+  pulseButton(e.currentTarget)
+  await logoutAuth()
+})
+
 document.getElementById('undo').addEventListener('click', e => {
   pulseButton(e.currentTarget)
 
@@ -2107,25 +2165,32 @@ function sizeByShape(shape) {
 /*
 ========================================
 ЗАГРУЗКА PROJECT
-Project не редактируется на странице
+Берём project текущего пользователя
 ========================================
 */
 async function loadCurrentProject() {
-  const { data: projects, error } =
+  if (!currentUser) {
+    projectLabel.textContent =
+      'login required'
+
+    return
+  }
+
+  const { data: project, error } =
     await supabase
       .from('projects')
       .select('*')
-      .order('created_at', { ascending: true })
-      .limit(1)
+      .eq('project_id', currentUser.project_id)
+      .maybeSingle()
 
   if (error)
     throw error
 
-  if (!projects || !projects.length)
+  if (!project)
     throw new Error('Project not found')
 
   currentProject =
-    projects[0]
+    project
 
   currentProjectId =
     currentProject.project_id || currentProject.id
@@ -2146,7 +2211,6 @@ async function loadCurrentProject() {
 /*
 ========================================
 ПОЛУЧИТЬ ИЛИ СОЗДАТЬ HALL
-Hall создаётся по введённому имени
 ========================================
 */
 async function getOrCreateHall(projectId, hallName) {
@@ -2191,7 +2255,7 @@ async function getOrCreateHall(projectId, hallName) {
 
 /*
 ========================================
-ЗАГРУЗКА ОДНОГО СТОЛА В БАЗУ
+ЗАГРУЗКА ОДНОГО СТОЛА
 ========================================
 */
 async function uploadTableToDatabase(row, project, hall) {
@@ -2319,15 +2383,22 @@ function failUploadProgress(message) {
 /*
 ========================================
 UPLOAD PROJECT TO DATABASE
-Console показывает Project / Hall / User
 ========================================
 */
 uploadDbBtn.addEventListener('click', async e => {
   pulseButton(e.currentTarget)
 
+  if (!authUser) {
+    systemMessage(
+      'Upload error: Supabase Auth login required',
+      true
+    )
+    return
+  }
+
   if (!currentUser) {
     systemMessage(
-      'Upload error: user not logged in',
+      'Upload error: user profile not loaded',
       true
     )
     return
@@ -2452,21 +2523,7 @@ canvas.addEventListener(
 async function init() {
   setOutputMode('console')
 
-  try {
-    await loadCurrentProject()
-  } catch (err) {
-    console.error(err)
-
-    projectLabel.textContent =
-      'Project load error'
-
-    addConsoleMessage(
-      'Project load error: ' + err.message,
-      true
-    )
-  }
-
-  await loginByName()
+  await checkExistingSession()
 
   appliedTables =
     cloneTables()
@@ -2489,7 +2546,7 @@ init()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    log in | v4.0.0
+    auth log in | v4.1.0
   </div>
 
   <div class="row" id="build-down">
