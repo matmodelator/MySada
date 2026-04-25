@@ -407,6 +407,7 @@ const contextMenu =
 ЭЛЕМЕНТЫ ПРАВОЙ ПАНЕЛИ
 ========================================
 */
+
 const outputTitle =
   document.getElementById('outputTitle')
 
@@ -446,14 +447,8 @@ const loadJsonBtn =
 const jsonFileInput =
   document.getElementById('jsonFileInput')
 
-const loginNameInput =
-  document.getElementById('loginName')
-
-const loginPasswordInput =
-  document.getElementById('loginPassword')
-
-const loginBtn =
-  document.getElementById('loginBtn')
+const goHallBtn =
+  document.getElementById('goHallBtn')
 
 /*
 ========================================
@@ -1739,6 +1734,7 @@ contextMenu.addEventListener('click', e => {
 КНОПКИ РЕЖИМОВ
 ========================================
 */
+
 viewConsoleBtn.addEventListener('click', e => {
   pulseButton(e.currentTarget)
   setOutputMode('console')
@@ -1758,12 +1754,6 @@ downloadLogBtn.addEventListener('click', e => {
   pulseButton(e.currentTarget)
   downloadLogFile()
 })
-
-loginBtn.addEventListener('click', async e => {
-  pulseButton(e.currentTarget)
-  await loginByName()
-})
-
 /*
 ========================================
 КНОПКИ РЕДАКТОРА
@@ -2439,44 +2429,17 @@ canvas.addEventListener(
   { passive: false }
 )
 
-/*
-========================================
-СТАРТ
-========================================
-*/
+
 /*
 ========================================
 INIT
-редактор запускается пустым
-проект создается позже при Upload
+редактор запускается без загрузки из базы
 ========================================
 */
 
 async function init() {
 
-  /*
-  ========================================
-  РЕЖИМ ВЫВОДА
-  ========================================
-  */
-
   setOutputMode('console')
-
-  /*
-  ========================================
-  ПРОВЕРКА LOGIN
-  если нет session → sign.html
-  ========================================
-  */
-
-  await loadAuthUser()
-
-  /*
-  ========================================
-  НОВЫЙ ПРОЕКТ
-  редактор стартует пустым
-  ========================================
-  */
 
   currentProject =
     null
@@ -2490,46 +2453,28 @@ async function init() {
   currentHallId =
     null
 
-  /*
-  ========================================
-  UI
-  ========================================
-  */
-
-  if (typeof projectLabel !== 'undefined') {
-
-    projectLabel.textContent =
-      'New project'
-
+  currentUser = {
+    user_id: 'local',
+    email: 'local',
+    name: 'local',
+    role: 'editor',
+    status: 'on'
   }
+
+  projectLabel.textContent =
+    'New project'
 
   updateSideInfoLine()
 
-  /*
-  ========================================
-  ПУСТОЕ ПОЛЕ
-  ========================================
-  */
-
-  if (typeof draw === 'function') {
-
-    draw()
-
-  }
-
-  /*
-  ========================================
-  ЛОГ
-  ========================================
-  */
+  draw()
 
   addConsoleMessage(
-    'Editor ready — new project'
+    'Editor ready — no database loading'
   )
 
 }
 
-
+init()
  
 </script>    
 
