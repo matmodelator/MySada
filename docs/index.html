@@ -2444,75 +2444,90 @@ canvas.addEventListener(
 СТАРТ
 ========================================
 */
+/*
+========================================
+INIT
+редактор запускается пустым
+проект создается позже при Upload
+========================================
+*/
+
 async function init() {
+
+  /*
+  ========================================
+  РЕЖИМ ВЫВОДА
+  ========================================
+  */
+
   setOutputMode('console')
 
-  try {
-    await loadCurrentProject()
-  } catch (err) {
-    console.error(err)
-
-    projectLabel.textContent =
-      'Project load error'
-
-    addConsoleMessage(
-      'Project load error: ' + err.message,
-      true
-    )
-  }
-
- async function loadAuthUser() {
-  const { data, error } =
-    await supabase.auth.getUser()
-
-  if (error || !data.user) {
-    window.location.href =
-      'sign.html'
-
-    return null
-  }
-
-  currentUser = {
-    user_id: data.user.id,
-    email: data.user.email,
-    name: data.user.email,
-    role: 'user',
-    status: 'on',
-    project_id: currentProjectId
-  }
-
-  sessionStorage.setItem(
-    'mysada_user',
-    JSON.stringify(currentUser)
-  ) 
-       
-  await loadCurrentProject()
+  /*
+  ========================================
+  ПРОВЕРКА LOGIN
+  если нет session → sign.html
+  ========================================
+  */
 
   await loadAuthUser()
 
+  /*
+  ========================================
+  НОВЫЙ ПРОЕКТ
+  редактор стартует пустым
+  ========================================
+  */
+
+  currentProject =
+    null
+
+  currentProjectId =
+    null
+
+  currentProjectName =
+    ''
+
+  currentHallId =
+    null
+
+  /*
+  ========================================
+  UI
+  ========================================
+  */
+
+  if (typeof projectLabel !== 'undefined') {
+
+    projectLabel.textContent =
+      'New project'
+
+  }
+
   updateSideInfoLine()
-  renderCurrentOutput()
 
-  return currentUser
+  /*
+  ========================================
+  ПУСТОЕ ПОЛЕ
+  ========================================
+  */
+
+  if (typeof draw === 'function') {
+
+    draw()
+
+  }
+
+  /*
+  ========================================
+  ЛОГ
+  ========================================
+  */
+
+  addConsoleMessage(
+    'Editor ready — new project'
+  )
+
 }
-
-  appliedTables =
-    cloneTables()
-
-  savedLayoutForUpload =
-    getAppliedRows()
-
-  uploadDbBtn.disabled =
-    false
-
-  uploadDbBtn.classList.add('ready')
-
-  updateSideInfoLine()
-  draw()
-}
-
-init()
-
 
 
  
@@ -2526,7 +2541,7 @@ init()
       
 <div id="service-console">
   <div class="row" id="build-top">
-   with sign up |v5.0.2
+   init |v5.0.3
   </div>
 
   <div class="row" id="build-down">
