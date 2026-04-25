@@ -367,69 +367,49 @@ function loadUserFromSession() {
 
 /*
 ========================================
-LOAD PROJECT BY USER.PROJECT_ID
+LOAD PROJECT ИЗ SESSION
+никаких user.project_id
 ========================================
 */
 
-async function loadProject() {
-  const projectId =
-    currentUser.project_id
+function loadProjectFromSession() {
 
-  if (!projectId) {
-    projectNameBox.textContent =
-      'No project_id in user'
+  const raw =
+    sessionStorage.getItem(
+      'mysada_project'
+    )
+
+  if (!raw) {
 
     setStatus(
-      'Project error: user.project_id is empty'
+      'Project error: project not found in session'
     )
 
     return null
   }
 
-  const { data, error } =
-    await supabase
-      .from('projects')
-      .select('*')
-      .eq('project_id', projectId)
-      .maybeSingle()
+  const saved =
+    JSON.parse(raw)
 
-  if (error) {
-    console.error(error)
+  currentProjectId =
+    saved.project_id
 
-    projectNameBox.textContent =
-      'Project load error'
+  currentProjectName =
+    saved.project_name
 
-    setStatus(
-      'Project load error: ' + error.message
-    )
+  projectNameLabel.textContent =
+    currentProjectName
 
-    return null
-  }
-
-  if (!data) {
-    projectNameBox.textContent =
-      'Project not found'
-
-    setStatus(
-      'Project not found: ' + projectId
-    )
-
-    return null
-  }
-
-  currentProject =
-    data
-
-  projectNameBox.textContent =
-    data.name || data.project_name || data.project_id
-
-  setStatus(
-    'Project loaded: ' + projectNameBox.textContent
+  addConsoleMessage(
+    'Project loaded: '
+    + currentProjectName
+    + ' / '
+    + currentProjectId
   )
 
-  return data
-}
+  return currentProjectId
 
+}
 /*
 ========================================
 LOAD HALL FROM DATABASE
@@ -647,38 +627,132 @@ document
 /*
 ========================================
 INIT
+Hall стартует из sessionStorage
+никаких user.project_id
 ========================================
 */
 
 async function init() {
-  updateBuildLine('init')
 
-  const user =
-    loadUserFromSession()
+  /*
+  ========================================
+  USER ИЗ SUPABASE AUTH
+  ========================================
+  */
 
-  if (!user) {
+  const { data, error } =
+    await supabase.auth.getUser()
+
+  if (error || !data.user) {
+
+    setStatus(
+      'User error: not logged in'
+    )
+
     return
   }
 
-  const project =
-    await loadProject()
+  currentUser = {
+    user_id: data.user.id,
+    email: data.user.email,
+    name: data.user.email,
+    role: 'user',
+    status: 'on'
+  }
 
-  if (!project) {
+  /*
+  ========================================
+  PROJECT ИЗ SESSION
+  ========================================
+  */
+
+  const rawProject =
+    sessionStorage.getItem(
+      'mysada_project'
+    )
+
+  if (!rawProject) {
+
+    setStatus(
+      'Project error: project not found in session'
+    )
+
     return
   }
 
-  const hall =
-    await loadHall()
+  const savedProject =
+    JSON.parse(rawProject)
 
-  if (!hall) {
+  currentProjectId =
+    savedProject.project_id
+
+  currentProjectName =
+    savedProject.project_name
+
+  projectNameLabel.textContent =
+    currentProjectName
+
+  addConsoleMessage(
+    'Project loaded: '
+    + currentProjectName
+  )
+
+  /*
+  ========================================
+  HALL ИЗ URL
+  ========================================
+  */
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    )
+
+  currentHallId =
+    params.get('hall_id')
+
+  if (!currentHallId) {
+
+    setStatus(
+      'Hall error: hall_id missing'
+    )
+
     return
   }
 
-  await loadTables()
+  hallNameLabel.textContent =
+    'Loading hall...'
+
+  /*
+  ========================================
+  ЗАГРУЗКА TABLES
+  ========================================
+  */
+
+  try {
+
+    await loadTables()
+
+    setStatus(
+      'Hall ready'
+    )
+
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Load tables error: '
+      + err.message
+    )
+
+  }
+
 }
-
 init()
 
+      
 </script>
 
 
@@ -692,7 +766,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    user from index | v3.0.3
+    project from index | v3.0.4
   </div>
 
   <div class="row" id="build-down">
