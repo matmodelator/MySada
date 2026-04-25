@@ -2319,7 +2319,7 @@ function failUploadProgress(message) {
 /*
 ========================================
 UPLOAD PROJECT TO DATABASE
-Console НЕ показывает Project / Hall / User
+Console показывает Project / Hall / User
 ========================================
 */
 uploadDbBtn.addEventListener('click', async e => {
@@ -2400,12 +2400,6 @@ uploadDbBtn.addEventListener('click', async e => {
 
     finishUploadProgress()
 
-
-await loadTablesFromCurrentHall()
-
-systemMessage(
-  'Project uploaded to DataBase'
-)
     systemMessage(
       'Project uploaded to DataBase'
     )
@@ -2426,42 +2420,6 @@ systemMessage(
   }
 })
 
-/*
-========================================
-DOWNLOAD PROJECT FROM DATABASE
-========================================
-*/
-async function loadTablesFromCurrentHall() {
-
-  if (!currentHallId) {
-    systemMessage(
-      'No current hall selected',
-      true
-    )
-    return
-  }
-
-  const { data, error } =
-    await supabase
-      .from('tables')
-      .select('*')
-      .eq('hall_id', currentHallId)
-
-  if (error) {
-    systemMessage(
-      'Load tables error: ' + error.message,
-      true
-    )
-    return
-  }
-
-  console.log(
-    'Tables loaded:',
-    data.length
-  )
-
-}
-      
 /*
 ========================================
 МАСШТАБ
@@ -2531,7 +2489,7 @@ init()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    function download hall from database | back to v4.0.2
+    log in | back to v4.0.0
   </div>
 
   <div class="row" id="build-down">
