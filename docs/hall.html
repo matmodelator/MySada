@@ -657,23 +657,64 @@
   ========================================
   */
   async function init() {
-    updateBuildLine('init')
 
-    if (!projectId || !hallId || !userNameFromUrl) {
-      setStatus(
-        'Missing URL params. Need project_id, hall_id, user_name'
-      )
+  console.log('HALL INIT START')
 
-      return
-    }
+  updateBuildLine('init')
 
-    await loadUserFromName()
-    await loadProject()
-    await loadHallInfo()
-    await loadTables()
+  console.log('URL:',
+    window.location.href
+  )
+
+  console.log('PARAMS:',
+    projectId,
+    hallId,
+    userNameFromUrl
+  )
+
+  if (!projectId) {
+    setStatus('ERROR: project_id missing')
+    return
   }
 
-  init()
+  if (!hallId) {
+    setStatus('ERROR: hall_id missing')
+    return
+  }
+
+  if (!userNameFromUrl) {
+    setStatus('ERROR: user_name missing')
+    return
+  }
+
+  try {
+
+    console.log('Loading user...')
+    await loadUserFromName()
+
+    console.log('Loading project...')
+    await loadProject()
+
+    console.log('Loading hall...')
+    await loadHallInfo()
+
+    console.log('Loading tables...')
+    await loadTables()
+
+    console.log('HALL READY')
+
+  }
+  catch (err) {
+
+    console.error('INIT ERROR:', err)
+
+    setStatus(
+      'INIT ERROR: ' + err.message
+    )
+
+  }
+
+}
 </script>
 
 
@@ -687,7 +728,7 @@
 <div id="service-console">
 
   <div class="row" id="build-top">
-    fix auth | v3.0.1
+    no back to index | v3.0.2
   </div>
 
   <div class="row" id="build-down">
