@@ -2398,6 +2398,15 @@ document
         + currentHallId
       )
 
+           sessionStorage.setItem(
+           'mysada_project',
+            JSON.stringify({
+            project_id: currentProjectId,
+       project_name: currentProjectName
+      })
+      )
+
+          
       window.location.href =
         'hall.html'
         + '?project_id='
@@ -2551,7 +2560,7 @@ init()
       
 <div id="service-console">
   <div class="row" id="build-top">
-   save project from index to hall |v5.0.5
+   mysada_project |v5.0.6
   </div>
 
   <div class="row" id="build-down">
