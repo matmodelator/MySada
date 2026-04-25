@@ -323,26 +323,7 @@ GO TO HALL
              accept=".json,application/json"
              style="display:none;" />
 
-      <!-- ПРОСТОЙ ВХОД ПО ИМЕНИ -->
-      <div class="legend">
-        <b>User login:</b>
-
-        <input id="loginName"
-               type="text"
-               value="Igor"
-               placeholder="User name" />
-
-        <input id="loginPassword"
-               type="password"
-               value=""
-               placeholder="Password empty"
-               style="margin-top:8px;" />
-
-        <button id="loginBtn"
-                style="width:100%;margin-top:8px;">
-          Login
-        </button>
-      </div>
+     
 
       <!-- PROJECT НЕ РЕДАКТИРУЕТСЯ -->
       <div class="legend">
@@ -1156,79 +1137,7 @@ function downloadLogFile() {
   )
 }
 
-/*
-========================================
-ПРОСТОЙ ВХОД ПО ИМЕНИ
-Пароль по умолчанию пустой
-========================================
-*/
-async function loginByName() {
-  const name =
-    loginNameInput.value.trim()
 
-  const password =
-    loginPasswordInput.value
-
-  if (!name) {
-    systemMessage(
-      'Login error: user name is empty',
-      true
-    )
-    return
-  }
-
-  if (password !== '') {
-    systemMessage(
-      'Login error: password must be empty',
-      true
-    )
-    return
-  }
-
-  const { data, error } =
-    await supabase
-      .from('users')
-      .select('user_id, project_id, name, role, status')
-      .eq('name', name)
-      .maybeSingle()
-
-  if (error) {
-    systemMessage(
-      'Login error: ' + error.message,
-      true
-    )
-    return
-  }
-
-  if (!data) {
-    systemMessage(
-      'Login error: user not found: ' + name,
-      true
-    )
-    return
-  }
-
-  if (data.status !== 'on') {
-    systemMessage(
-      'Login error: user switched off: ' + name,
-      true
-    )
-    return
-  }
-
-  currentUser =
-    data
-
-  currentUserName =
-    data.name
-
-  addConsoleMessage(
-    'User login: ' + data.name + ' | role: ' + data.role
-  )
-
-  updateSideInfoLine()
-  renderCurrentOutput()
-}
 
 /*
 ========================================
@@ -2552,7 +2461,40 @@ async function init() {
     )
   }
 
-  await loginByName()
+ async function loadAuthUser() {
+  const { data, error } =
+    await supabase.auth.getUser()
+
+  if (error || !data.user) {
+    window.location.href =
+      'sign.html'
+
+    return null
+  }
+
+  currentUser = {
+    user_id: data.user.id,
+    email: data.user.email,
+    name: data.user.email,
+    role: 'user',
+    status: 'on',
+    project_id: currentProjectId
+  }
+
+  sessionStorage.setItem(
+    'mysada_user',
+    JSON.stringify(currentUser)
+  ) 
+       
+  await loadCurrentProject()
+
+  await loadAuthUser()
+
+  updateSideInfoLine()
+  renderCurrentOutput()
+
+  return currentUser
+}
 
   appliedTables =
     cloneTables()
@@ -2584,7 +2526,7 @@ init()
       
 <div id="service-console">
   <div class="row" id="build-top">
-    GO to HALL |v5.0.1
+   with sign up |v5.0.2
   </div>
 
   <div class="row" id="build-down">
