@@ -2433,7 +2433,7 @@ canvas.addEventListener(
 /*
 ========================================
 INIT
-редактор запускается без загрузки из базы
+загружаем фиксированный проект Restaurant MVP
 ========================================
 */
 
@@ -2441,35 +2441,85 @@ async function init() {
 
   setOutputMode('console')
 
-  currentProject =
-    null
+  /*
+  ========================================
+  USER ИЗ SUPABASE AUTH
+  ========================================
+  */
 
-  currentProjectId =
-    null
+  const { data, error } =
+    await supabase.auth.getUser()
 
-  currentProjectName =
-    ''
+  if (error || !data.user) {
+    window.location.href =
+      'sign.html'
 
-  currentHallId =
-    null
+    return
+  }
 
   currentUser = {
-    user_id: 'local',
-    email: 'local',
-    name: 'local',
-    role: 'editor',
+    user_id: data.user.id,
+    email: data.user.email,
+    name: data.user.email,
+    role: 'user',
     status: 'on'
   }
 
+  sessionStorage.setItem(
+    'mysada_user',
+    JSON.stringify(currentUser)
+  )
+
+  /*
+  ========================================
+  PROJECT: Restaurant MVP
+  ========================================
+  */
+
+  const { data: project, error: projectError } =
+    await supabase
+      .from('projects')
+      .select('*')
+      .eq('name', 'Restaurant MVP')
+      .maybeSingle()
+
+  if (projectError) {
+    systemMessage(
+      'Project load error: ' + projectError.message,
+      true
+    )
+    return
+  }
+
+  if (!project) {
+    systemMessage(
+      'Project not found: Restaurant MVP',
+      true
+    )
+    return
+  }
+
+  currentProject =
+    project
+
+  currentProjectId =
+    project.project_id || project.id
+
+  currentProjectName =
+    project.name
+
   projectLabel.textContent =
-    'New project'
+    currentProjectName + ' / ' + currentProjectId
+
+  currentHallId =
+    null
 
   updateSideInfoLine()
 
   draw()
 
   addConsoleMessage(
-    'Editor ready — no database loading'
+    'Editor ready — project loaded: Restaurant MVP'
   )
 
 }
@@ -2486,7 +2536,7 @@ init()
       
 <div id="service-console">
   <div class="row" id="build-top">
-   init |v5.0.3
+   init with project & user |v5.0.4
   </div>
 
   <div class="row" id="build-down">
