@@ -1,189 +1,199 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+<meta charset="UTF-8" />
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0" />
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
 
-  <title>MySada Hall</title>
+<title>MySada Hall</title>
 
-  <link rel="stylesheet"
-        href="styles/console.css" />
+<link rel="stylesheet"
+      href="styles/console.css" />
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #eef1f6;
-      color: #243447;
-      min-height: 100vh;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef1f6;
+  color: #243447;
+  min-height: 100vh;
+}
 
-    header {
-      background: #2563eb;
-      color: white;
-      padding: 14px 18px;
-      text-align: center;
-    }
+.top-bar {
+  background: #2563eb;
+  color: white;
+  padding: 14px 18px;
 
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-    .top-info {
-      max-width: 1200px;
-      margin: 16px auto 10px;
-      padding: 14px 18px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
+.top-title {
+  font-size: 22px;
+  font-weight: 700;
+}
 
-    .info-card {
-      background: #f8fafc;
-      border: 1px solid #dbe3ef;
-      border-radius: 10px;
-      padding: 12px;
-    }
+.top-buttons {
+  display: flex;
+  gap: 10px;
+}
 
-    .info-label {
-      font-size: 12px;
-      color: #64748b;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
+.top-buttons button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  background: white;
+  color: #2563eb;
+  cursor: pointer;
+}
 
-    .info-value {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0f172a;
-      word-break: break-word;
-    }
+.top-buttons button:hover {
+  background: #e5edff;
+}
 
-    .status {
-      max-width: 1200px;
-      margin: 10px auto;
-      padding: 0 16px;
-      color: #475569;
-      font-size: 14px;
-    }
+.top-info {
+  max-width: 1200px;
+  margin: 16px auto 10px;
+  padding: 14px 18px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 
-    .hall-wrap {
-      max-width: 1200px;
-      margin: 0 auto 80px;
-      padding: 16px;
-    }
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
 
-    .hall-canvas {
-      position: relative;
-      width: 100%;
-      height: 680px;
-      background: #ffffff;
-      border: 2px solid #cbd5e1;
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow:
-        inset 0 0 0 1px rgba(0,0,0,0.03),
-        0 6px 18px rgba(0,0,0,0.08);
-    }
+.info-card {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  padding: 12px;
+}
 
-    .table-item {
-      position: absolute;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #7dd3fc;
-      border: 2px solid #0284c7;
-      color: #0f172a;
-      font-weight: 800;
-      font-size: 18px;
-      user-select: none;
-      cursor: default;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
-    }
+.info-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 
-    .table-round {
-      border-radius: 50%;
-    }
+.info-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-word;
+}
 
-    .table-square {
-      border-radius: 8px;
-    }
+.status {
+  max-width: 1200px;
+  margin: 10px auto;
+  padding: 0 16px;
+  color: #475569;
+  font-size: 14px;
+}
 
-    .table-rect {
-      border-radius: 12px;
-    }
+.hall-wrap {
+  max-width: 1200px;
+  margin: 0 auto 80px;
+  padding: 16px;
+}
 
-    .table-label {
-      pointer-events: none;
-      text-align: center;
-      line-height: 1.1;
-    }
+.hall-canvas {
+  position: relative;
+  width: 100%;
+  height: 680px;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.03),
+    0 6px 18px rgba(0,0,0,0.08);
+}
 
-    .bottom-bar {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 16px;
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      pointer-events: none;
-    }
+.table-item {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    .bottom-bar button {
-      pointer-events: auto;
-      padding: 11px 20px;
-      border: none;
-      border-radius: 999px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 5px 14px rgba(0,0,0,0.22);
-    }
+  background: #7dd3fc;
+  border: 2px solid #0284c7;
+  color: #0f172a;
 
-    #backBtn {
-      background: #334155;
-      color: white;
-    }
+  font-weight: 800;
+  font-size: 18px;
 
-    #reloadBtn {
-      background: #2563eb;
-      color: white;
-    }
+  user-select: none;
+  cursor: default;
 
-    @media (max-width: 800px) {
-      .top-info {
-        grid-template-columns: 1fr;
-        margin-left: 12px;
-        margin-right: 12px;
-      }
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
 
-      .hall-canvas {
-        height: 560px;
-      }
-    }
-  </style>
+.table-round {
+  border-radius: 50%;
+}
+
+.table-square {
+  border-radius: 8px;
+}
+
+.table-rect {
+  border-radius: 12px;
+}
+
+.table-label {
+  pointer-events: none;
+  text-align: center;
+  line-height: 1.1;
+}
+
+@media (max-width: 800px) {
+  .top-info {
+    grid-template-columns: 1fr;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .hall-canvas {
+    height: 560px;
+  }
+}
+</style>
 </head>
 
 <body>
 
-<header>
-  <h1>MySada Hall</h1>
+<header class="top-bar">
+
+  <div class="top-title">
+    MySada Hall
+  </div>
+
+  <div class="top-buttons">
+    <button id="backBtn" type="button">
+      Back
+    </button>
+
+    <button id="reloadBtn" type="button">
+      Reload
+    </button>
+  </div>
+
 </header>
 
 <section class="top-info">
+
   <div class="info-card">
     <div class="info-label">Project</div>
     <div id="projectName" class="info-value">loading...</div>
@@ -198,6 +208,7 @@
     <div class="info-label">User</div>
     <div id="userName" class="info-value">loading...</div>
   </div>
+
 </section>
 
 <div id="status" class="status">
@@ -208,19 +219,9 @@
   <div id="hallCanvas" class="hall-canvas"></div>
 </main>
 
-<div class="bottom-bar">
-  <button id="backBtn" type="button">
-    Back to Index
-  </button>
-
-  <button id="reloadBtn" type="button">
-    Reload Hall
-  </button>
-</div>
-
 <div id="service-console">
   <div class="row" id="build-top">
-    Hall | v1.1.0
+    Hall | v1.2.0
   </div>
 
   <div class="row" id="build-down">
@@ -229,492 +230,455 @@
 </div>
 
 <script type="module">
-  /*
-  ========================================
-  SUPABASE
-  ========================================
-  */
-  import { supabase }
-  from "./scripts/config.js"
 
-  /*
-  ========================================
-  DOM
-  ========================================
-  */
-  const projectNameBox =
-    document.getElementById('projectName')
+import { supabase }
+from "./scripts/config.js"
 
-  const hallNameBox =
-    document.getElementById('hallName')
+/*
+========================================
+DOM
+========================================
+*/
 
-  const userNameBox =
-    document.getElementById('userName')
+const projectNameBox =
+  document.getElementById('projectName')
 
-  const statusBox =
-    document.getElementById('status')
+const hallNameBox =
+  document.getElementById('hallName')
 
-  const hallCanvas =
-    document.getElementById('hallCanvas')
+const userNameBox =
+  document.getElementById('userName')
 
-  const buildDown =
-    document.getElementById('build-down')
+const statusBox =
+  document.getElementById('status')
 
-  /*
-  ========================================
-  URL PARAMS
-  ========================================
-  */
-  const params =
-    new URLSearchParams(window.location.search)
+const hallCanvas =
+  document.getElementById('hallCanvas')
 
-  const projectId =
-    params.get('project_id')
+const buildDown =
+  document.getElementById('build-down')
 
-  const hallId =
-    params.get('hall_id')
+/*
+========================================
+STATE
+========================================
+*/
 
-  const userNameFromUrl =
-    params.get('user_name')
+let currentUser =
+  null
 
-  let currentProject =
-    null
+let currentProject =
+  null
 
-  let currentHall =
-    null
+let currentHall =
+  null
 
-  let currentUser =
-    null
+let currentHallId =
+  null
 
-  /*
-  ========================================
-  STATUS / CONSOLE
-  ========================================
-  */
-  function updateBuildLine(text) {
-    const now =
-      new Date()
+/*
+========================================
+STATUS
+========================================
+*/
 
-    const pad =
-      n => String(n).padStart(2, '0')
+function updateBuildLine(text) {
+  const now =
+    new Date()
 
-    const date =
-      pad(now.getDate()) +
-      '.' +
-      pad(now.getMonth() + 1) +
-      '.' +
-      now.getFullYear()
+  const pad =
+    n => String(n).padStart(2, '0')
 
-    const time =
-      pad(now.getHours()) +
-      ':' +
-      pad(now.getMinutes())
+  const date =
+      pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear()
 
-    buildDown.textContent =
-      'deploy: ' + date + ' ' + time + ' | ' + text
-  }
+  const time =
+      pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes())
 
-  function setStatus(text) {
-    statusBox.textContent =
-      text
+  buildDown.textContent =
+    'deploy: ' + date + ' ' + time + ' | ' + text
+}
 
-    console.log('[HALL]', text)
+function setStatus(text) {
+  statusBox.textContent =
+    text
 
-    updateBuildLine(text)
-  }
+  console.log('[HALL]', text)
 
-  /*
-  ========================================
-  LOAD USER
-  ВАЖНО:
-  это НЕ Supabase Auth
-  это твоя таблица users
-  ========================================
-  */
-  async function loadUserFromName() {
-    if (!userNameFromUrl) {
-      setStatus('Missing user_name in URL')
-      userNameBox.textContent =
-        'missing user_name'
+  updateBuildLine(text)
+}
 
-      return null
-    }
+/*
+========================================
+LOAD USER FROM SESSION
+НЕ ГРУЗИМ ЮЗЕРА ИЗ URL
+НЕ ДЕЛАЕМ SUPABASE AUTH
+========================================
+*/
 
-    const { data, error } =
-      await supabase
-        .from('users')
-        .select('user_id, project_id, name, role, status')
-        .eq('name', userNameFromUrl)
-        .maybeSingle()
+function loadUserFromSession() {
+  const raw =
+    sessionStorage.getItem('mysada_user')
 
-    if (error) {
-      console.error(error)
-
-      setStatus(
-        'User load error: ' + error.message
-      )
-
-      userNameBox.textContent =
-        'User load error'
-
-      return null
-    }
-
-    if (!data) {
-      setStatus(
-        'User not found: ' + userNameFromUrl
-      )
-
-      userNameBox.textContent =
-        'User not found'
-
-      return null
-    }
-
-    if (data.status !== 'on') {
-      setStatus(
-        'User switched off: ' + data.name
-      )
-
-      userNameBox.textContent =
-        data.name + ' / off'
-
-      return null
-    }
-
-    currentUser =
-      data
-
+  if (!raw) {
     userNameBox.textContent =
-      data.name + ' / ' + data.role
+      'No user in session'
 
     setStatus(
-      'User loaded: ' + data.name
+      'User not saved in sessionStorage'
     )
 
-    return data
-  }
-
-  /*
-  ========================================
-  LOAD PROJECT
-  ========================================
-  */
-  async function loadProject() {
-    if (!projectId) {
-      projectNameBox.textContent =
-        'missing project_id'
-
-      setStatus('Missing project_id in URL')
-
-      return null
-    }
-
-    const { data, error } =
-      await supabase
-        .from('projects')
-        .select('*')
-        .or(
-          'project_id.eq.' + projectId +
-          ',id.eq.' + projectId
-        )
-        .maybeSingle()
-
-    if (error) {
-      console.error(error)
-
-      projectNameBox.textContent =
-        'Project load error'
-
-      setStatus(
-        'Project load error: ' + error.message
-      )
-
-      return null
-    }
-
-    if (!data) {
-      projectNameBox.textContent =
-        'Project not found'
-
-      setStatus(
-        'Project not found: ' + projectId
-      )
-
-      return null
-    }
-
-    currentProject =
-      data
-
-    projectNameBox.textContent =
-      data.name || data.project_name || projectId
-
-    return data
-  }
-
-  /*
-  ========================================
-  LOAD HALL
-  ========================================
-  */
-  async function loadHallInfo() {
-    if (!hallId) {
-      hallNameBox.textContent =
-        'missing hall_id'
-
-      setStatus('Missing hall_id in URL')
-
-      return null
-    }
-
-    const { data, error } =
-      await supabase
-        .from('halls')
-        .select('*')
-        .or(
-          'hall_id.eq.' + hallId +
-          ',id.eq.' + hallId
-        )
-        .maybeSingle()
-
-    if (error) {
-      console.error(error)
-
-      hallNameBox.textContent =
-        'Hall load error'
-
-      setStatus(
-        'Hall load error: ' + error.message
-      )
-
-      return null
-    }
-
-    if (!data) {
-      hallNameBox.textContent =
-        'Hall not found'
-
-      setStatus(
-        'Hall not found: ' + hallId
-      )
-
-      return null
-    }
-
-    currentHall =
-      data
-
-    hallNameBox.textContent =
-      data.name || hallId
-
-    return data
-  }
-
-  /*
-  ========================================
-  LOAD TABLES
-  таблица: tables
-  поля: project_id, hall_id, name, x, y, width, height, shape
-  ========================================
-  */
-  async function loadTables() {
-    hallCanvas.innerHTML =
-      ''
-
-    if (!projectId || !hallId) {
-      setStatus(
-        'Cannot load tables: missing project_id or hall_id'
-      )
-
-      return
-    }
-
-    const { data, error } =
-      await supabase
-        .from('tables')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('hall_id', hallId)
-        .order('name', { ascending: true })
-
-    if (error) {
-      console.error(error)
-
-      setStatus(
-        'Tables load error: ' + error.message
-      )
-
-      return
-    }
-
-    if (!data || !data.length) {
-      setStatus(
-        'Hall loaded. No tables found.'
-      )
-
-      return
-    }
-
-    data.forEach(renderTable)
-
-    setStatus(
-      'Hall loaded from database. Tables: ' + data.length
-    )
-  }
-
-  /*
-  ========================================
-  RENDER TABLE
-  СТОЛЫ НЕ ДВИГАЮТСЯ
-  ========================================
-  */
-  function renderTable(item) {
-    const el =
-      document.createElement('div')
-
-    const shape =
-      item.shape || 'square'
-
-    const x =
-      Number(item.x || 0)
-
-    const y =
-      Number(item.y || 0)
-
-    const width =
-      Number(item.width || 120)
-
-    const height =
-      Number(item.height || 120)
-
-    let shapeClass =
-      'table-square'
-
-    if (shape === 'round') {
-      shapeClass =
-        'table-round'
-    }
-
-    if (shape === 'rect') {
-      shapeClass =
-        'table-rect'
-    }
-
-    el.className =
-      'table-item ' + shapeClass
-
-    el.style.left =
-      x + 'px'
-
-    el.style.top =
-      y + 'px'
-
-    el.style.width =
-      width + 'px'
-
-    el.style.height =
-      height + 'px'
-
-    el.dataset.tableId =
-      item.table_id || item.id || ''
-
-    const label =
-      document.createElement('div')
-
-    label.className =
-      'table-label'
-
-    label.textContent =
-      item.name || 'Table'
-
-    el.appendChild(label)
-
-    hallCanvas.appendChild(el)
-  }
-
-  /*
-  ========================================
-  BUTTONS
-  ========================================
-  */
-  document
-    .getElementById('backBtn')
-    .addEventListener('click', () => {
-      window.location.href =
-        'index.html'
-    })
-
-  document
-    .getElementById('reloadBtn')
-    .addEventListener('click', async () => {
-      await loadTables()
-    })
-
-  /*
-  ========================================
-  INIT
-  ========================================
-  */
-  async function init() {
-
-  console.log('HALL INIT START')
-
-  updateBuildLine('init')
-
-  console.log('URL:',
-    window.location.href
-  )
-
-  console.log('PARAMS:',
-    projectId,
-    hallId,
-    userNameFromUrl
-  )
-
-  if (!projectId) {
-    setStatus('ERROR: project_id missing')
-    return
-  }
-
-  if (!hallId) {
-    setStatus('ERROR: hall_id missing')
-    return
-  }
-
-  if (!userNameFromUrl) {
-    setStatus('ERROR: user_name missing')
-    return
+    return null
   }
 
   try {
+    currentUser =
+      JSON.parse(raw)
+  } catch (err) {
+    console.error(err)
 
-    console.log('Loading user...')
-    await loadUserFromName()
-
-    console.log('Loading project...')
-    await loadProject()
-
-    console.log('Loading hall...')
-    await loadHallInfo()
-
-    console.log('Loading tables...')
-    await loadTables()
-
-    console.log('HALL READY')
-
-  }
-  catch (err) {
-
-    console.error('INIT ERROR:', err)
+    userNameBox.textContent =
+      'User session error'
 
     setStatus(
-      'INIT ERROR: ' + err.message
+      'User session parse error: ' + err.message
     )
 
+    return null
   }
 
+  userNameBox.textContent =
+    (currentUser.name || '-') +
+    ' / ' +
+    (currentUser.role || '-')
+
+  setStatus(
+    'User loaded from session: ' + currentUser.name
+  )
+
+  return currentUser
 }
+
+/*
+========================================
+LOAD PROJECT BY USER.PROJECT_ID
+========================================
+*/
+
+async function loadProject() {
+  const projectId =
+    currentUser.project_id
+
+  if (!projectId) {
+    projectNameBox.textContent =
+      'No project_id in user'
+
+    setStatus(
+      'Project error: user.project_id is empty'
+    )
+
+    return null
+  }
+
+  const { data, error } =
+    await supabase
+      .from('projects')
+      .select('*')
+      .eq('project_id', projectId)
+      .maybeSingle()
+
+  if (error) {
+    console.error(error)
+
+    projectNameBox.textContent =
+      'Project load error'
+
+    setStatus(
+      'Project load error: ' + error.message
+    )
+
+    return null
+  }
+
+  if (!data) {
+    projectNameBox.textContent =
+      'Project not found'
+
+    setStatus(
+      'Project not found: ' + projectId
+    )
+
+    return null
+  }
+
+  currentProject =
+    data
+
+  projectNameBox.textContent =
+    data.name || data.project_name || data.project_id
+
+  setStatus(
+    'Project loaded: ' + projectNameBox.textContent
+  )
+
+  return data
+}
+
+/*
+========================================
+LOAD HALL FROM DATABASE
+Берём первый зал проекта
+========================================
+*/
+
+async function loadHall() {
+  const projectId =
+    currentUser.project_id
+
+  const { data, error } =
+    await supabase
+      .from('halls')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+  if (error) {
+    console.error(error)
+
+    hallNameBox.textContent =
+      'Hall load error'
+
+    setStatus(
+      'Hall load error: ' + error.message
+    )
+
+    return null
+  }
+
+  if (!data) {
+    hallNameBox.textContent =
+      'Hall not found'
+
+    setStatus(
+      'Hall not found for project: ' + projectId
+    )
+
+    return null
+  }
+
+  currentHall =
+    data
+
+  currentHallId =
+    data.hall_id || data.id
+
+  hallNameBox.textContent =
+    (data.name || 'Hall') +
+    ' / ' +
+    currentHallId
+
+  setStatus(
+    'Hall loaded: ' + data.name
+  )
+
+  return data
+}
+
+/*
+========================================
+LOAD TABLES
+СТОЛЫ НЕ ДВИГАЮТСЯ
+========================================
+*/
+
+async function loadTables() {
+  hallCanvas.innerHTML =
+    ''
+
+  if (!currentUser || !currentUser.project_id) {
+    setStatus(
+      'Tables error: no current user project_id'
+    )
+
+    return
+  }
+
+  if (!currentHallId) {
+    setStatus(
+      'Tables error: currentHallId is empty'
+    )
+
+    return
+  }
+
+  const { data, error } =
+    await supabase
+      .from('tables')
+      .select('*')
+      .eq('project_id', currentUser.project_id)
+      .eq('hall_id', currentHallId)
+      .order('name', { ascending: true })
+
+  if (error) {
+    console.error(error)
+
+    setStatus(
+      'Tables load error: ' + error.message
+    )
+
+    return
+  }
+
+  if (!data || !data.length) {
+    setStatus(
+      'Hall loaded. No tables found.'
+    )
+
+    return
+  }
+
+  data.forEach(renderTable)
+
+  setStatus(
+    'Tables loaded: ' + data.length
+  )
+}
+
+/*
+========================================
+RENDER TABLE
+NO DRAG
+NO MOVE
+NO EDIT
+========================================
+*/
+
+function renderTable(item) {
+  const el =
+    document.createElement('div')
+
+  const shape =
+    item.shape || 'square'
+
+  const x =
+    Number(item.x || 0)
+
+  const y =
+    Number(item.y || 0)
+
+  const width =
+    Number(item.width || 120)
+
+  const height =
+    Number(item.height || 120)
+
+  let shapeClass =
+    'table-square'
+
+  if (shape === 'round') {
+    shapeClass =
+      'table-round'
+  }
+
+  if (shape === 'rect') {
+    shapeClass =
+      'table-rect'
+  }
+
+  el.className =
+    'table-item ' + shapeClass
+
+  el.style.left =
+    x + 'px'
+
+  el.style.top =
+    y + 'px'
+
+  el.style.width =
+    width + 'px'
+
+  el.style.height =
+    height + 'px'
+
+  el.dataset.tableId =
+    item.table_id || item.id || ''
+
+  const label =
+    document.createElement('div')
+
+  label.className =
+    'table-label'
+
+  label.textContent =
+    item.name || 'Table'
+
+  el.appendChild(label)
+
+  hallCanvas.appendChild(el)
+}
+
+/*
+========================================
+BUTTONS
+========================================
+*/
+
+document
+  .getElementById('backBtn')
+  .addEventListener('click', () => {
+    window.location.href =
+      'index.html'
+  })
+
+document
+  .getElementById('reloadBtn')
+  .addEventListener('click', async () => {
+    await loadTables()
+  })
+
+/*
+========================================
+INIT
+========================================
+*/
+
+async function init() {
+  updateBuildLine('init')
+
+  const user =
+    loadUserFromSession()
+
+  if (!user) {
+    return
+  }
+
+  const project =
+    await loadProject()
+
+  if (!project) {
+    return
+  }
+
+  const hall =
+    await loadHall()
+
+  if (!hall) {
+    return
+  }
+
+  await loadTables()
+}
+
+init()
+
 </script>
 
 
@@ -728,7 +692,7 @@
 <div id="service-console">
 
   <div class="row" id="build-top">
-    no back to index | v3.0.2
+    user from index | v3.0.3
   </div>
 
   <div class="row" id="build-down">
