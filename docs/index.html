@@ -2319,7 +2319,7 @@ function failUploadProgress(message) {
 /*
 ========================================
 UPLOAD PROJECT TO DATABASE
-Console показывает Project / Hall / User
+Console НЕ показывает Project / Hall / User
 ========================================
 */
 uploadDbBtn.addEventListener('click', async e => {
@@ -2426,8 +2426,41 @@ systemMessage(
   }
 })
 
+/*
+========================================
+DOWNLOAD PROJECT FROM DATABASE
+========================================
+*/
+async function loadTablesFromCurrentHall() {
 
+  if (!currentHallId) {
+    systemMessage(
+      'No current hall selected',
+      true
+    )
+    return
+  }
 
+  const { data, error } =
+    await supabase
+      .from('tables')
+      .select('*')
+      .eq('hall_id', currentHallId)
+
+  if (error) {
+    systemMessage(
+      'Load tables error: ' + error.message,
+      true
+    )
+    return
+  }
+
+  console.log(
+    'Tables loaded:',
+    data.length
+  )
+
+}
       
 /*
 ========================================
@@ -2498,7 +2531,7 @@ init()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    fix realtime | back to v4.0.1
+    function download hall from database | back to v4.0.2
   </div>
 
   <div class="row" id="build-down">
