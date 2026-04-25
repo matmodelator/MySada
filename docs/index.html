@@ -2487,9 +2487,85 @@ init()
 
 </script>
 
+  <!-- ========================================
+     ПЕРЕХОД В HALL
+     сохраняет авторизацию Supabase
+     передает project_id и hall_id через URL
+======================================== -->
+
+<div class="bottom-hall-bar">
+  <button id="goHallBtn" type="button">
+    Go to Hall
+  </button>
+</div>
+
+<style>
+  .bottom-hall-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 18px;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  #goHallBtn {
+    pointer-events: auto;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 999px;
+    background: #2563eb;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  }
+
+  #goHallBtn:hover {
+    background: #1d4ed8;
+  }
+</style>
+
+<script>
+  document.getElementById('goHallBtn').addEventListener('click', function () {
+
+    /*
+      Берем текущие значения из index.html.
+      Эти переменные должны уже существовать после загрузки проекта/зала.
+    */
+
+    const projectId =
+      window.currentProjectId || currentProjectId
+
+    const hallId =
+      window.currentHallId || currentHallId
+
+    if (!projectId || !hallId) {
+      alert('Project или Hall не выбран')
+      return
+    }
+
+    const url =
+      'hall.html'
+      + '?project_id=' + encodeURIComponent(projectId)
+      + '&hall_id=' + encodeURIComponent(hallId)
+
+    window.location.href = url
+  })
+</script>    
+
+/*
+========================================
+КОНСОЛЬ
+========================================
+*/
+      
 <div id="service-console">
   <div class="row" id="build-top">
-    log in | back to v4.0.0
+    switch to Hall |v5.0.0
   </div>
 
   <div class="row" id="build-down">
