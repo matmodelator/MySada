@@ -2400,6 +2400,12 @@ uploadDbBtn.addEventListener('click', async e => {
 
     finishUploadProgress()
 
+
+await loadTablesFromCurrentHall()
+
+systemMessage(
+  'Project uploaded to DataBase'
+)
     systemMessage(
       'Project uploaded to DataBase'
     )
@@ -2489,7 +2495,7 @@ init()
 
 <div id="service-console">
   <div class="row" id="build-top">
-    log in | back to v4.0.0
+    fix realtime | back to v4.0.1
   </div>
 
   <div class="row" id="build-down">
