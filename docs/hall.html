@@ -70,6 +70,14 @@
       word-break: break-word;
     }
 
+    .status {
+      max-width: 1200px;
+      margin: 10px auto;
+      padding: 0 16px;
+      color: #475569;
+      font-size: 14px;
+    }
+
     .hall-wrap {
       max-width: 1200px;
       margin: 0 auto 80px;
@@ -84,8 +92,9 @@
       border: 2px solid #cbd5e1;
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03),
-                  0 6px 18px rgba(0,0,0,0.08);
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,0.03),
+        0 6px 18px rgba(0,0,0,0.08);
     }
 
     .table-item {
@@ -105,6 +114,10 @@
 
     .table-round {
       border-radius: 50%;
+    }
+
+    .table-square {
+      border-radius: 8px;
     }
 
     .table-rect {
@@ -148,14 +161,6 @@
     #reloadBtn {
       background: #2563eb;
       color: white;
-    }
-
-    .status {
-      max-width: 1200px;
-      margin: 10px auto;
-      padding: 0 16px;
-      color: #475569;
-      font-size: 14px;
     }
 
     @media (max-width: 800px) {
@@ -213,37 +218,30 @@
   </button>
 </div>
 
-<!-- СЕРВИСНАЯ КОНСОЛЬ -->
 <div id="service-console">
-  <div id="build-top">Hall | v1.0.0</div>
-  <div id="build-down">loading...</div>
+  <div class="row" id="build-top">
+    Hall | v1.1.0
+  </div>
+
+  <div class="row" id="build-down">
+    deploy: --
+  </div>
 </div>
 
 <script type="module">
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  /*
+  ========================================
+  SUPABASE
+  ========================================
+  */
+  import { supabase }
+  from "./scripts/config.js"
 
   /*
-    ========================================
-    SUPABASE CONFIG
-    ВСТАВЬ СЮДА ТЕ ЖЕ ДАННЫЕ, ЧТО В INDEX.HTML
-    ========================================
+  ========================================
+  DOM
+  ========================================
   */
-
-  const SUPABASE_URL =
-    'https://YOUR-PROJECT.supabase.co'
-
-  const SUPABASE_ANON_KEY =
-    'YOUR-ANON-KEY'
-
-  const supabase =
-    createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
-  /*
-    ========================================
-    DOM
-    ========================================
-  */
-
   const projectNameBox =
     document.getElementById('projectName')
 
@@ -263,11 +261,10 @@
     document.getElementById('build-down')
 
   /*
-    ========================================
-    URL PARAMS
-    ========================================
+  ========================================
+  URL PARAMS
+  ========================================
   */
-
   const params =
     new URLSearchParams(window.location.search)
 
@@ -277,177 +274,335 @@
   const hallId =
     params.get('hall_id')
 
+  const userNameFromUrl =
+    params.get('user_name')
+
+  let currentProject =
+    null
+
+  let currentHall =
+    null
+
   let currentUser =
     null
 
   /*
-    ========================================
-    SERVICE CONSOLE
-    ========================================
+  ========================================
+  STATUS / CONSOLE
+  ========================================
   */
+  function updateBuildLine(text) {
+    const now =
+      new Date()
 
-  function updateConsole(text) {
-    if (buildDown) {
-      buildDown.textContent =
-        new Date().toLocaleString('ru-RU') + ' | ' + text
-    }
+    const pad =
+      n => String(n).padStart(2, '0')
+
+    const date =
+      pad(now.getDate()) +
+      '.' +
+      pad(now.getMonth() + 1) +
+      '.' +
+      now.getFullYear()
+
+    const time =
+      pad(now.getHours()) +
+      ':' +
+      pad(now.getMinutes())
+
+    buildDown.textContent =
+      'deploy: ' + date + ' ' + time + ' | ' + text
   }
 
   function setStatus(text) {
-    statusBox.textContent = text
+    statusBox.textContent =
+      text
+
     console.log('[HALL]', text)
-    updateConsole(text)
+
+    updateBuildLine(text)
   }
 
   /*
-    ========================================
-    AUTH CHECK
-    ========================================
+  ========================================
+  LOAD USER
+  ВАЖНО:
+  это НЕ Supabase Auth
+  это твоя таблица users
+  ========================================
   */
+  async function loadUserFromName() {
+    if (!userNameFromUrl) {
+      setStatus('Missing user_name in URL')
+      userNameBox.textContent =
+        'missing user_name'
 
-  async function checkAuth() {
+      return null
+    }
+
     const { data, error } =
-      await supabase.auth.getUser()
+      await supabase
+        .from('users')
+        .select('user_id, project_id, name, role, status')
+        .eq('name', userNameFromUrl)
+        .maybeSingle()
 
-    if (error || !data || !data.user) {
-      setStatus('No active user. Redirecting to index...')
-      window.location.href = 'index.html'
+    if (error) {
+      console.error(error)
+
+      setStatus(
+        'User load error: ' + error.message
+      )
+
+      userNameBox.textContent =
+        'User load error'
+
+      return null
+    }
+
+    if (!data) {
+      setStatus(
+        'User not found: ' + userNameFromUrl
+      )
+
+      userNameBox.textContent =
+        'User not found'
+
+      return null
+    }
+
+    if (data.status !== 'on') {
+      setStatus(
+        'User switched off: ' + data.name
+      )
+
+      userNameBox.textContent =
+        data.name + ' / off'
+
       return null
     }
 
     currentUser =
-      data.user
+      data
 
     userNameBox.textContent =
-      currentUser.email || currentUser.id
+      data.name + ' / ' + data.role
 
-    return currentUser
+    setStatus(
+      'User loaded: ' + data.name
+    )
+
+    return data
   }
 
   /*
-    ========================================
-    LOAD PROJECT
-    ожидаем таблицу projects:
-    id, name
-    ========================================
+  ========================================
+  LOAD PROJECT
+  ========================================
   */
-
   async function loadProject() {
+    if (!projectId) {
+      projectNameBox.textContent =
+        'missing project_id'
+
+      setStatus('Missing project_id in URL')
+
+      return null
+    }
+
     const { data, error } =
       await supabase
         .from('projects')
-        .select('id, name')
-        .eq('id', projectId)
-        .single()
+        .select('*')
+        .or(
+          'project_id.eq.' + projectId +
+          ',id.eq.' + projectId
+        )
+        .maybeSingle()
 
     if (error) {
       console.error(error)
-      projectNameBox.textContent = 'Project not found'
-      setStatus('Project load error')
-      return
+
+      projectNameBox.textContent =
+        'Project load error'
+
+      setStatus(
+        'Project load error: ' + error.message
+      )
+
+      return null
     }
 
+    if (!data) {
+      projectNameBox.textContent =
+        'Project not found'
+
+      setStatus(
+        'Project not found: ' + projectId
+      )
+
+      return null
+    }
+
+    currentProject =
+      data
+
     projectNameBox.textContent =
-      data.name || data.id
+      data.name || data.project_name || projectId
+
+    return data
   }
 
   /*
-    ========================================
-    LOAD HALL
-    ожидаем таблицу halls:
-    id, project_id, name
-    ========================================
+  ========================================
+  LOAD HALL
+  ========================================
   */
-
   async function loadHallInfo() {
+    if (!hallId) {
+      hallNameBox.textContent =
+        'missing hall_id'
+
+      setStatus('Missing hall_id in URL')
+
+      return null
+    }
+
     const { data, error } =
       await supabase
         .from('halls')
-        .select('id, project_id, name')
-        .eq('id', hallId)
-        .eq('project_id', projectId)
-        .single()
+        .select('*')
+        .or(
+          'hall_id.eq.' + hallId +
+          ',id.eq.' + hallId
+        )
+        .maybeSingle()
 
     if (error) {
       console.error(error)
-      hallNameBox.textContent = 'Hall not found'
-      setStatus('Hall load error')
-      return
+
+      hallNameBox.textContent =
+        'Hall load error'
+
+      setStatus(
+        'Hall load error: ' + error.message
+      )
+
+      return null
     }
 
+    if (!data) {
+      hallNameBox.textContent =
+        'Hall not found'
+
+      setStatus(
+        'Hall not found: ' + hallId
+      )
+
+      return null
+    }
+
+    currentHall =
+      data
+
     hallNameBox.textContent =
-      data.name || data.id
+      data.name || hallId
+
+    return data
   }
 
   /*
-    ========================================
-    LOAD TABLES
-    ожидаем таблицу hall_tables:
-    id, hall_id, name, x, y, width, height, shape
-    shape: round / rect
-    СТОЛЫ НЕ ДВИГАЮТСЯ
-    ========================================
+  ========================================
+  LOAD TABLES
+  таблица: tables
+  поля: project_id, hall_id, name, x, y, width, height, shape
+  ========================================
   */
-
   async function loadTables() {
-    hallCanvas.innerHTML = ''
+    hallCanvas.innerHTML =
+      ''
+
+    if (!projectId || !hallId) {
+      setStatus(
+        'Cannot load tables: missing project_id or hall_id'
+      )
+
+      return
+    }
 
     const { data, error } =
       await supabase
-        .from('hall_tables')
+        .from('tables')
         .select('*')
+        .eq('project_id', projectId)
         .eq('hall_id', hallId)
-        .order('id', { ascending: true })
+        .order('name', { ascending: true })
 
     if (error) {
       console.error(error)
-      setStatus('Tables load error')
+
+      setStatus(
+        'Tables load error: ' + error.message
+      )
+
       return
     }
 
     if (!data || !data.length) {
-      setStatus('Hall loaded. No tables found.')
+      setStatus(
+        'Hall loaded. No tables found.'
+      )
+
       return
     }
 
     data.forEach(renderTable)
 
-    setStatus('Hall loaded from database. Tables: ' + data.length)
+    setStatus(
+      'Hall loaded from database. Tables: ' + data.length
+    )
   }
 
   /*
-    ========================================
-    RENDER TABLE
-    Без drag/drop
-    Без pointer move
-    Без сохранения координат
-    ========================================
+  ========================================
+  RENDER TABLE
+  СТОЛЫ НЕ ДВИГАЮТСЯ
+  ========================================
   */
-
   function renderTable(item) {
     const el =
       document.createElement('div')
 
     const shape =
-      item.shape || item.type || 'rect'
+      item.shape || 'square'
 
     const x =
-      Number(item.x || item.left || 0)
+      Number(item.x || 0)
 
     const y =
-      Number(item.y || item.top || 0)
+      Number(item.y || 0)
 
     const width =
-      Number(item.width || item.w || 90)
+      Number(item.width || 120)
 
     const height =
-      Number(item.height || item.h || 70)
+      Number(item.height || 120)
+
+    let shapeClass =
+      'table-square'
+
+    if (shape === 'round') {
+      shapeClass =
+        'table-round'
+    }
+
+    if (shape === 'rect') {
+      shapeClass =
+        'table-rect'
+    }
 
     el.className =
-      'table-item ' +
-      (shape === 'round' || shape === 'circle'
-        ? 'table-round'
-        : 'table-rect')
+      'table-item ' + shapeClass
 
     el.style.left =
       x + 'px'
@@ -461,8 +616,8 @@
     el.style.height =
       height + 'px'
 
-    el.dataset.id =
-      item.id
+    el.dataset.tableId =
+      item.table_id || item.id || ''
 
     const label =
       document.createElement('div')
@@ -471,7 +626,7 @@
       'table-label'
 
     label.textContent =
-      item.name || item.number || 'N'
+      item.name || 'Table'
 
     el.appendChild(label)
 
@@ -479,52 +634,48 @@
   }
 
   /*
-    ========================================
-    INIT
-    ========================================
+  ========================================
+  BUTTONS
+  ========================================
   */
+  document
+    .getElementById('backBtn')
+    .addEventListener('click', () => {
+      window.location.href =
+        'index.html'
+    })
 
+  document
+    .getElementById('reloadBtn')
+    .addEventListener('click', async () => {
+      await loadTables()
+    })
+
+  /*
+  ========================================
+  INIT
+  ========================================
+  */
   async function init() {
-    updateConsole('init')
+    updateBuildLine('init')
 
-    if (!projectId || !hallId) {
-      setStatus('Missing project_id or hall_id in URL')
+    if (!projectId || !hallId || !userNameFromUrl) {
+      setStatus(
+        'Missing URL params. Need project_id, hall_id, user_name'
+      )
+
       return
     }
 
-    const user =
-      await checkAuth()
-
-    if (!user) {
-      return
-    }
-
-    setStatus('Auth ok. Loading database...')
-
+    await loadUserFromName()
     await loadProject()
     await loadHallInfo()
     await loadTables()
   }
 
-  /*
-    ========================================
-    BUTTONS
-    ========================================
-  */
-
-  document.getElementById('backBtn').addEventListener('click', function () {
-    window.location.href =
-      'index.html'
-      + '?project_id=' + encodeURIComponent(projectId)
-      + '&hall_id=' + encodeURIComponent(hallId)
-  })
-
-  document.getElementById('reloadBtn').addEventListener('click', function () {
-    loadTables()
-  })
-
   init()
 </script>
+
 
   /*
     ========================================
@@ -536,7 +687,7 @@
 <div id="service-console">
 
   <div class="row" id="build-top">
-    switch to index | v3.0.0
+    fix auth | v3.0.1
   </div>
 
   <div class="row" id="build-down">
