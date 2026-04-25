@@ -1,741 +1,542 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
+  <meta charset="UTF-8" />
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0" />
 
-<title>План зала</title>
+  <title>MySada Hall</title>
 
-<link rel="stylesheet"
-      href="styles/console.css" />
+  <link rel="stylesheet"
+        href="styles/console.css" />
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #eef1f6;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-#hall {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  background: #f8fafc;
-  overflow: hidden;
-}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef1f6;
+      color: #243447;
+      min-height: 100vh;
+    }
 
-/* ========================================
-   СТОЛЫ
-======================================== */
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 14px 18px;
+      text-align: center;
+    }
 
-.table-wrap {
-  position: absolute;
-  width: 160px;
-  height: 160px;
-  cursor: pointer;
-}
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
 
-.table-core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%,-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  box-sizing: border-box;
-  text-align: center;
-  z-index: 2;
-}
+    .top-info {
+      max-width: 1200px;
+      margin: 16px auto 10px;
+      padding: 14px 18px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
 
-/* Круглый стол — 2 места */
-.table-wrap.round {
-  width: 150px;
-  height: 150px;
-}
+    .info-card {
+      background: #f8fafc;
+      border: 1px solid #dbe3ef;
+      border-radius: 10px;
+      padding: 12px;
+    }
 
-.table-wrap.round .table-core {
-  width: 82px;
-  height: 82px;
-  border-radius: 50%;
-}
+    .info-label {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
 
-/* Квадратный стол — 4 места */
-.table-wrap.square {
-  width: 170px;
-  height: 170px;
-}
+    .info-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      word-break: break-word;
+    }
 
-.table-wrap.square .table-core {
-  width: 88px;
-  height: 88px;
-  border-radius: 12px;
-}
+    .hall-wrap {
+      max-width: 1200px;
+      margin: 0 auto 80px;
+      padding: 16px;
+    }
 
-/* Прямоугольный стол — 6 мест */
-.table-wrap.rect {
-  width: 230px;
-  height: 160px;
-}
+    .hall-canvas {
+      position: relative;
+      width: 100%;
+      height: 680px;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03),
+                  0 6px 18px rgba(0,0,0,0.08);
+    }
 
-.table-wrap.rect .table-core {
-  width: 140px;
-  height: 82px;
-  border-radius: 12px;
-}
+    .table-item {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #7dd3fc;
+      border: 2px solid #0284c7;
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 18px;
+      user-select: none;
+      cursor: default;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    }
 
-/* Статусы */
-.table-wrap.free .table-core {
-  background: #2ecc71;
-}
+    .table-round {
+      border-radius: 50%;
+    }
 
-.table-wrap.occupied .table-core {
-  background: #e74c3c;
-}
+    .table-rect {
+      border-radius: 12px;
+    }
 
-.table-wrap.reserved .table-core {
-  background: #f1c40f;
-}
+    .table-label {
+      pointer-events: none;
+      text-align: center;
+      line-height: 1.1;
+    }
 
-.table-wrap.cleaning .table-core {
-  background: #95a5a6;
-}
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      pointer-events: none;
+    }
 
-/* ========================================
-   СТУЛЬЯ
-======================================== */
+    .bottom-bar button {
+      pointer-events: auto;
+      padding: 11px 20px;
+      border: none;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(0,0,0,0.22);
+    }
 
-.chair {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  background: #374151;
-  border-radius: 50%;
-  z-index: 1;
-}
+    #backBtn {
+      background: #334155;
+      color: white;
+    }
 
-/* 2 стула */
-.seats-2 .chair-1 {
-  left: 50%;
-  top: 4px;
-  transform: translateX(-50%);
-}
+    #reloadBtn {
+      background: #2563eb;
+      color: white;
+    }
 
-.seats-2 .chair-2 {
-  left: 50%;
-  bottom: 4px;
-  transform: translateX(-50%);
-}
+    .status {
+      max-width: 1200px;
+      margin: 10px auto;
+      padding: 0 16px;
+      color: #475569;
+      font-size: 14px;
+    }
 
-/* 4 стула */
-.seats-4 .chair-1 {
-  left: 50%;
-  top: 2px;
-  transform: translateX(-50%);
-}
+    @media (max-width: 800px) {
+      .top-info {
+        grid-template-columns: 1fr;
+        margin-left: 12px;
+        margin-right: 12px;
+      }
 
-.seats-4 .chair-2 {
-  right: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.seats-4 .chair-3 {
-  left: 50%;
-  bottom: 2px;
-  transform: translateX(-50%);
-}
-
-.seats-4 .chair-4 {
-  left: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* 6 стульев */
-.seats-6 .chair-1 {
-  left: 70px;
-  top: 0;
-}
-
-.seats-6 .chair-2 {
-  right: 70px;
-  top: 0;
-}
-
-.seats-6 .chair-3 {
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.seats-6 .chair-4 {
-  right: 70px;
-  bottom: 0;
-}
-
-.seats-6 .chair-5 {
-  left: 70px;
-  bottom: 0;
-}
-
-.seats-6 .chair-6 {
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* ========================================
-   ДИАЛОГ
-======================================== */
-
-.dialog {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.dialog.hidden {
-  display: none;
-}
-
-.dialog-box {
-  width: 380px;
-  max-width: calc(100vw - 32px);
-  background: white;
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  color: #1f2937;
-}
-
-#dialog-title {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-#dialog-body {
-  margin-bottom: 16px;
-  line-height: 1.5;
-  font-size: 14px;
-}
-
-.dialog-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.dialog-actions button {
-  border: 0;
-  border-radius: 8px;
-  padding: 11px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-#btn-open-order {
-  background: #2563eb;
-  color: white;
-}
-
-#btn-close-order {
-  background: #16a34a;
-  color: white;
-}
-
-#btn-reserve-table {
-  background: #facc15;
-  color: #111827;
-}
-
-#btn-clean-table {
-  background: #6b7280;
-  color: white;
-}
-</style>
+      .hall-canvas {
+        height: 560px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="hall"></div>
+<header>
+  <h1>MySada Hall</h1>
+</header>
 
-<div id="table-dialog" class="dialog hidden">
-  <div class="dialog-box">
-
-    <div id="dialog-title">
-      Стол
-    </div>
-
-    <div id="dialog-body"></div>
-
-    <div class="dialog-actions">
-
-      <button id="btn-open-order">
-        Открыть заказ
-      </button>
-
-      <button id="btn-close-order">
-        Закрыть заказ
-      </button>
-
-      <button id="btn-reserve-table">
-        Зарезервировать стол
-      </button>
-
-      <button id="btn-clean-table">
-        Уборка стола
-      </button>
-
-    </div>
-
+<section class="top-info">
+  <div class="info-card">
+    <div class="info-label">Project</div>
+    <div id="projectName" class="info-value">loading...</div>
   </div>
+
+  <div class="info-card">
+    <div class="info-label">Hall</div>
+    <div id="hallName" class="info-value">loading...</div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-label">User</div>
+    <div id="userName" class="info-value">loading...</div>
+  </div>
+</section>
+
+<div id="status" class="status">
+  Loading hall from database...
+</div>
+
+<main class="hall-wrap">
+  <div id="hallCanvas" class="hall-canvas"></div>
+</main>
+
+<div class="bottom-bar">
+  <button id="backBtn" type="button">
+    Back to Index
+  </button>
+
+  <button id="reloadBtn" type="button">
+    Reload Hall
+  </button>
+</div>
+
+<!-- СЕРВИСНАЯ КОНСОЛЬ -->
+<div id="service-console">
+  <div id="build-top">Hall | v1.0.0</div>
+  <div id="build-down">loading...</div>
 </div>
 
 <script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-import { supabase }
-from "./scripts/config.js"
+  /*
+    ========================================
+    SUPABASE CONFIG
+    ВСТАВЬ СЮДА ТЕ ЖЕ ДАННЫЕ, ЧТО В INDEX.HTML
+    ========================================
+  */
 
-const hall =
-  document.getElementById("hall")
+  const SUPABASE_URL =
+    'https://YOUR-PROJECT.supabase.co'
 
-const dialog =
-  document.getElementById("table-dialog")
+  const SUPABASE_ANON_KEY =
+    'YOUR-ANON-KEY'
 
-const dialogTitle =
-  document.getElementById("dialog-title")
+  const supabase =
+    createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-const dialogBody =
-  document.getElementById("dialog-body")
+  /*
+    ========================================
+    DOM
+    ========================================
+  */
 
-const btnOpenOrder =
-  document.getElementById("btn-open-order")
+  const projectNameBox =
+    document.getElementById('projectName')
 
-const btnCloseOrder =
-  document.getElementById("btn-close-order")
+  const hallNameBox =
+    document.getElementById('hallName')
 
-const btnReserveTable =
-  document.getElementById("btn-reserve-table")
+  const userNameBox =
+    document.getElementById('userName')
 
-const btnCleanTable =
-  document.getElementById("btn-clean-table")
+  const statusBox =
+    document.getElementById('status')
 
-let activeTable = null
+  const hallCanvas =
+    document.getElementById('hallCanvas')
 
-/* ========================================
-   ЗАГРУЗКА СТОЛОВ
-======================================== */
+  const buildDown =
+    document.getElementById('build-down')
 
-async function loadTables() {
+  /*
+    ========================================
+    URL PARAMS
+    ========================================
+  */
 
-  const { data, error } =
-    await supabase
-      .from("tables")
-      .select("*")
-      .order("name")
+  const params =
+    new URLSearchParams(window.location.search)
 
-  console.log("TABLES DATA:", data)
-  console.log("TABLES ERROR:", error)
+  const projectId =
+    params.get('project_id')
 
-  if (error) {
-    console.error(error)
-    return
-  }
+  const hallId =
+    params.get('hall_id')
 
-  hall.innerHTML = ""
+  let currentUser =
+    null
 
-  data.forEach(createTable)
-}
+  /*
+    ========================================
+    SERVICE CONSOLE
+    ========================================
+  */
 
-/* ========================================
-   ОТРИСОВКА СТОЛА
-======================================== */
-
-function createTable(row) {
-
-  const shape =
-    getShape(row)
-
-  const seats =
-    getSeats(row)
-
-  const wrap =
-    document.createElement("div")
-
-  wrap.className =
-    "table-wrap " +
-    shape + " " +
-    (row.table_status || "free") + " " +
-    "seats-" + seats
-
-  wrap.dataset.tableId =
-    row.table_id
-
-  wrap.style.left =
-    (row.x ?? 0) + "px"
-
-  wrap.style.top =
-    (row.y ?? 0) + "px"
-
-  const core =
-    document.createElement("div")
-
-  core.className =
-    "table-core"
-
-  core.textContent =
-    row.name || "Table"
-
-  wrap.appendChild(core)
-
-  for (let i = 1; i <= seats; i++) {
-    const chair =
-      document.createElement("div")
-
-    chair.className =
-      "chair chair-" + i
-
-    wrap.appendChild(chair)
-  }
-
-  wrap.addEventListener(
-    "click",
-    () => {
-      openDialog(row)
-    }
-  )
-
-  hall.appendChild(wrap)
-}
-
-/* ========================================
-   ФОРМА СТОЛА
-======================================== */
-
-function getShape(row) {
-
-  if (row.shape === "round")
-    return "round"
-
-  if (row.shape === "rect")
-    return "rect"
-
-  if (row.seats === 2)
-    return "round"
-
-  if (row.seats === 6)
-    return "rect"
-
-  return "square"
-}
-
-/* ========================================
-   КОЛИЧЕСТВО СТУЛЬЕВ
-======================================== */
-
-function getSeats(row) {
-
-  if (row.seats === 2)
-    return 2
-
-  if (row.seats === 6)
-    return 6
-
-  return 4
-}
-
-/* ========================================
-   ОБНОВИТЬ СТОЛ НА ЭКРАНЕ
-======================================== */
-
-function updateTable(row) {
-
-  const oldEl =
-    document.querySelector(
-      `[data-table-id="${row.table_id}"]`
-    )
-
-  if (oldEl)
-    oldEl.remove()
-
-  createTable(row)
-
-  if (
-    activeTable &&
-    activeTable.table_id === row.table_id
-  ) {
-    activeTable = row
-    renderDialog(row)
-  }
-}
-
-/* ========================================
-   ОТКРЫТЬ ДИАЛОГ
-======================================== */
-
-function openDialog(row) {
-
-  activeTable = row
-
-  renderDialog(row)
-
-  dialog.classList.remove("hidden")
-}
-
-/* ========================================
-   ОТРИСОВАТЬ ДИАЛОГ
-======================================== */
-
-function renderDialog(row) {
-
-  dialogTitle.textContent =
-    row.name || "Стол"
-
-  dialogBody.innerHTML =
-    "Статус: " + (row.table_status || "free") + "<br>" +
-    "Мест: " + (row.seats ?? 4) + "<br>" +
-    "Форма: " + (getShape(row)) + "<br>" +
-    "table_id: " + row.table_id
-}
-
-/* ========================================
-   ЗАКРЫТЬ ДИАЛОГ ПО ФОНУ
-======================================== */
-
-dialog.addEventListener(
-  "click",
-  e => {
-    if (e.target === dialog) {
-      dialog.classList.add("hidden")
-      activeTable = null
+  function updateConsole(text) {
+    if (buildDown) {
+      buildDown.textContent =
+        new Date().toLocaleString('ru-RU') + ' | ' + text
     }
   }
-)
 
-/* ========================================
-   1. ОТКРЫТЬ ЗАКАЗ
-   orders = open
-   tables = occupied
-======================================== */
+  function setStatus(text) {
+    statusBox.textContent = text
+    console.log('[HALL]', text)
+    updateConsole(text)
+  }
 
-btnOpenOrder.addEventListener(
-  "click",
-  async () => {
+  /*
+    ========================================
+    AUTH CHECK
+    ========================================
+  */
 
-    if (!activeTable)
-      return
+  async function checkAuth() {
+    const { data, error } =
+      await supabase.auth.getUser()
 
-    const { data: orderData, error: orderError } =
+    if (error || !data || !data.user) {
+      setStatus('No active user. Redirecting to index...')
+      window.location.href = 'index.html'
+      return null
+    }
+
+    currentUser =
+      data.user
+
+    userNameBox.textContent =
+      currentUser.email || currentUser.id
+
+    return currentUser
+  }
+
+  /*
+    ========================================
+    LOAD PROJECT
+    ожидаем таблицу projects:
+    id, name
+    ========================================
+  */
+
+  async function loadProject() {
+    const { data, error } =
       await supabase
-        .from("orders")
-        .insert({
-          project_id: activeTable.project_id,
-          hall_id: activeTable.hall_id,
-          table_id: activeTable.table_id,
-          guest_count: 2,
-          shift_id: activeTable.current_shift_id
-        })
-        .select()
+        .from('projects')
+        .select('id, name')
+        .eq('id', projectId)
+        .single()
 
-    console.log("OPEN ORDER DATA:", orderData)
-    console.log("OPEN ORDER ERROR:", orderError)
-
-    if (orderError) {
-      alert("Не удалось открыть заказ")
+    if (error) {
+      console.error(error)
+      projectNameBox.textContent = 'Project not found'
+      setStatus('Project load error')
       return
     }
 
-    await setTableStatus(
-      activeTable.table_id,
-      "occupied"
-    )
+    projectNameBox.textContent =
+      data.name || data.id
   }
-)
 
-/* ========================================
-   2. ЗАКРЫТЬ ЗАКАЗ
-   orders = closed
-   tables = free
-======================================== */
+  /*
+    ========================================
+    LOAD HALL
+    ожидаем таблицу halls:
+    id, project_id, name
+    ========================================
+  */
 
-btnCloseOrder.addEventListener(
-  "click",
-  async () => {
-
-    if (!activeTable)
-      return
-
-    const { data: openOrder, error: findError } =
+  async function loadHallInfo() {
+    const { data, error } =
       await supabase
-        .from("orders")
-        .select("*")
-        .eq("table_id", activeTable.table_id)
-        .eq("order_status", "open")
-        .order("opened_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+        .from('halls')
+        .select('id, project_id, name')
+        .eq('id', hallId)
+        .eq('project_id', projectId)
+        .single()
 
-    console.log("FIND ORDER DATA:", openOrder)
-    console.log("FIND ORDER ERROR:", findError)
-
-    if (findError || !openOrder) {
-      alert("Открытый заказ не найден")
+    if (error) {
+      console.error(error)
+      hallNameBox.textContent = 'Hall not found'
+      setStatus('Hall load error')
       return
     }
 
-    const { error: closeError } =
+    hallNameBox.textContent =
+      data.name || data.id
+  }
+
+  /*
+    ========================================
+    LOAD TABLES
+    ожидаем таблицу hall_tables:
+    id, hall_id, name, x, y, width, height, shape
+    shape: round / rect
+    СТОЛЫ НЕ ДВИГАЮТСЯ
+    ========================================
+  */
+
+  async function loadTables() {
+    hallCanvas.innerHTML = ''
+
+    const { data, error } =
       await supabase
-        .from("orders")
-        .update({
-          order_status: "closed",
-          closed_at: new Date().toISOString()
-        })
-        .eq("order_id", openOrder.order_id)
+        .from('hall_tables')
+        .select('*')
+        .eq('hall_id', hallId)
+        .order('id', { ascending: true })
 
-    console.log("CLOSE ORDER ERROR:", closeError)
-
-    if (closeError) {
-      alert("Не удалось закрыть заказ")
+    if (error) {
+      console.error(error)
+      setStatus('Tables load error')
       return
     }
 
-    await setTableStatus(
-      activeTable.table_id,
-      "free"
-    )
-  }
-)
-
-/* ========================================
-   3. ЗАРЕЗЕРВИРОВАТЬ СТОЛ
-   tables = reserved
-======================================== */
-
-btnReserveTable.addEventListener(
-  "click",
-  async () => {
-
-    if (!activeTable)
+    if (!data || !data.length) {
+      setStatus('Hall loaded. No tables found.')
       return
-
-    await setTableStatus(
-      activeTable.table_id,
-      "reserved"
-    )
-  }
-)
-
-/* ========================================
-   4. УБОРКА СТОЛА
-   tables = cleaning
-======================================== */
-
-btnCleanTable.addEventListener(
-  "click",
-  async () => {
-
-    if (!activeTable)
-      return
-
-    await setTableStatus(
-      activeTable.table_id,
-      "cleaning"
-    )
-  }
-)
-
-/* ========================================
-   ОБЩАЯ ФУНКЦИЯ СМЕНЫ СТАТУСА СТОЛА
-======================================== */
-
-async function setTableStatus(
-  table_id,
-  table_status
-) {
-
-  const { data, error } =
-    await supabase
-      .from("tables")
-      .update({
-        table_status
-      })
-      .eq("table_id", table_id)
-      .select()
-      .single()
-
-  console.log("TABLE STATUS DATA:", data)
-  console.log("TABLE STATUS ERROR:", error)
-
-  if (error) {
-    alert("Не удалось изменить статус стола")
-    return
-  }
-
-  if (data) {
-    updateTable(data)
-  }
-
-  dialog.classList.add("hidden")
-  activeTable = null
-}
-
-/* ========================================
-   REALTIME ДЛЯ ДРУГИХ ЭКРАНОВ
-======================================== */
-
-supabase
-  .channel("tables-realtime")
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "tables"
-    },
-    payload => {
-
-      console.log("TABLES REALTIME:", payload)
-
-      if (payload.eventType === "DELETE") {
-        const el =
-          document.querySelector(
-            `[data-table-id="${payload.old.table_id}"]`
-          )
-
-        if (el)
-          el.remove()
-
-        return
-      }
-
-      if (payload.new) {
-        updateTable(payload.new)
-      }
     }
-  )
-  .subscribe(status => {
-    console.log("TABLES REALTIME STATUS:", status)
+
+    data.forEach(renderTable)
+
+    setStatus('Hall loaded from database. Tables: ' + data.length)
+  }
+
+  /*
+    ========================================
+    RENDER TABLE
+    Без drag/drop
+    Без pointer move
+    Без сохранения координат
+    ========================================
+  */
+
+  function renderTable(item) {
+    const el =
+      document.createElement('div')
+
+    const shape =
+      item.shape || item.type || 'rect'
+
+    const x =
+      Number(item.x || item.left || 0)
+
+    const y =
+      Number(item.y || item.top || 0)
+
+    const width =
+      Number(item.width || item.w || 90)
+
+    const height =
+      Number(item.height || item.h || 70)
+
+    el.className =
+      'table-item ' +
+      (shape === 'round' || shape === 'circle'
+        ? 'table-round'
+        : 'table-rect')
+
+    el.style.left =
+      x + 'px'
+
+    el.style.top =
+      y + 'px'
+
+    el.style.width =
+      width + 'px'
+
+    el.style.height =
+      height + 'px'
+
+    el.dataset.id =
+      item.id
+
+    const label =
+      document.createElement('div')
+
+    label.className =
+      'table-label'
+
+    label.textContent =
+      item.name || item.number || 'N'
+
+    el.appendChild(label)
+
+    hallCanvas.appendChild(el)
+  }
+
+  /*
+    ========================================
+    INIT
+    ========================================
+  */
+
+  async function init() {
+    updateConsole('init')
+
+    if (!projectId || !hallId) {
+      setStatus('Missing project_id or hall_id in URL')
+      return
+    }
+
+    const user =
+      await checkAuth()
+
+    if (!user) {
+      return
+    }
+
+    setStatus('Auth ok. Loading database...')
+
+    await loadProject()
+    await loadHallInfo()
+    await loadTables()
+  }
+
+  /*
+    ========================================
+    BUTTONS
+    ========================================
+  */
+
+  document.getElementById('backBtn').addEventListener('click', function () {
+    window.location.href =
+      'index.html'
+      + '?project_id=' + encodeURIComponent(projectId)
+      + '&hall_id=' + encodeURIComponent(hallId)
   })
 
-loadTables()
+  document.getElementById('reloadBtn').addEventListener('click', function () {
+    loadTables()
+  })
 
+  init()
 </script>
+
+  /*
+    ========================================
+    КОНСОЛЬ
+    ========================================
+  */
+     
 
 <div id="service-console">
 
   <div class="row" id="build-top">
-    tables & orders | v2.3.1
+    switch to index | v3.0.0
   </div>
 
   <div class="row" id="build-down">
