@@ -388,7 +388,7 @@
     if (error) {
 
       statusText.textContent =
-        'Ошибка: ' + error.message
+        'Ошибка входа: ' + error.message
 
       return
     }
@@ -415,7 +415,8 @@
     login
 
   /* ========================================
-     РЕГИСТРАЦИЯ
+     РЕГИСТРАЦИЯ БЕЗ ОЖИДАНИЯ ПОЧТЫ
+     создаем пользователя и сразу логиним
   ======================================== */
 
   async function signup() {
@@ -456,16 +457,33 @@
     statusText.textContent =
       'Регистрация...'
 
-    const { data, error } =
+    const { error: signUpError } =
       await supabase.auth.signUp({
         email,
         password
       })
 
-    if (error) {
+    if (signUpError) {
 
       statusText.textContent =
-        'Ошибка: ' + error.message
+        'Ошибка регистрации: ' + signUpError.message
+
+      return
+    }
+
+    statusText.textContent =
+      'Выполняется вход...'
+
+    const { data, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+    if (signInError) {
+
+      statusText.textContent =
+        'Ошибка входа: ' + signInError.message
 
       return
     }
@@ -477,14 +495,14 @@
     }
 
     statusText.textContent =
-      'Регистрация выполнена. Проверь почту, если включено подтверждение.'
+      'Регистрация и вход выполнены'
 
     setTimeout(function () {
 
       window.location.href =
         'index.html'
 
-    }, 800)
+    }, 300)
 
   }
 
@@ -500,7 +518,7 @@
 <div id="service-console">
 
   <div class="row" id="build-top">
-    MySada Sign | v1.0.0
+    вход + регистрация без подтверждения + автовход после регистрации + сохранение юзера для index.html / hall.html | v1.1.0
   </div>
 
   <div class="row" id="build-down">
