@@ -2313,8 +2313,23 @@ uploadDbBtn.addEventListener('click', async e => {
     finishUploadProgress()
 
     systemMessage(
-      'Project uploaded to DataBase'
-    )
+  'Project uploaded to DataBase'
+)
+
+/*
+========================================
+СОХРАНЯЕМ PROJECT В SESSION
+чтобы hall.html мог его прочитать
+========================================
+*/
+
+sessionStorage.setItem(
+  'mysada_project',
+  JSON.stringify({
+    project_id: currentProjectId,
+    project_name: currentProjectName
+  })
+)
   } catch (err) {
     console.error(err)
 
@@ -2536,7 +2551,7 @@ init()
       
 <div id="service-console">
   <div class="row" id="build-top">
-   init with project & user |v5.0.4
+   save project from index to hall |v5.0.5
   </div>
 
   <div class="row" id="build-down">
