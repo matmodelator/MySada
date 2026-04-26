@@ -28,7 +28,6 @@ body {
   background: #2563eb;
   color: white;
   padding: 14px 18px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,10 +54,6 @@ body {
   cursor: pointer;
 }
 
-.top-buttons button:hover {
-  background: #e5edff;
-}
-
 .top-info {
   max-width: 1200px;
   margin: 16px auto 10px;
@@ -66,7 +61,6 @@ body {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
@@ -84,7 +78,6 @@ body {
   color: #64748b;
   margin-bottom: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .info-value {
@@ -116,9 +109,6 @@ body {
   border: 2px solid #cbd5e1;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,0.03),
-    0 6px 18px rgba(0,0,0,0.08);
 }
 
 .table-item {
@@ -126,17 +116,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: #7dd3fc;
   border: 2px solid #0284c7;
   color: #0f172a;
-
   font-weight: 800;
   font-size: 18px;
-
   user-select: none;
   cursor: default;
-
   box-shadow: 0 4px 10px rgba(0,0,0,0.18);
 }
 
@@ -155,19 +141,6 @@ body {
 .table-label {
   pointer-events: none;
   text-align: center;
-  line-height: 1.1;
-}
-
-@media (max-width: 800px) {
-  .top-info {
-    grid-template-columns: 1fr;
-    margin-left: 12px;
-    margin-right: 12px;
-  }
-
-  .hall-canvas {
-    height: 560px;
-  }
 }
 </style>
 </head>
@@ -175,25 +148,15 @@ body {
 <body>
 
 <header class="top-bar">
-
-  <div class="top-title">
-    MySada Hall
-  </div>
+  <div class="top-title">MySada Hall</div>
 
   <div class="top-buttons">
-    <button id="backBtn" type="button">
-      Back
-    </button>
-
-    <button id="reloadBtn" type="button">
-      Reload
-    </button>
+    <button id="backBtn" type="button">Back</button>
+    <button id="reloadBtn" type="button">Reload</button>
   </div>
-
 </header>
 
 <section class="top-info">
-
   <div class="info-card">
     <div class="info-label">Project</div>
     <div id="projectName" class="info-value">loading...</div>
@@ -208,11 +171,10 @@ body {
     <div class="info-label">User</div>
     <div id="userName" class="info-value">loading...</div>
   </div>
-
 </section>
 
 <div id="status" class="status">
-  Loading hall from database...
+  Starting...
 </div>
 
 <main class="hall-wrap">
@@ -221,7 +183,7 @@ body {
 
 <div id="service-console">
   <div class="row" id="build-top">
-    Hall | v1.2.0
+    Hall fixed | v3.1.0
   </div>
 
   <div class="row" id="build-down">
@@ -267,14 +229,17 @@ STATE
 let currentUser =
   null
 
-let currentProject =
+let currentProjectId =
   null
 
-let currentHall =
-  null
+let currentProjectName =
+  ''
 
 let currentHallId =
   null
+
+let currentHallName =
+  ''
 
 /*
 ========================================
@@ -289,20 +254,19 @@ function updateBuildLine(text) {
   const pad =
     n => String(n).padStart(2, '0')
 
-  const date =
-      pad(now.getDate())
+  buildDown.textContent =
+    'deploy: '
+    + pad(now.getDate())
     + '.'
     + pad(now.getMonth() + 1)
     + '.'
     + now.getFullYear()
-
-  const time =
-      pad(now.getHours())
+    + ' '
+    + pad(now.getHours())
     + ':'
     + pad(now.getMinutes())
-
-  buildDown.textContent =
-    'deploy: ' + date + ' ' + time + ' | ' + text
+    + ' | '
+    + text
 }
 
 function setStatus(text) {
@@ -316,50 +280,36 @@ function setStatus(text) {
 
 /*
 ========================================
-LOAD USER FROM SESSION
-НЕ ГРУЗИМ ЮЗЕРА ИЗ URL
-НЕ ДЕЛАЕМ SUPABASE AUTH
+LOAD USER
+берём текущего Supabase Auth пользователя
 ========================================
 */
 
-function loadUserFromSession() {
-  const raw =
-    sessionStorage.getItem('mysada_user')
+async function loadUser() {
+  setStatus('Loading user...')
 
-  if (!raw) {
-    userNameBox.textContent =
-      'No user in session'
+  const { data, error } =
+    await supabase.auth.getUser()
 
-    setStatus(
-      'User not saved in sessionStorage'
-    )
+  if (error)
+    throw error
 
-    return null
-  }
+  if (!data || !data.user)
+    throw new Error('User not logged in')
 
-  try {
-    currentUser =
-      JSON.parse(raw)
-  } catch (err) {
-    console.error(err)
-
-    userNameBox.textContent =
-      'User session error'
-
-    setStatus(
-      'User session parse error: ' + err.message
-    )
-
-    return null
+  currentUser = {
+    user_id: data.user.id,
+    email: data.user.email,
+    name: data.user.email,
+    role: 'user'
   }
 
   userNameBox.textContent =
-    (currentUser.name || '-') +
-    ' / ' +
-    (currentUser.role || '-')
+    currentUser.name + ' / ' + currentUser.role
 
-  setStatus(
-    'User loaded from session: ' + currentUser.name
+  sessionStorage.setItem(
+    'mysada_user',
+    JSON.stringify(currentUser)
   )
 
   return currentUser
@@ -367,107 +317,88 @@ function loadUserFromSession() {
 
 /*
 ========================================
-LOAD PROJECT ИЗ SESSION
-никаких user.project_id
+LOAD PROJECT
+берём project из sessionStorage после Upload в index.html
 ========================================
 */
 
 function loadProjectFromSession() {
+  setStatus('Loading project from session...')
 
-  const raw =
-    sessionStorage.getItem(
-      'mysada_project'
-    )
+  const rawProject =
+    sessionStorage.getItem('mysada_project')
 
-  if (!raw) {
+  if (!rawProject)
+    throw new Error('Project not found in sessionStorage')
 
-    setStatus(
-      'Project error: project not found in session'
-    )
-
-    return null
-  }
-
-  const saved =
-    JSON.parse(raw)
+  const savedProject =
+    JSON.parse(rawProject)
 
   currentProjectId =
-    saved.project_id
+    savedProject.project_id
 
   currentProjectName =
-    saved.project_name
+    savedProject.project_name || savedProject.name || 'Project'
 
-  projectNameLabel.textContent =
-    currentProjectName
+  if (!currentProjectId)
+    throw new Error('Project ID is empty in sessionStorage')
 
-  addConsoleMessage(
-    'Project loaded: '
-    + currentProjectName
-    + ' / '
-    + currentProjectId
-  )
+  projectNameBox.textContent =
+    currentProjectName + ' / ' + currentProjectId
 
   return currentProjectId
-
 }
+
 /*
 ========================================
-LOAD HALL FROM DATABASE
-Берём первый зал проекта
+LOAD HALL ID
+берём hall_id из URL
 ========================================
 */
 
-async function loadHall() {
-  const projectId =
-    currentUser.project_id
+function loadHallIdFromUrl() {
+  setStatus('Reading hall_id...')
+
+  const params =
+    new URLSearchParams(window.location.search)
+
+  currentHallId =
+    params.get('hall_id')
+
+  if (!currentHallId)
+    throw new Error('hall_id missing in URL')
+
+  return currentHallId
+}
+
+/*
+========================================
+LOAD HALL INFO
+грузим имя зала из базы
+========================================
+*/
+
+async function loadHallInfo() {
+  setStatus('Loading hall info...')
 
   const { data, error } =
     await supabase
       .from('halls')
       .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .limit(1)
+      .eq('hall_id', currentHallId)
       .maybeSingle()
 
-  if (error) {
-    console.error(error)
+  if (error)
+    throw error
 
-    hallNameBox.textContent =
-      'Hall load error'
+  if (!data)
+    throw new Error('Hall not found: ' + currentHallId)
 
-    setStatus(
-      'Hall load error: ' + error.message
-    )
-
-    return null
-  }
-
-  if (!data) {
-    hallNameBox.textContent =
-      'Hall not found'
-
-    setStatus(
-      'Hall not found for project: ' + projectId
-    )
-
-    return null
-  }
-
-  currentHall =
-    data
-
-  currentHallId =
-    data.hall_id || data.id
+  currentHallName =
+    data.name || 'Hall'
 
   hallNameBox.textContent =
-    (data.name || 'Hall') +
-    ' / ' +
-    currentHallId
-
-  setStatus(
-    'Hall loaded: ' + data.name
-  )
+    currentHallName + ' / ' + currentHallId
 
   return data
 }
@@ -475,76 +406,40 @@ async function loadHall() {
 /*
 ========================================
 LOAD TABLES
-СТОЛЫ НЕ ДВИГАЮТСЯ
-диагностика без зависания
+грузим столы из базы
 ========================================
 */
 
 async function loadTables() {
+  setStatus('Loading tables...')
 
-  setStatus(
-    'Loading tables... hall_id: ' + currentHallId
-  )
-
-  console.log(
-    'LOAD TABLES START',
-    {
-      currentProjectId,
-      currentHallId
-    }
-  )
+  hallCanvas.innerHTML =
+    ''
 
   const { data, error } =
     await supabase
       .from('tables')
       .select('*')
       .eq('hall_id', currentHallId)
+      .order('name', { ascending: true })
 
-  if (error) {
-
-    console.error(
-      'TABLES ERROR:',
-      error
-    )
-
-    setStatus(
-      'Tables error: ' + error.message
-    )
-
-    return
-  }
-
-  console.log(
-    'TABLES DATA:',
-    data
-  )
+  if (error)
+    throw error
 
   if (!data || !data.length) {
-
-    setStatus(
-      'No tables found for hall_id: ' + currentHallId
-    )
-
+    setStatus('No tables found for hall_id: ' + currentHallId)
     return
   }
-
-  hallCanvas.innerHTML =
-    ''
 
   data.forEach(renderTable)
 
-  setStatus(
-    'Tables loaded: ' + data.length
-  )
-
+  setStatus('Tables loaded: ' + data.length)
 }
 
 /*
 ========================================
 RENDER TABLE
-NO DRAG
-NO MOVE
-NO EDIT
+столы только отображаются, не двигаются
 ========================================
 */
 
@@ -570,15 +465,13 @@ function renderTable(item) {
   let shapeClass =
     'table-square'
 
-  if (shape === 'round') {
+  if (shape === 'round')
     shapeClass =
       'table-round'
-  }
 
-  if (shape === 'rect') {
+  if (shape === 'rect')
     shapeClass =
       'table-rect'
-  }
 
   el.className =
     'table-item ' + shapeClass
@@ -594,9 +487,6 @@ function renderTable(item) {
 
   el.style.height =
     height + 'px'
-
-  el.dataset.tableId =
-    item.table_id || item.id || ''
 
   const label =
     document.createElement('div')
@@ -628,223 +518,49 @@ document
 document
   .getElementById('reloadBtn')
   .addEventListener('click', async () => {
-    await loadTables()
+    try {
+      await loadTables()
+    }
+    catch (err) {
+      console.error(err)
+      setStatus('Reload error: ' + err.message)
+    }
   })
 
 /*
 ========================================
-INIT HALL
-жесткий запуск без скрытых зависимостей
+INIT
+единый понятный запуск
 ========================================
 */
 
 async function init() {
-
-  /*
-  ========================================
-  СТАРТ
-  ========================================
-  */
-
-  console.log('HALL INIT START')
-
-  setStatus(
-    'Loading hall from database...'
-  )
-
-  /*
-  ========================================
-  USER ИЗ AUTH
-  ========================================
-  */
-
-  let userData
-
   try {
+    console.log('HALL INIT START')
 
-    const { data, error } =
-      await supabase.auth.getUser()
+    await loadUser()
 
-    if (error)
-      throw error
+    loadProjectFromSession()
 
-    if (!data || !data.user) {
+    loadHallIdFromUrl()
 
-      setStatus(
-        'User not logged in'
-      )
-
-      window.location.href =
-        'sign.html'
-
-      return
-    }
-
-    userData =
-      data.user
-
-  }
-  catch (err) {
-
-    console.error(
-      'AUTH ERROR:',
-      err
-    )
-
-    setStatus(
-      'Auth error: '
-      + err.message
-    )
-
-    return
-  }
-
-  currentUser = {
-    user_id:
-      userData.id,
-
-    email:
-      userData.email
-  }
-
-  console.log(
-    'USER OK:',
-    currentUser
-  )
-
-  /*
-  ========================================
-  PROJECT ИЗ SESSION
-  ========================================
-  */
-
-  const rawProject =
-    sessionStorage.getItem(
-      'mysada_project'
-    )
-
-  console.log(
-    'SESSION PROJECT:',
-    rawProject
-  )
-
-  if (!rawProject) {
-
-    setStatus(
-      'Project error: project not found in session'
-    )
-
-    return
-  }
-
-  const savedProject =
-    JSON.parse(rawProject)
-
-  currentProjectId =
-    savedProject.project_id
-
-  currentProjectName =
-    savedProject.project_name
-
-  /*
-  ========================================
-  ВЫВОД PROJECT
-  ========================================
-  */
-
-  const projectBox =
-    document.getElementById(
-      'projectNameBox'
-    )
-
-  if (projectBox)
-    projectBox.textContent =
-      currentProjectName
-
-  console.log(
-    'PROJECT OK:',
-    currentProjectId
-  )
-
-  /*
-  ========================================
-  HALL ИЗ URL
-  ========================================
-  */
-
-  const params =
-    new URLSearchParams(
-      window.location.search
-    )
-
-  currentHallId =
-    params.get('hall_id')
-
-  console.log(
-    'HALL ID:',
-    currentHallId
-  )
-
-  if (!currentHallId) {
-
-    setStatus(
-      'Hall error: hall_id missing'
-    )
-
-    return
-  }
-
-  const hallBox =
-    document.getElementById(
-      'hallNameBox'
-    )
-
-  if (hallBox)
-    hallBox.textContent =
-      'Loading hall...'
-
-  /*
-  ========================================
-  ЗАГРУЗКА TABLES
-  ========================================
-  */
-
-  try {
-
-    console.log(
-      'LOAD TABLES START'
-    )
+    await loadHallInfo()
 
     await loadTables()
-
-    console.log(
-      'TABLES LOADED'
-    )
-
-    setStatus(
-      'Hall ready'
-    )
-
   }
   catch (err) {
-
-    console.error(
-      'LOAD TABLES ERROR:',
-      err
-    )
+    console.error('HALL INIT ERROR:', err)
 
     setStatus(
-      'Load tables error: '
-      + err.message
+      'Hall error: ' + err.message
     )
-
   }
-
 }
+
 init()
 
-      
 </script>
+
 
 
   /*
@@ -857,7 +573,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    жесткий запуск | v3.0.6
+    единый понятный запуск | v3.0.7
   </div>
 
   <div class="row" id="build-down">
