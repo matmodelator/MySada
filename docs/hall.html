@@ -9,10 +9,10 @@
 <title>MySada Hall</title>
 
 <link rel="stylesheet"
-      href="styles/hall.css" />      
+      href="styles/hall.css" />
+
 <link rel="stylesheet"
       href="styles/console.css" />
-
 
 </head>
 
@@ -121,28 +121,6 @@
       Cleaning
     </button>
 
-    <button id="btnCloseDialog" type="button">
-      Cancel
-    </button>
-
-  </div>
-
-</div>
-
-<!--
-========================================
-КОНСОЛЬ
-========================================
--->
-
-<div id="service-console">
-
-  <div class="row" id="build-top">
-    Hall modes tabs grid all | v5.0.0
-  </div>
-
-  <div class="row" id="build-down">
-    deploy: --
   </div>
 
 </div>
@@ -188,7 +166,7 @@ const hallCanvas =
 const allHalls =
   document.getElementById('allHalls')
 
-const buildDown =
+let buildDown =
   document.getElementById('build-down')
 
 const viewTabsBtn =
@@ -220,9 +198,6 @@ const btnReserveTable =
 
 const btnCleanTable =
   document.getElementById('btnCleanTable')
-
-const btnCloseDialog =
-  document.getElementById('btnCloseDialog')
 
 /*
 ========================================
@@ -264,6 +239,14 @@ STATUS
 */
 
 function updateBuildLine(text) {
+  if (!buildDown) {
+    buildDown =
+      document.getElementById('build-down')
+  }
+
+  if (!buildDown)
+    return
+
   const now =
     new Date()
 
@@ -541,6 +524,10 @@ function setCurrentHall(hallId) {
     renderCurrentHall()
   }
 
+  if (hallViewMode === 'all') {
+    renderAllHalls()
+  }
+
   setStatus(
     'Selected hall: ' + currentHallName
   )
@@ -590,40 +577,23 @@ function renderHallTabs() {
 /*
 ========================================
 RENDER HALL GRID
-мозаика залов
-========================================
-*/
-
-/*
-========================================
-RENDER HALL GRID
 залы горизонтально
 столы вертикально под своим залом
 ========================================
 */
 
 function renderHallGrid() {
-
-  hallGrid.innerHTML = ''
+  hallGrid.innerHTML =
+    ''
 
   if (!hallsList.length) {
-
     setStatus('No halls to render')
-
     return
-
   }
 
   hallsList.forEach(hall => {
-
     const hallId =
       hall.hall_id || hall.id
-
-    /*
-    ----------------------------------------
-    карточка зала
-    ----------------------------------------
-    */
 
     const card =
       document.createElement('div')
@@ -632,16 +602,8 @@ function renderHallGrid() {
       'hall-card'
 
     if (hallId === currentHallId) {
-
       card.classList.add('active')
-
     }
-
-    /*
-    ----------------------------------------
-    заголовок
-    ----------------------------------------
-    */
 
     const title =
       document.createElement('div')
@@ -653,12 +615,6 @@ function renderHallGrid() {
       hall.name || hallId
 
     card.appendChild(title)
-
-    /*
-    ----------------------------------------
-    инфо
-    ----------------------------------------
-    */
 
     const info =
       document.createElement('div')
@@ -672,12 +628,6 @@ function renderHallGrid() {
 
     card.appendChild(info)
 
-    /*
-    ----------------------------------------
-    контейнер столов
-    ----------------------------------------
-    */
-
     const tree =
       document.createElement('div')
 
@@ -686,68 +636,80 @@ function renderHallGrid() {
 
     card.appendChild(tree)
 
-    /*
-    ----------------------------------------
-    столы только своего зала
-    ----------------------------------------
-    */
-
     tablesList
-
       .filter(
         table =>
           table.hall_id === hallId
       )
+      .sort((a, b) => {
+        const aName =
+          Number(a.name)
 
-      .forEach(
-        table => {
+        const bName =
+          Number(b.name)
 
-          const row =
-            document.createElement('button')
-
-          row.type =
-            'button'
-
-          row.className =
-            'table-tree-row'
-
-          row.textContent =
-            table.name || table.table_id
-
-          row.addEventListener(
-            'click',
-            () => {
-
-              openTableDialog(table)
-
-            }
-          )
-
-          tree.appendChild(row)
-
+        if (
+          Number.isFinite(aName)
+          &&
+          Number.isFinite(bName)
+        ) {
+          return aName - bName
         }
-      )
-                     
-    /*
-    ----------------------------------------
-    клик по залу
-    ----------------------------------------
-    */
+
+        return String(a.name || '').localeCompare(
+          String(b.name || '')
+        )
+      })
+      .forEach(table => {
+        const row =
+          document.createElement('button')
+
+        const status =
+          table.table_status || 'free'
+
+        row.type =
+          'button'
+
+        row.className =
+          'table-tree-row table-'
+          + status
+
+        row.textContent =
+          (table.name || table.table_id)
+          + ' · '
+          + status
+
+        row.addEventListener(
+          'click',
+          event => {
+            event.stopPropagation()
+
+            setCurrentHall(
+              hallId
+            )
+
+            openTableDialog(
+              table
+            )
+          }
+        )
+
+        tree.appendChild(row)
+      })
 
     card.addEventListener(
       'click',
       () => {
-
-        setCurrentHall(hallId)
-
+        setCurrentHall(
+          hallId
+        )
       }
     )
 
     hallGrid.appendChild(card)
-
   })
 }
-      
+
 /*
 ========================================
 SET HALL VIEW MODE
@@ -910,12 +872,12 @@ function renderAllHalls() {
 
     block.className =
       'hall-block'
-        
-if (hallId === currentHallId) {
-  block.classList.add('active')
-}
-    
-        const title =
+
+    if (hallId === currentHallId) {
+      block.classList.add('active')
+    }
+
+    const title =
       document.createElement('div')
 
     title.className =
@@ -926,6 +888,12 @@ if (hallId === currentHallId) {
       + ' · tables: '
       + countTablesForHall(hallId)
 
+    const scaleBox =
+      document.createElement('div')
+
+    scaleBox.className =
+      'hall-scale-box'
+
     const canvas =
       document.createElement('div')
 
@@ -935,13 +903,27 @@ if (hallId === currentHallId) {
     canvas.dataset.hallId =
       hallId
 
+    scaleBox.appendChild(canvas)
+
     block.appendChild(title)
-    block.appendChild(canvas)
+    block.appendChild(scaleBox)
 
     allHalls.appendChild(block)
 
+    block.addEventListener(
+      'click',
+      () => {
+        setCurrentHall(
+          hallId
+        )
+      }
+    )
+
     tablesList
-      .filter(table => table.hall_id === hallId)
+      .filter(
+        table =>
+          table.hall_id === hallId
+      )
       .forEach(table => {
         renderTableToCanvas(
           table,
@@ -1041,9 +1023,16 @@ function renderTableToCanvas(item, targetCanvas) {
 
   el.appendChild(label)
 
-  el.addEventListener('click', () => {
-    openTableDialog(item)
-  })
+  el.addEventListener(
+    'click',
+    event => {
+      event.stopPropagation()
+
+      openTableDialog(
+        item
+      )
+    }
+  )
 
   targetCanvas.appendChild(el)
 }
@@ -1126,9 +1115,7 @@ tables = occupied
 btnOpenOrder.addEventListener(
   "click",
   async () => {
-
     try {
-
       if (!activeTable)
         return
 
@@ -1162,7 +1149,6 @@ btnOpenOrder.addEventListener(
         activeTable.table_id,
         "occupied"
       )
-
     }
     catch (err) {
       console.error(err)
@@ -1171,7 +1157,6 @@ btnOpenOrder.addEventListener(
         'Open order error: ' + err.message
       )
     }
-
   }
 )
 
@@ -1186,9 +1171,7 @@ tables = free
 btnCloseOrder.addEventListener(
   "click",
   async () => {
-
     try {
-
       if (!activeTable)
         return
 
@@ -1238,7 +1221,6 @@ btnCloseOrder.addEventListener(
         activeTable.table_id,
         "free"
       )
-
     }
     catch (err) {
       console.error(err)
@@ -1247,7 +1229,6 @@ btnCloseOrder.addEventListener(
         'Close order error: ' + err.message
       )
     }
-
   }
 )
 
@@ -1261,9 +1242,7 @@ tables = reserved
 btnReserveTable.addEventListener(
   "click",
   async () => {
-
     try {
-
       if (!activeTable)
         return
 
@@ -1271,7 +1250,6 @@ btnReserveTable.addEventListener(
         activeTable.table_id,
         "reserved"
       )
-
     }
     catch (err) {
       console.error(err)
@@ -1280,7 +1258,6 @@ btnReserveTable.addEventListener(
         'Reserve table error: ' + err.message
       )
     }
-
   }
 )
 
@@ -1294,9 +1271,7 @@ tables = cleaning
 btnCleanTable.addEventListener(
   "click",
   async () => {
-
     try {
-
       if (!activeTable)
         return
 
@@ -1304,7 +1279,6 @@ btnCleanTable.addEventListener(
         activeTable.table_id,
         "cleaning"
       )
-
     }
     catch (err) {
       console.error(err)
@@ -1313,7 +1287,6 @@ btnCleanTable.addEventListener(
         'Cleaning table error: ' + err.message
       )
     }
-
   }
 )
 
@@ -1327,7 +1300,6 @@ async function setTableStatus(
   table_id,
   table_status
 ) {
-
   setStatus(
     'Updating table status: ' + table_status
   )
@@ -1370,21 +1342,53 @@ async function setTableStatus(
 
 /*
 ========================================
-ЗАКРЫТЬ ДИАЛОГ СТОЛА
+КЛИК ВНУТРИ ДИАЛОГА
+не закрывает диалог
 ========================================
 */
 
-btnCloseDialog.addEventListener(
-  "click",
-  () => {
+dialog.addEventListener(
+  'click',
+  event => {
+    event.stopPropagation()
+  }
+)
 
-    dialog.classList.add("hidden")
+/*
+========================================
+ЗАКРЫТЬ ДИАЛОГ КЛИКОМ МИМО ПОЛЯ
+========================================
+*/
+
+document.addEventListener(
+  'click',
+  event => {
+    if (
+      dialog.classList.contains('hidden')
+    )
+      return
+
+    const clickedInsideDialog =
+      dialog.contains(event.target)
+
+    const clickedTable =
+      event.target.closest('.table-item')
+      ||
+      event.target.closest('.table-tree-row')
+
+    if (
+      clickedInsideDialog
+      ||
+      clickedTable
+    )
+      return
+
+    dialog.classList.add('hidden')
 
     activeTable =
       null
 
-    setStatus("Table dialog closed")
-
+    setStatus('Table dialog closed')
   }
 )
 
@@ -1530,18 +1534,16 @@ init()
 
 </script>
 
-
-  /*
-    ========================================
-    КОНСОЛЬ
-    ========================================
-  */
-     
+<!--
+========================================
+КОНСОЛЬ
+========================================
+-->
 
 <div id="service-console">
 
   <div class="row" id="build-top">
-    mosaic & tree fix| v5.0.1
+    mosaic field fix | v5.0.3
   </div>
 
   <div class="row" id="build-down">
