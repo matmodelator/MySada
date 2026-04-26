@@ -633,14 +633,20 @@ document
 
 /*
 ========================================
-INIT
-жесткая диагностика каждого шага
+INIT HALL
+жесткий запуск без скрытых зависимостей
 ========================================
 */
 
 async function init() {
 
-  console.log('INIT START')
+  /*
+  ========================================
+  СТАРТ
+  ========================================
+  */
+
+  console.log('HALL INIT START')
 
   setStatus(
     'Loading hall from database...'
@@ -648,44 +654,57 @@ async function init() {
 
   /*
   ========================================
-  USER
+  USER ИЗ AUTH
   ========================================
   */
 
-  console.log('STEP 1: getUser')
+  let userData
 
-  const { data, error } =
-    await supabase.auth.getUser()
+  try {
 
-  if (error) {
+    const { data, error } =
+      await supabase.auth.getUser()
+
+    if (error)
+      throw error
+
+    if (!data || !data.user) {
+
+      setStatus(
+        'User not logged in'
+      )
+
+      window.location.href =
+        'sign.html'
+
+      return
+    }
+
+    userData =
+      data.user
+
+  }
+  catch (err) {
 
     console.error(
-      'USER ERROR:',
-      error
+      'AUTH ERROR:',
+      err
     )
 
     setStatus(
-      'User error: ' + error.message
+      'Auth error: '
+      + err.message
     )
-
-    return
-  }
-
-  if (!data.user) {
-
-    console.log(
-      'NO USER — redirect'
-    )
-
-    window.location.href =
-      'sign.html'
 
     return
   }
 
   currentUser = {
-    user_id: data.user.id,
-    email: data.user.email
+    user_id:
+      userData.id,
+
+    email:
+      userData.email
   }
 
   console.log(
@@ -698,10 +717,6 @@ async function init() {
   PROJECT ИЗ SESSION
   ========================================
   */
-
-  console.log(
-    'STEP 2: load project from session'
-  )
 
   const rawProject =
     sessionStorage.getItem(
@@ -731,23 +746,31 @@ async function init() {
   currentProjectName =
     savedProject.project_name
 
+  /*
+  ========================================
+  ВЫВОД PROJECT
+  ========================================
+  */
+
+  const projectBox =
+    document.getElementById(
+      'projectNameBox'
+    )
+
+  if (projectBox)
+    projectBox.textContent =
+      currentProjectName
+
   console.log(
     'PROJECT OK:',
     currentProjectId
   )
-
-  projectNameLabel.textContent =
-    currentProjectName
 
   /*
   ========================================
   HALL ИЗ URL
   ========================================
   */
-
-  console.log(
-    'STEP 3: read hall_id from URL'
-  )
 
   const params =
     new URLSearchParams(
@@ -771,25 +794,31 @@ async function init() {
     return
   }
 
-  hallNameLabel.textContent =
-    'Loading hall...'
+  const hallBox =
+    document.getElementById(
+      'hallNameBox'
+    )
+
+  if (hallBox)
+    hallBox.textContent =
+      'Loading hall...'
 
   /*
   ========================================
-  LOAD TABLES
+  ЗАГРУЗКА TABLES
   ========================================
   */
 
-  console.log(
-    'STEP 4: loadTables'
-  )
-
   try {
+
+    console.log(
+      'LOAD TABLES START'
+    )
 
     await loadTables()
 
     console.log(
-      'STEP 5: tables loaded'
+      'TABLES LOADED'
     )
 
     setStatus(
@@ -828,7 +857,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    диагностика | v3.0.5
+    жесткий запуск | v3.0.6
   </div>
 
   <div class="row" id="build-down">
