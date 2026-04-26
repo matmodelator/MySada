@@ -108,19 +108,19 @@ body {
   масштаб всего зала
   */
 
-  --hall-scale: 0.5;
+  --hall-scale: 0.75;
 
   /*
   масштаб столов
   */
 
-  --table-scale: 0.65;
+  --table-scale: 0.75;
 
   /*
   размер текста на столах
   */
 
-  --table-font-size: 10px;
+  --table-font-size: 12px;
 
 }
 
@@ -291,9 +291,17 @@ LABEL
 </header>
 
 <section class="top-info">
+
   <div class="info-card">
     <div class="info-label">Project</div>
     <div id="projectName" class="info-value">loading...</div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-label">Select Hall</div>
+    <select id="hallSelect">
+      <option value="">loading...</option>
+    </select>
   </div>
 
   <div class="info-card">
@@ -305,6 +313,7 @@ LABEL
     <div class="info-label">User</div>
     <div id="userName" class="info-value">loading...</div>
   </div>
+
 </section>
 
 <div id="status" class="status">
@@ -317,7 +326,7 @@ LABEL
 
 <div id="service-console">
   <div class="row" id="build-top">
-    Hall fixed | v3.1.0
+    Hall select | v4.0.0
   </div>
 
   <div class="row" id="build-down">
@@ -344,6 +353,9 @@ const hallNameBox =
 
 const userNameBox =
   document.getElementById('userName')
+
+const hallSelect =
+  document.getElementById('hallSelect')
 
 const statusBox =
   document.getElementById('status')
@@ -485,70 +497,106 @@ function loadProjectFromSession() {
 
 /*
 ========================================
-LOAD HALL ID
-берём hall_id из URL
+LOAD HALL LIST
+загружаем все залы проекта
 ========================================
 */
 
-function loadHallIdFromUrl() {
-  setStatus('Reading hall_id...')
+async function loadHallList() {
+  setStatus('Loading hall list...')
+
+  hallSelect.innerHTML =
+    '<option value="">loading...</option>'
+
+  const { data, error } =
+    await supabase
+      .from('halls')
+      .select('*')
+      .eq('project_id', currentProjectId)
+      .order('name', { ascending: true })
+
+  if (error)
+    throw error
+
+  hallSelect.innerHTML =
+    ''
+
+  if (!data || !data.length) {
+    hallSelect.innerHTML =
+      '<option value="">No halls</option>'
+
+    hallNameBox.textContent =
+      'No halls'
+
+    setStatus('No halls found for project')
+
+    return null
+  }
+
+  data.forEach(hall => {
+    const option =
+      document.createElement('option')
+
+    option.value =
+      hall.hall_id || hall.id
+
+    option.textContent =
+      hall.name || option.value
+
+    hallSelect.appendChild(option)
+  })
 
   const params =
     new URLSearchParams(window.location.search)
 
-  currentHallId =
+  const hallIdFromUrl =
     params.get('hall_id')
 
-  if (!currentHallId)
-    throw new Error('hall_id missing in URL')
+  if (hallIdFromUrl) {
+    hallSelect.value =
+      hallIdFromUrl
+  }
+
+  if (!hallSelect.value) {
+    hallSelect.selectedIndex =
+      0
+  }
+
+  currentHallId =
+    hallSelect.value
+
+  currentHallName =
+    hallSelect.options[hallSelect.selectedIndex].textContent
+
+  hallNameBox.textContent =
+    currentHallName + ' / ' + currentHallId
+
+  setStatus(
+    'Hall list loaded: ' + data.length
+  )
 
   return currentHallId
 }
 
 /*
 ========================================
-LOAD HALL INFO
-грузим имя зала из базы
-========================================
-*/
-
-async function loadHallInfo() {
-  setStatus('Loading hall info...')
-
-  const { data, error } =
-    await supabase
-      .from('halls')
-      .select('*')
-      .eq('hall_id', currentHallId)
-      .maybeSingle()
-
-  if (error)
-    throw error
-
-  if (!data)
-    throw new Error('Hall not found: ' + currentHallId)
-
-  currentHallName =
-    data.name || 'Hall'
-
-  hallNameBox.textContent =
-    currentHallName + ' / ' + currentHallId
-
-  return data
-}
-
-/*
-========================================
 LOAD TABLES
-грузим столы из базы
+грузим столы выбранного зала
 ========================================
 */
 
 async function loadTables() {
-  setStatus('Loading tables...')
-
   hallCanvas.innerHTML =
     ''
+
+  if (!currentHallId) {
+    setStatus('No hall selected')
+    return
+  }
+
+  setStatus(
+    'Loading tables for hall: ' + currentHallName
+  )
 
   const { data, error } =
     await supabase
@@ -561,19 +609,24 @@ async function loadTables() {
     throw error
 
   if (!data || !data.length) {
-    setStatus('No tables found for hall_id: ' + currentHallId)
+    setStatus(
+      'No tables found for hall: ' + currentHallName
+    )
+
     return
   }
 
   data.forEach(renderTable)
 
-  setStatus('Tables loaded: ' + data.length)
+  setStatus(
+    'Tables loaded: ' + data.length
+  )
 }
 
 /*
 ========================================
 RENDER TABLE
-столы только отображаются, не двигаются
+столы только отображаются
 ========================================
 */
 
@@ -638,6 +691,35 @@ function renderTable(item) {
 
 /*
 ========================================
+SELECT HALL
+при выборе зала грузим его столы
+========================================
+*/
+
+hallSelect.addEventListener('change', async () => {
+  try {
+    currentHallId =
+      hallSelect.value
+
+    currentHallName =
+      hallSelect.options[hallSelect.selectedIndex].textContent
+
+    hallNameBox.textContent =
+      currentHallName + ' / ' + currentHallId
+
+    await loadTables()
+  }
+  catch (err) {
+    console.error(err)
+
+    setStatus(
+      'Select hall error: ' + err.message
+    )
+  }
+})
+
+/*
+========================================
 BUTTONS
 ========================================
 */
@@ -657,14 +739,17 @@ document
     }
     catch (err) {
       console.error(err)
-      setStatus('Reload error: ' + err.message)
+
+      setStatus(
+        'Reload error: ' + err.message
+      )
     }
   })
 
 /*
 ========================================
 INIT
-единый понятный запуск
+загрузка пользователя, проекта, списка залов и столов
 ========================================
 */
 
@@ -676,11 +761,11 @@ async function init() {
 
     loadProjectFromSession()
 
-    loadHallIdFromUrl()
+    const hallId =
+      await loadHallList()
 
-    await loadHallInfo()
-
-    await loadTables()
+    if (hallId)
+      await loadTables()
   }
   catch (err) {
     console.error('HALL INIT ERROR:', err)
@@ -707,7 +792,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    размеры и масштаб | v3.1.0
+    выбор холла и регулировка размера | v3.2.0
   </div>
 
   <div class="row" id="build-down">
