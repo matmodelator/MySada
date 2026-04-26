@@ -1485,6 +1485,44 @@ document
 
 /*
 ========================================
+REALTIME TABLES
+слушаем изменения столов проекта
+========================================
+*/
+
+function subscribeTablesRealtime() {
+
+  setStatus('Realtime subscribe tables...')
+
+  supabase
+    .channel('tables-' + currentProjectId)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'tables',
+        filter: 'project_id=eq.' + currentProjectId
+      },
+      payload => {
+
+        console.log('REALTIME TABLE:', payload)
+
+        if (!payload.new)
+          return
+
+        updateTable(
+          payload.new
+        )
+
+      }
+    )
+    .subscribe()
+
+}
+      
+/*
+========================================
 INIT
 загрузка пользователя, проекта, всех залов и всех столов
 ========================================
@@ -1499,6 +1537,8 @@ async function init() {
     loadProjectFromSession()
 
     await loadProjectData()
+
+    subscribeTablesRealtime()    
 
     const hallId =
       loadHallList()
@@ -1543,7 +1583,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    mosaic field fix | v5.0.3
+    Tables Realtime() | v5.1.0
   </div>
 
   <div class="row" id="build-down">
