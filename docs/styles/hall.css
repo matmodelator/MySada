@@ -1,0 +1,536 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef1f6;
+  color: #243447;
+  min-height: 100vh;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.top-bar {
+  background: #2563eb;
+  color: white;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.top-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.top-buttons button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  background: white;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.top-info {
+  max-width: 1200px;
+  margin: 16px auto 10px;
+  padding: 14px 18px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.info-card {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.info-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.status {
+  max-width: 1200px;
+  margin: 10px auto;
+  padding: 0 16px;
+  color: #475569;
+  font-size: 14px;
+}
+
+/*
+========================================
+ПАРАМЕТРЫ МАСШТАБА
+меняешь только здесь
+========================================
+*/
+
+:root {
+
+  /*
+  масштаб всего зала
+  */
+
+  --hall-scale: 0.75;
+
+  /*
+  масштаб столов
+  */
+
+  --table-scale: 0.75;
+
+  /*
+  размер текста на столах
+  */
+
+  --table-font-size: 12px;
+
+  /*
+  масштаб всех залов одновременно
+  */
+
+  --all-halls-scale: 0.42;
+
+}
+
+/*
+========================================
+ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ
+tabs / grid / all
+========================================
+*/
+
+.view-panel {
+  max-width: 1200px;
+  margin: 10px auto;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.view-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.view-buttons button {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.view-buttons button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/*
+========================================
+ЗАКЛАДКИ ЗАЛОВ
+========================================
+*/
+
+.hall-tabs {
+  max-width: 1200px;
+  margin: 10px auto;
+  padding: 0 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hall-tab {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 9px 16px;
+  background: white;
+  color: #334155;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.hall-tab.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/*
+========================================
+Grid ЗАЛОВ
+========================================
+*/
+
+.hall-grid {
+  max-width: 1200px;
+  margin: 10px auto 16px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.hall-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.hall-card.active {
+  border-color: #2563eb;
+}
+
+.hall-card-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.hall-card-info {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.table-tree {
+  max-width: 1200px;
+  margin: 14px auto 40px;
+  padding: 0 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.table-tree-row {
+  text-align: left;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  background: white;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+      
+/*
+========================================
+HALL WRAP
+контейнер с прокруткой
+========================================
+*/
+
+.hall-wrap {
+
+  max-width: 1500px;
+
+  margin: 0 auto 80px;
+
+  padding: 8px;
+
+  overflow: auto;
+
+}
+
+/*
+========================================
+HALL CANVAS
+реальный размер зала
+но отображаем уменьшенным
+========================================
+*/
+
+.hall-canvas {
+
+  position: relative;
+
+  /*
+  РЕАЛЬНЫЙ РАЗМЕР
+  должен совпадать с редактором
+  */
+
+  width: 1460px;
+
+  height: 1180px;
+
+  background: #ffffff;
+
+  border: 2px solid #cbd5e1;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  /*
+  масштаб всего зала
+  */
+
+  transform: scale(
+    var(--hall-scale)
+  );
+
+  transform-origin:
+    top left;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.03),
+    0 6px 18px rgba(0,0,0,0.08);
+
+}
+
+/*
+========================================
+TABLE ITEM
+уменьшаем сами столы
+========================================
+*/
+
+.table-item {
+
+  position: absolute;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: #7dd3fc;
+
+  border: 2px solid #0284c7;
+
+  color: #0f172a;
+
+  font-weight: 800;
+
+  font-size:
+    var(--table-font-size);
+
+  user-select: none;
+
+  cursor: pointer;
+
+  /*
+  масштаб столов
+  */
+
+  transform: scale(
+    var(--table-scale)
+  );
+
+  transform-origin:
+    center center;
+
+  box-shadow:
+    0 4px 10px rgba(0,0,0,0.18);
+
+}
+
+/*
+========================================
+СТАТУСЫ СТОЛОВ
+========================================
+*/
+
+.table-free {
+  background: #7dd3fc;
+  border-color: #0284c7;
+}
+
+.table-occupied {
+  background: #fb7185;
+  border-color: #be123c;
+}
+
+.table-reserved {
+  background: #facc15;
+  border-color: #ca8a04;
+}
+
+.table-cleaning {
+  background: #c4b5fd;
+  border-color: #7c3aed;
+}
+
+/*
+========================================
+ФОРМЫ СТОЛОВ
+========================================
+*/
+
+.table-round {
+
+  border-radius: 50%;
+
+}
+
+.table-square {
+
+  border-radius: 8px;
+
+}
+
+.table-rect {
+
+  border-radius: 12px;
+
+}
+
+/*
+========================================
+LABEL
+========================================
+*/
+
+.table-label {
+
+  pointer-events: none;
+
+  text-align: center;
+
+  line-height: 1.1;
+
+}
+
+/*
+========================================
+Mosaic ЗАЛОВ 
+========================================
+*/
+
+.all-halls {
+  max-width: 1500px;
+  margin: 0 auto 80px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 18px;
+}
+
+.hall-block {
+  background: white;
+  border: 3px solid transparent;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.hall-block.active {
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,0.18),
+    0 4px 14px rgba(0,0,0,0.08);
+}
+/*
+========================================
+ДИАЛОГ СТОЛА
+========================================
+*/
+
+.table-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.28);
+  z-index: 1000;
+}
+
+.table-dialog.hidden {
+  display: none;
+}
+
+.dialog-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.dialog-info {
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 14px;
+}
+
+.dialog-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.dialog-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#btnOpenOrder {
+  background: #2563eb;
+  color: white;
+}
+
+#btnCloseOrder {
+  background: #16a34a;
+  color: white;
+}
+
+#btnReserveTable {
+  background: #facc15;
+  color: #111827;
+}
+
+#btnCleanTable {
+  background: #7c3aed;
+  color: white;
+}
+
+#btnCloseDialog {
+  background: #e5e7eb;
+  color: #111827;
+}
