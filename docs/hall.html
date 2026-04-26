@@ -24,6 +24,10 @@ body {
   min-height: 100vh;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .top-bar {
   background: #2563eb;
   color: white;
@@ -41,6 +45,7 @@ body {
 .top-buttons {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .top-buttons button {
@@ -122,6 +127,121 @@ body {
 
   --table-font-size: 12px;
 
+  /*
+  масштаб всех залов одновременно
+  */
+
+  --all-halls-scale: 0.42;
+
+}
+
+/*
+========================================
+ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ
+tabs / grid / all
+========================================
+*/
+
+.view-panel {
+  max-width: 1200px;
+  margin: 10px auto;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.view-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.view-buttons button {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.view-buttons button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/*
+========================================
+ЗАКЛАДКИ ЗАЛОВ
+========================================
+*/
+
+.hall-tabs {
+  max-width: 1200px;
+  margin: 10px auto;
+  padding: 0 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hall-tab {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 9px 16px;
+  background: white;
+  color: #334155;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.hall-tab.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/*
+========================================
+МОЗАИКА ЗАЛОВ
+========================================
+*/
+
+.hall-grid {
+  max-width: 1200px;
+  margin: 10px auto 16px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.hall-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.hall-card.active {
+  border-color: #2563eb;
+}
+
+.hall-card-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.hall-card-info {
+  font-size: 14px;
+  color: #64748b;
 }
 
 /*
@@ -305,6 +425,50 @@ LABEL
 
 /*
 ========================================
+ВСЕ ЗАЛЫ ОДНОВРЕМЕННО
+========================================
+*/
+
+.all-halls {
+  max-width: 1500px;
+  margin: 0 auto 80px;
+  padding: 8px;
+  display: grid;
+  gap: 24px;
+}
+
+.hall-block {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  overflow: auto;
+}
+
+.hall-block-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+
+.hall-canvas-all {
+  position: relative;
+  width: 1460px;
+  height: 1180px;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  overflow: hidden;
+  transform: scale(var(--all-halls-scale));
+  transform-origin: top left;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.03),
+    0 6px 18px rgba(0,0,0,0.08);
+}
+
+/*
+========================================
 ДИАЛОГ СТОЛА
 ========================================
 */
@@ -417,13 +581,39 @@ LABEL
 
 </section>
 
+<div class="view-panel">
+
+  <div class="view-buttons">
+
+    <button id="viewTabsBtn" type="button">
+      Tabs
+    </button>
+
+    <button id="viewGridBtn" type="button">
+      Grid
+    </button>
+
+    <button id="viewAllBtn" type="button">
+      All halls
+    </button>
+
+  </div>
+
+</div>
+
 <div id="status" class="status">
   Starting...
 </div>
 
-<main class="hall-wrap">
+<div id="hallTabs" class="hall-tabs"></div>
+
+<div id="hallGrid" class="hall-grid hidden"></div>
+
+<main id="singleHallWrap" class="hall-wrap">
   <div id="hallCanvas" class="hall-canvas"></div>
 </main>
+
+<div id="allHalls" class="all-halls hidden"></div>
 
 <!--
 ========================================
@@ -476,7 +666,7 @@ LABEL
 <div id="service-console">
 
   <div class="row" id="build-top">
-    выбор холла и обработки стола | v4.1.0
+    Hall modes tabs grid all | v5.0.0
   </div>
 
   <div class="row" id="build-down">
@@ -511,11 +701,32 @@ const hallSelect =
 const statusBox =
   document.getElementById('status')
 
+const hallTabs =
+  document.getElementById('hallTabs')
+
+const hallGrid =
+  document.getElementById('hallGrid')
+
+const singleHallWrap =
+  document.getElementById('singleHallWrap')
+
 const hallCanvas =
   document.getElementById('hallCanvas')
 
+const allHalls =
+  document.getElementById('allHalls')
+
 const buildDown =
   document.getElementById('build-down')
+
+const viewTabsBtn =
+  document.getElementById('viewTabsBtn')
+
+const viewGridBtn =
+  document.getElementById('viewGridBtn')
+
+const viewAllBtn =
+  document.getElementById('viewAllBtn')
 
 const dialog =
   document.getElementById('tableDialog')
@@ -564,6 +775,15 @@ let currentHallName =
 
 let activeTable =
   null
+
+let hallViewMode =
+  sessionStorage.getItem('mysada_hall_view_mode') || 'tabs'
+
+let hallsList =
+  []
+
+let tablesList =
+  []
 
 /*
 ========================================
@@ -675,31 +895,62 @@ function loadProjectFromSession() {
 
 /*
 ========================================
-LOAD HALL LIST
-загружаем все залы проекта
+LOAD PROJECT DATA
+сразу грузим все залы и все столы проекта из Supabase
 ========================================
 */
 
-async function loadHallList() {
-  setStatus('Loading hall list...')
+async function loadProjectData() {
+  setStatus('Loading halls and tables...')
 
-  hallSelect.innerHTML =
-    '<option value="">loading...</option>'
-
-  const { data, error } =
+  const { data: halls, error: hallsError } =
     await supabase
       .from('halls')
       .select('*')
       .eq('project_id', currentProjectId)
       .order('name', { ascending: true })
 
-  if (error)
-    throw error
+  if (hallsError)
+    throw hallsError
+
+  hallsList =
+    halls || []
+
+  const { data: tables, error: tablesError } =
+    await supabase
+      .from('tables')
+      .select('*')
+      .eq('project_id', currentProjectId)
+      .order('name', { ascending: true })
+
+  if (tablesError)
+    throw tablesError
+
+  tablesList =
+    tables || []
+
+  setStatus(
+    'Project data loaded: halls '
+    + hallsList.length
+    + ', tables '
+    + tablesList.length
+  )
+}
+
+/*
+========================================
+LOAD HALL LIST
+строим список залов из уже загруженных данных
+========================================
+*/
+
+function loadHallList() {
+  setStatus('Rendering hall list...')
 
   hallSelect.innerHTML =
     ''
 
-  if (!data || !data.length) {
+  if (!hallsList.length) {
     hallSelect.innerHTML =
       '<option value="">No halls</option>'
 
@@ -711,7 +962,7 @@ async function loadHallList() {
     return null
   }
 
-  data.forEach(hall => {
+  hallsList.forEach(hall => {
     const option =
       document.createElement('option')
 
@@ -750,7 +1001,7 @@ async function loadHallList() {
     currentHallName + ' / ' + currentHallId
 
   setStatus(
-    'Hall list loaded: ' + data.length
+    'Hall list rendered: ' + hallsList.length
   )
 
   return currentHallId
@@ -758,12 +1009,261 @@ async function loadHallList() {
 
 /*
 ========================================
-LOAD TABLES
-грузим столы выбранного зала
+COUNT TABLES FOR HALL
 ========================================
 */
 
-async function loadTables() {
+function countTablesForHall(hallId) {
+  return tablesList.filter(
+    table => table.hall_id === hallId
+  ).length
+}
+
+/*
+========================================
+GET HALL NAME
+========================================
+*/
+
+function getHallName(hallId) {
+  const hall =
+    hallsList.find(
+      item => (item.hall_id || item.id) === hallId
+    )
+
+  if (!hall)
+    return hallId
+
+  return hall.name || hallId
+}
+
+/*
+========================================
+SET CURRENT HALL
+выбор активного зала
+========================================
+*/
+
+function setCurrentHall(hallId) {
+  currentHallId =
+    hallId
+
+  currentHallName =
+    getHallName(hallId)
+
+  hallSelect.value =
+    hallId
+
+  hallNameBox.textContent =
+    currentHallName + ' / ' + currentHallId
+
+  sessionStorage.setItem(
+    'mysada_current_hall_id',
+    currentHallId
+  )
+
+  renderHallTabs()
+  renderHallGrid()
+
+  if (hallViewMode !== 'all') {
+    renderCurrentHall()
+  }
+
+  setStatus(
+    'Selected hall: ' + currentHallName
+  )
+}
+
+/*
+========================================
+RENDER HALL TABS
+закладки залов
+========================================
+*/
+
+function renderHallTabs() {
+  hallTabs.innerHTML =
+    ''
+
+  hallsList.forEach(hall => {
+    const hallId =
+      hall.hall_id || hall.id
+
+    const button =
+      document.createElement('button')
+
+    button.type =
+      'button'
+
+    button.className =
+      'hall-tab'
+
+    if (hallId === currentHallId) {
+      button.classList.add('active')
+    }
+
+    button.textContent =
+      (hall.name || hallId)
+      + ' · '
+      + countTablesForHall(hallId)
+
+    button.addEventListener('click', () => {
+      setCurrentHall(hallId)
+    })
+
+    hallTabs.appendChild(button)
+  })
+}
+
+/*
+========================================
+RENDER HALL GRID
+мозаика залов
+========================================
+*/
+
+function renderHallGrid() {
+  hallGrid.innerHTML =
+    ''
+
+  hallsList.forEach(hall => {
+    const hallId =
+      hall.hall_id || hall.id
+
+    const card =
+      document.createElement('div')
+
+    card.className =
+      'hall-card'
+
+    if (hallId === currentHallId) {
+      card.classList.add('active')
+    }
+
+    const title =
+      document.createElement('div')
+
+    title.className =
+      'hall-card-title'
+
+    title.textContent =
+      hall.name || hallId
+
+    const info =
+      document.createElement('div')
+
+    info.className =
+      'hall-card-info'
+
+    info.textContent =
+      'tables: '
+      + countTablesForHall(hallId)
+      + ' | '
+      + hallId
+
+    card.appendChild(title)
+    card.appendChild(info)
+
+    card.addEventListener('click', () => {
+      setCurrentHall(hallId)
+      setHallViewMode('tabs')
+    })
+
+    hallGrid.appendChild(card)
+  })
+}
+
+/*
+========================================
+SET HALL VIEW MODE
+tabs | grid | all
+========================================
+*/
+
+function setHallViewMode(mode) {
+  hallViewMode =
+    mode
+
+  sessionStorage.setItem(
+    'mysada_hall_view_mode',
+    mode
+  )
+
+  viewTabsBtn.classList.toggle(
+    'active',
+    mode === 'tabs'
+  )
+
+  viewGridBtn.classList.toggle(
+    'active',
+    mode === 'grid'
+  )
+
+  viewAllBtn.classList.toggle(
+    'active',
+    mode === 'all'
+  )
+
+  hallTabs.classList.toggle(
+    'hidden',
+    mode !== 'tabs'
+  )
+
+  hallGrid.classList.toggle(
+    'hidden',
+    mode !== 'grid'
+  )
+
+  singleHallWrap.classList.toggle(
+    'hidden',
+    mode === 'all' || mode === 'grid'
+  )
+
+  allHalls.classList.toggle(
+    'hidden',
+    mode !== 'all'
+  )
+
+  dialog.classList.add('hidden')
+
+  activeTable =
+    null
+
+  renderHallTabs()
+  renderHallGrid()
+
+  if (mode === 'all') {
+    renderAllHalls()
+  }
+
+  if (mode === 'tabs') {
+    renderCurrentHall()
+  }
+
+  setStatus(
+    'View mode: ' + mode
+  )
+}
+
+/*
+========================================
+LOAD TABLES
+грузим столы выбранного зала из уже загруженных данных
+========================================
+*/
+
+function loadTables() {
+  renderCurrentHall()
+}
+
+/*
+========================================
+RENDER CURRENT HALL
+один выбранный зал
+========================================
+*/
+
+function renderCurrentHall() {
   hallCanvas.innerHTML =
     ''
 
@@ -777,21 +1277,12 @@ async function loadTables() {
     return
   }
 
-  setStatus(
-    'Loading tables for hall: ' + currentHallName
-  )
+  const tablesForHall =
+    tablesList.filter(
+      table => table.hall_id === currentHallId
+    )
 
-  const { data, error } =
-    await supabase
-      .from('tables')
-      .select('*')
-      .eq('hall_id', currentHallId)
-      .order('name', { ascending: true })
-
-  if (error)
-    throw error
-
-  if (!data || !data.length) {
+  if (!tablesForHall.length) {
     setStatus(
       'No tables found for hall: ' + currentHallName
     )
@@ -799,21 +1290,114 @@ async function loadTables() {
     return
   }
 
-  data.forEach(renderTable)
+  tablesForHall.forEach(table => {
+    renderTableToCanvas(
+      table,
+      hallCanvas
+    )
+  })
 
   setStatus(
-    'Tables loaded: ' + data.length
+    'Tables rendered: '
+    + tablesForHall.length
+    + ' | '
+    + currentHallName
+  )
+}
+
+/*
+========================================
+RENDER ALL HALLS
+все залы одновременно
+========================================
+*/
+
+function renderAllHalls() {
+  allHalls.innerHTML =
+    ''
+
+  activeTable =
+    null
+
+  dialog.classList.add('hidden')
+
+  if (!hallsList.length) {
+    setStatus('No halls to render')
+    return
+  }
+
+  hallsList.forEach(hall => {
+    const hallId =
+      hall.hall_id || hall.id
+
+    const block =
+      document.createElement('section')
+
+    block.className =
+      'hall-block'
+
+    const title =
+      document.createElement('div')
+
+    title.className =
+      'hall-block-title'
+
+    title.textContent =
+      (hall.name || hallId)
+      + ' · tables: '
+      + countTablesForHall(hallId)
+
+    const canvas =
+      document.createElement('div')
+
+    canvas.className =
+      'hall-canvas-all'
+
+    canvas.dataset.hallId =
+      hallId
+
+    block.appendChild(title)
+    block.appendChild(canvas)
+
+    allHalls.appendChild(block)
+
+    tablesList
+      .filter(table => table.hall_id === hallId)
+      .forEach(table => {
+        renderTableToCanvas(
+          table,
+          canvas
+        )
+      })
+  })
+
+  setStatus(
+    'All halls rendered: ' + hallsList.length
   )
 }
 
 /*
 ========================================
 RENDER TABLE
-столы отображаются и открывают диалог действий
+совместимость со старым названием функции
 ========================================
 */
 
 function renderTable(item) {
+  renderTableToCanvas(
+    item,
+    hallCanvas
+  )
+}
+
+/*
+========================================
+RENDER TABLE TO CANVAS
+столы отображаются и открывают диалог действий
+========================================
+*/
+
+function renderTableToCanvas(item, targetCanvas) {
   const el =
     document.createElement('div')
 
@@ -882,7 +1466,7 @@ function renderTable(item) {
     openTableDialog(item)
   })
 
-  hallCanvas.appendChild(el)
+  targetCanvas.appendChild(el)
 }
 
 /*
@@ -899,7 +1483,9 @@ function openTableDialog(table) {
     table.name || 'Table'
 
   dialogInfo.textContent =
-    'status: '
+    'hall: '
+    + getHallName(table.hall_id)
+    + ' | status: '
     + (table.table_status || 'free')
     + ' | table_id: '
     + table.table_id
@@ -913,20 +1499,41 @@ function openTableDialog(table) {
 
 /*
 ========================================
+ОБНОВИТЬ СТОЛ В ПАМЯТИ
+чтобы при переключении зала статус не откатился
+========================================
+*/
+
+function updateTableInMemory(updatedTable) {
+  tablesList =
+    tablesList.map(table => {
+      if (table.table_id === updatedTable.table_id)
+        return updatedTable
+
+      return table
+    })
+}
+
+/*
+========================================
 ОБНОВИТЬ СТОЛ НА ЭКРАНЕ
 ========================================
 */
 
 function updateTable(updatedTable) {
-  const oldEl =
-    hallCanvas.querySelector(
-      '[data-table-id="' + updatedTable.table_id + '"]'
-    )
+  updateTableInMemory(updatedTable)
 
-  if (oldEl)
-    oldEl.remove()
+  if (hallViewMode === 'all') {
+    renderAllHalls()
+    return
+  }
 
-  renderTable(updatedTable)
+  if (hallViewMode === 'tabs') {
+    renderCurrentHall()
+    return
+  }
+
+  renderHallGrid()
 }
 
 /*
@@ -1209,18 +1816,15 @@ SELECT HALL
 ========================================
 */
 
-hallSelect.addEventListener('change', async () => {
+hallSelect.addEventListener('change', () => {
   try {
-    currentHallId =
+    setCurrentHall(
       hallSelect.value
+    )
 
-    currentHallName =
-      hallSelect.options[hallSelect.selectedIndex].textContent
-
-    hallNameBox.textContent =
-      currentHallName + ' / ' + currentHallId
-
-    await loadTables()
+    if (hallViewMode !== 'tabs') {
+      setHallViewMode('tabs')
+    }
   }
   catch (err) {
     console.error(err)
@@ -1230,6 +1834,34 @@ hallSelect.addEventListener('change', async () => {
     )
   }
 })
+
+/*
+========================================
+VIEW BUTTONS
+переключение режимов представления залов
+========================================
+*/
+
+viewTabsBtn.addEventListener(
+  'click',
+  () => {
+    setHallViewMode('tabs')
+  }
+)
+
+viewGridBtn.addEventListener(
+  'click',
+  () => {
+    setHallViewMode('grid')
+  }
+)
+
+viewAllBtn.addEventListener(
+  'click',
+  () => {
+    setHallViewMode('all')
+  }
+)
 
 /*
 ========================================
@@ -1248,7 +1880,16 @@ document
   .getElementById('reloadBtn')
   .addEventListener('click', async () => {
     try {
-      await loadTables()
+      await loadProjectData()
+
+      loadHallList()
+
+      renderHallTabs()
+      renderHallGrid()
+
+      setHallViewMode(
+        hallViewMode
+      )
     }
     catch (err) {
       console.error(err)
@@ -1262,7 +1903,7 @@ document
 /*
 ========================================
 INIT
-загрузка пользователя, проекта, списка залов и столов
+загрузка пользователя, проекта, всех залов и всех столов
 ========================================
 */
 
@@ -1274,11 +1915,28 @@ async function init() {
 
     loadProjectFromSession()
 
-    const hallId =
-      await loadHallList()
+    await loadProjectData()
 
-    if (hallId)
-      await loadTables()
+    const hallId =
+      loadHallList()
+
+    const savedHallId =
+      sessionStorage.getItem('mysada_current_hall_id')
+
+    if (
+      savedHallId
+      &&
+      hallsList.some(hall => (hall.hall_id || hall.id) === savedHallId)
+    ) {
+      setCurrentHall(savedHallId)
+    }
+    else if (hallId) {
+      setCurrentHall(hallId)
+    }
+
+    setHallViewMode(
+      hallViewMode
+    )
   }
   catch (err) {
     console.error('HALL INIT ERROR:', err)
@@ -1294,7 +1952,6 @@ init()
 </script>
 
 
-
   /*
     ========================================
     КОНСОЛЬ
@@ -1305,7 +1962,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    фичи столов и регулировка размера | v3.3.0
+    multi halls | v4.0.0
   </div>
 
   <div class="row" id="build-down">
