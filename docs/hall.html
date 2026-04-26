@@ -35,6 +35,11 @@
   </div>
 
   <div class="info-card">
+    <div class="info-label">User</div>
+    <div id="userName" class="info-value">loading...</div>
+  </div>
+
+  <div class="info-card">
     <div class="info-label">Select Hall</div>
     <select id="hallSelect">
       <option value="">loading...</option>
@@ -44,11 +49,6 @@
   <div class="info-card">
     <div class="info-label">Hall</div>
     <div id="hallName" class="info-value">loading...</div>
-  </div>
-
-  <div class="info-card">
-    <div class="info-label">User</div>
-    <div id="userName" class="info-value">loading...</div>
   </div>
 
 </section>
@@ -594,82 +594,160 @@ RENDER HALL GRID
 ========================================
 */
 
+/*
+========================================
+RENDER HALL GRID
+залы горизонтально
+столы вертикально под своим залом
+========================================
+*/
+
 function renderHallGrid() {
-  hallGrid.innerHTML =
-    ''
 
-  const menu =
-    document.createElement('div')
+  hallGrid.innerHTML = ''
 
-  menu.className =
-    'hall-tabs'
+  if (!hallsList.length) {
+
+    setStatus('No halls to render')
+
+    return
+
+  }
 
   hallsList.forEach(hall => {
+
     const hallId =
       hall.hall_id || hall.id
 
-    const button =
-      document.createElement('button')
+    /*
+    ----------------------------------------
+    карточка зала
+    ----------------------------------------
+    */
 
-    button.type =
-      'button'
+    const card =
+      document.createElement('div')
 
-    button.className =
-      'hall-tab'
+    card.className =
+      'hall-card'
 
-    if (hallId === currentHallId)
-      button.classList.add('active')
+    if (hallId === currentHallId) {
 
-    button.textContent =
+      card.classList.add('active')
+
+    }
+
+    /*
+    ----------------------------------------
+    заголовок
+    ----------------------------------------
+    */
+
+    const title =
+      document.createElement('div')
+
+    title.className =
+      'hall-card-title'
+
+    title.textContent =
       hall.name || hallId
 
-    button.addEventListener('click', () => {
-      setCurrentHall(hallId)
-      renderHallGrid()
-    })
+    card.appendChild(title)
 
-    menu.appendChild(button)
+    /*
+    ----------------------------------------
+    инфо
+    ----------------------------------------
+    */
+
+    const info =
+      document.createElement('div')
+
+    info.className =
+      'hall-card-info'
+
+    info.textContent =
+      'tables: '
+      + countTablesForHall(hallId)
+
+    card.appendChild(info)
+
+    /*
+    ----------------------------------------
+    контейнер столов
+    ----------------------------------------
+    */
+
+    const tree =
+      document.createElement('div')
+
+    tree.className =
+      'table-tree'
+
+    card.appendChild(tree)
+
+    /*
+    ----------------------------------------
+    столы только своего зала
+    ----------------------------------------
+    */
+
+    tablesList
+
+      .filter(
+        table =>
+          table.hall_id === hallId
+      )
+
+      .forEach(
+        table => {
+
+          const row =
+            document.createElement('button')
+
+          row.type =
+            'button'
+
+          row.className =
+            'table-tree-row'
+
+          row.textContent =
+            table.name || table.table_id
+
+          row.addEventListener(
+            'click',
+            () => {
+
+              openTableDialog(table)
+
+            }
+          )
+
+          tree.appendChild(row)
+
+        }
+      )
+                     
+    /*
+    ----------------------------------------
+    клик по залу
+    ----------------------------------------
+    */
+
+    card.addEventListener(
+      'click',
+      () => {
+
+        setCurrentHall(hallId)
+
+      }
+    )
+
+    hallGrid.appendChild(card)
+
   })
-
-  hallGrid.appendChild(menu)
-
-  const list =
-    document.createElement('div')
-
-  list.className =
-    'table-tree'
-
-  tablesList
-    .filter(table => table.hall_id === currentHallId)
-    .sort((a, b) => Number(a.name) - Number(b.name))
-    .forEach(table => {
-      const row =
-        document.createElement('button')
-
-      const status =
-        table.table_status || 'free'
-
-      row.type =
-        'button'
-
-      row.className =
-        'table-tree-row table-' + status
-
-      row.textContent =
-        (table.name || table.table_id)
-        + ' · '
-        + status
-
-      row.addEventListener('click', () => {
-        openTableDialog(table)
-      })
-
-      list.appendChild(row)
-    })
-
-  hallGrid.appendChild(list)
 }
-
+      
 /*
 ========================================
 SET HALL VIEW MODE
@@ -1463,7 +1541,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    mosaic/tree/css-file | v5.0.0
+    mosaic & tree fix| v5.0.1
   </div>
 
   <div class="row" id="build-down">
