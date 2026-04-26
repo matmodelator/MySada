@@ -112,26 +112,27 @@ body {
   /*
   масштаб всего зала
   */
-
   --hall-scale: 0.75;
 
   /*
   масштаб столов
   */
-
   --table-scale: 0.75;
 
   /*
   размер текста на столах
   */
-
   --table-font-size: 12px;
 
   /*
   масштаб всех залов одновременно
   */
-
   --all-halls-scale: 0.42;
+
+  /*
+  масштаб в мозаике All Halls
+  */ 
+  --all-halls-scale: 0.28;   
 
 }
 
@@ -206,7 +207,8 @@ tabs / grid / all
 
 /*
 ========================================
-МОЗАИКА ЗАЛОВ
+GRID MODE
+список / выбор залов
 ========================================
 */
 
@@ -244,6 +246,109 @@ tabs / grid / all
   color: #64748b;
 }
 
+/*
+========================================
+ALL HALLS MODE
+мозаика залов
+========================================
+*/
+
+.all-halls {
+
+  max-width: 1500px;
+
+  margin: 0 auto 80px;
+
+  padding: 8px;
+
+  display: grid;
+
+  grid-template-columns:
+
+    repeat(
+      auto-fit,
+      minmax(420px, 1fr)
+    );
+
+  gap: 18px;
+
+}
+
+.hall-block {
+
+  background: white;
+
+  border: 3px solid transparent;
+
+  border-radius: 16px;
+
+  padding: 14px;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.08);
+
+  overflow: hidden;
+
+}
+
+.hall-block.active {
+
+  border-color: #2563eb;
+
+  box-shadow:
+
+    0 0 0 4px rgba(37,99,235,0.18),
+
+    0 4px 14px rgba(0,0,0,0.08);
+
+}
+
+.hall-block-title {
+
+  font-size: 18px;
+
+  font-weight: 900;
+
+  color: #0f172a;
+
+  margin-bottom: 10px;
+
+}
+
+.hall-canvas-all {
+
+  position: relative;
+
+  width: 1460px;
+
+  height: 1180px;
+
+  background: #ffffff;
+
+  border: 2px solid #cbd5e1;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  transform:
+
+    scale(
+      var(--all-halls-scale)
+    );
+
+  transform-origin:
+
+    top left;
+
+  box-shadow:
+
+    inset 0 0 0 1px rgba(0,0,0,0.03),
+
+    0 6px 18px rgba(0,0,0,0.08);
+
+}
+      
 /*
 ========================================
 HALL WRAP
@@ -555,28 +660,48 @@ LABEL
   </div>
 </header>
 
+/*
+========================================
+МЕНЮ
+========================================
+*/
+      
 <section class="top-info">
+
+  <!-- ВЕРХНИЙ РЯД -->
 
   <div class="info-card">
     <div class="info-label">Project</div>
-    <div id="projectName" class="info-value">loading...</div>
-  </div>
-
-  <div class="info-card">
-    <div class="info-label">Select Hall</div>
-    <select id="hallSelect">
-      <option value="">loading...</option>
-    </select>
-  </div>
-
-  <div class="info-card">
-    <div class="info-label">Hall</div>
-    <div id="hallName" class="info-value">loading...</div>
+    <div id="projectName" class="info-value">
+      loading...
+    </div>
   </div>
 
   <div class="info-card">
     <div class="info-label">User</div>
-    <div id="userName" class="info-value">loading...</div>
+    <div id="userName" class="info-value">
+      loading...
+    </div>
+  </div>
+
+  <!-- НИЖНИЙ РЯД -->
+
+  <div class="info-card">
+    <div class="info-label">Select Hall</div>
+
+    <select id="hallSelect">
+      <option value="">
+        loading...
+      </option>
+    </select>
+
+  </div>
+
+  <div class="info-card">
+    <div class="info-label">Hall</div>
+    <div id="hallName" class="info-value">
+      loading...
+    </div>
   </div>
 
 </section>
@@ -610,6 +735,7 @@ LABEL
 <div id="hallGrid" class="hall-grid hidden"></div>
 
 <main id="singleHallWrap" class="hall-wrap">
+  <div id="allHalls" class="all-halls hidden"></div>  
   <div id="hallCanvas" class="hall-canvas"></div>
 </main>
 
@@ -751,6 +877,9 @@ const btnCleanTable =
 
 const btnCloseDialog =
   document.getElementById('btnCloseDialog')
+
+ const allHalls =
+  document.getElementById('allHalls')
 
 /*
 ========================================
@@ -1837,6 +1966,134 @@ hallSelect.addEventListener('change', () => {
 
 /*
 ========================================
+RENDER ALL HALLS
+мозаика всех залов
+========================================
+*/
+
+function renderAllHalls() {
+
+  allHalls.innerHTML =
+    ''
+
+  hallsList.forEach(hall => {
+
+    const hallId =
+      hall.hall_id || hall.id
+
+    const block =
+      document.createElement('section')
+
+    block.className =
+      'hall-block'
+
+    if (
+      hallId === currentHallId
+    ) {
+
+      block.classList.add(
+        'active'
+      )
+
+    }
+
+    const title =
+      document.createElement('div')
+
+    title.className =
+      'hall-block-title'
+
+    title.textContent =
+      hall.name || hallId
+
+    block.appendChild(
+      title
+    )
+
+    const canvas =
+      document.createElement('div')
+
+    canvas.className =
+      'hall-canvas-all'
+
+    block.appendChild(
+      canvas
+    )
+
+    allHalls.appendChild(
+      block
+    )
+
+    tablesList
+
+      .filter(
+        table =>
+          table.hall_id === hallId
+      )
+
+      .forEach(
+        table =>
+          renderTableToCanvas(
+            table,
+            canvas
+          )
+      )
+
+    title.addEventListener(
+      'click',
+      () => {
+
+        setCurrentHall(
+          hallId
+        )
+
+      }
+    )
+
+  })
+
+}
+
+function setHallViewMode(
+  mode
+) {
+
+  hallViewMode =
+    mode
+
+  hallCanvas
+    .parentElement
+    .classList.toggle(
+      'hidden',
+      mode === 'all'
+    )
+
+  allHalls
+    .classList.toggle(
+      'hidden',
+      mode !== 'all'
+    )
+
+  if (
+    mode === 'all'
+  ) {
+
+    renderAllHalls()
+
+  }
+
+}
+
+if (
+  hallViewMode === 'all'
+) {
+
+  renderAllHalls()
+
+}
+      
+/*
+========================================
 VIEW BUTTONS
 переключение режимов представления залов
 ========================================
@@ -1962,7 +2219,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    multi halls | v4.0.0
+    mosaic halls/ tables tree in grid/ menu | v4.1.0
   </div>
 
   <div class="row" id="build-down">
