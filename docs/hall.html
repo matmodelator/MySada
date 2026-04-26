@@ -476,60 +476,67 @@ async function loadHall() {
 ========================================
 LOAD TABLES
 СТОЛЫ НЕ ДВИГАЮТСЯ
+диагностика без зависания
 ========================================
 */
 
 async function loadTables() {
-  hallCanvas.innerHTML =
-    ''
 
-  if (!currentUser || !currentUser.project_id) {
-    setStatus(
-      'Tables error: no current user project_id'
-    )
+  setStatus(
+    'Loading tables... hall_id: ' + currentHallId
+  )
 
-    return
-  }
-
-  if (!currentHallId) {
-    setStatus(
-      'Tables error: currentHallId is empty'
-    )
-
-    return
-  }
+  console.log(
+    'LOAD TABLES START',
+    {
+      currentProjectId,
+      currentHallId
+    }
+  )
 
   const { data, error } =
     await supabase
       .from('tables')
       .select('*')
-      .eq('project_id', currentUser.project_id)
       .eq('hall_id', currentHallId)
-      .order('name', { ascending: true })
 
   if (error) {
-    console.error(error)
+
+    console.error(
+      'TABLES ERROR:',
+      error
+    )
 
     setStatus(
-      'Tables load error: ' + error.message
+      'Tables error: ' + error.message
     )
 
     return
   }
+
+  console.log(
+    'TABLES DATA:',
+    data
+  )
 
   if (!data || !data.length) {
+
     setStatus(
-      'Hall loaded. No tables found.'
+      'No tables found for hall_id: ' + currentHallId
     )
 
     return
   }
+
+  hallCanvas.innerHTML =
+    ''
 
   data.forEach(renderTable)
 
   setStatus(
     'Tables loaded: ' + data.length
   )
+
 }
 
 /*
