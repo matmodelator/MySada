@@ -825,7 +825,7 @@ const hallCanvas =
 const allHalls =
   document.getElementById('allHalls')
 
-const buildDown =
+let buildDown =
   document.getElementById('build-down')
 
 const viewTabsBtn =
@@ -901,6 +901,14 @@ STATUS
 */
 
 function updateBuildLine(text) {
+  if (!buildDown) {
+    buildDown =
+      document.getElementById('build-down')
+  }
+
+  if (!buildDown)
+    return
+
   const now =
     new Date()
 
@@ -921,7 +929,7 @@ function updateBuildLine(text) {
     + ' | '
     + text
 }
-
+            
 function setStatus(text) {
   statusBox.textContent =
     text
@@ -2034,34 +2042,6 @@ function renderAllHalls() {
 
 }
 
-function setHallViewMode(
-  mode
-) {
-
-  hallViewMode =
-    mode
-
-  hallCanvas
-    .parentElement
-    .classList.toggle(
-      'hidden',
-      mode === 'all'
-    )
-
-  allHalls
-    .classList.toggle(
-      'hidden',
-      mode !== 'all'
-    )
-
-  if (
-    mode === 'all'
-  ) {
-
-    renderAllHalls()
-
-  }
-
 }
 
 if (
@@ -2199,7 +2179,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    back link to supabase | v4.1.3
+    fix console & fuction | v4.1.4
   </div>
 
   <div class="row" id="build-down">
