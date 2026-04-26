@@ -634,38 +634,64 @@ document
 /*
 ========================================
 INIT
-Hall стартует из sessionStorage
-никаких user.project_id
+жесткая диагностика каждого шага
 ========================================
 */
 
 async function init() {
 
+  console.log('INIT START')
+
+  setStatus(
+    'Loading hall from database...'
+  )
+
   /*
   ========================================
-  USER ИЗ SUPABASE AUTH
+  USER
   ========================================
   */
+
+  console.log('STEP 1: getUser')
 
   const { data, error } =
     await supabase.auth.getUser()
 
-  if (error || !data.user) {
+  if (error) {
+
+    console.error(
+      'USER ERROR:',
+      error
+    )
 
     setStatus(
-      'User error: not logged in'
+      'User error: ' + error.message
     )
+
+    return
+  }
+
+  if (!data.user) {
+
+    console.log(
+      'NO USER — redirect'
+    )
+
+    window.location.href =
+      'sign.html'
 
     return
   }
 
   currentUser = {
     user_id: data.user.id,
-    email: data.user.email,
-    name: data.user.email,
-    role: 'user',
-    status: 'on'
+    email: data.user.email
   }
+
+  console.log(
+    'USER OK:',
+    currentUser
+  )
 
   /*
   ========================================
@@ -673,10 +699,19 @@ async function init() {
   ========================================
   */
 
+  console.log(
+    'STEP 2: load project from session'
+  )
+
   const rawProject =
     sessionStorage.getItem(
       'mysada_project'
     )
+
+  console.log(
+    'SESSION PROJECT:',
+    rawProject
+  )
 
   if (!rawProject) {
 
@@ -696,19 +731,23 @@ async function init() {
   currentProjectName =
     savedProject.project_name
 
+  console.log(
+    'PROJECT OK:',
+    currentProjectId
+  )
+
   projectNameLabel.textContent =
     currentProjectName
-
-  addConsoleMessage(
-    'Project loaded: '
-    + currentProjectName
-  )
 
   /*
   ========================================
   HALL ИЗ URL
   ========================================
   */
+
+  console.log(
+    'STEP 3: read hall_id from URL'
+  )
 
   const params =
     new URLSearchParams(
@@ -717,6 +756,11 @@ async function init() {
 
   currentHallId =
     params.get('hall_id')
+
+  console.log(
+    'HALL ID:',
+    currentHallId
+  )
 
   if (!currentHallId) {
 
@@ -732,13 +776,21 @@ async function init() {
 
   /*
   ========================================
-  ЗАГРУЗКА TABLES
+  LOAD TABLES
   ========================================
   */
+
+  console.log(
+    'STEP 4: loadTables'
+  )
 
   try {
 
     await loadTables()
+
+    console.log(
+      'STEP 5: tables loaded'
+    )
 
     setStatus(
       'Hall ready'
@@ -747,7 +799,10 @@ async function init() {
   }
   catch (err) {
 
-    console.error(err)
+    console.error(
+      'LOAD TABLES ERROR:',
+      err
+    )
 
     setStatus(
       'Load tables error: '
@@ -773,7 +828,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    project from index | v3.0.4
+    диагностика | v3.0.5
   </div>
 
   <div class="row" id="build-down">
