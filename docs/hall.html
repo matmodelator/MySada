@@ -66,7 +66,7 @@
     </button>
 
     <button id="viewAllBtn" type="button">
-      All halls
+      Mosaic
     </button>
 
   </div>
@@ -844,7 +844,7 @@ function renderCurrentHall() {
 
 /*
 ========================================
-RENDER ALL HALLS
+RENDER Mosaic 
 все залы одновременно
 ========================================
 */
@@ -933,7 +933,7 @@ function renderAllHalls() {
   })
 
   setStatus(
-    'All halls rendered: ' + hallsList.length
+    'Mosaic rendered: ' + hallsList.length
   )
 }
 
@@ -1405,9 +1405,9 @@ hallSelect.addEventListener('change', () => {
       hallSelect.value
     )
 
-    if (hallViewMode !== 'tabs') {
-      setHallViewMode('tabs')
-    }
+    setHallViewMode(
+      hallViewMode
+    )
   }
   catch (err) {
     console.error(err)
@@ -1583,7 +1583,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    Tables Realtime() | v5.1.0
+    Select fix & button Mosaic  | v5.1.1
   </div>
 
   <div class="row" id="build-down">
