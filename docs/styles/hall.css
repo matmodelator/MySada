@@ -1,14 +1,11 @@
 /*
 ========================================
 верхнее меню — 2 строки: Project/User сверху, Select/Hall снизу
-Grid — горизонтальное меню залов, столы вертикально (tree готов)
-Mosaic — ровно 2 зала в строке
-столы только внутри своего зала
-подсветка hover и active| 1.1.0
+Grid — залы горизонтально, столы вертикально под своим залом
+Mosaic — 2 зала в строке
+подсветка Mosaic на .hall-canvas-all  | 1.1.1
 ========================================
 */
-
-
 
 * {
   box-sizing: border-box;
@@ -66,33 +63,22 @@ TOP BAR
 /*
 ========================================
 TOP INFO
-2 строки:
 Project | User
 Select  | Hall
 ========================================
 */
 
 .top-info {
-
   max-width: 1200px;
-
   margin: 16px auto 10px;
-
   padding: 14px 18px;
-
   background: white;
-
   border-radius: 12px;
-
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 
   display: grid;
-
-  grid-template-columns:
-    repeat(2, 1fr);
-
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-
 }
 
 .info-card {
@@ -131,15 +117,10 @@ Select  | Hall
 */
 
 :root {
-
   --hall-scale: 0.75;
-
   --table-scale: 0.75;
-
   --table-font-size: 12px;
-
   --all-halls-scale: 0.42;
-
 }
 
 /*
@@ -213,109 +194,94 @@ TABS
 /*
 ========================================
 GRID ЗАЛОВ
-горизонтально залы
-вертикально столы
+залы горизонтально
+столы вертикально под своим залом
 ========================================
 */
 
 .hall-grid {
-
   max-width: 1200px;
-
-  margin: 10px auto 16px;
-
+  margin: 10px auto 40px;
   padding: 0 16px;
 
-  display: grid;
+  display: flex;
+  gap: 16px;
 
-  grid-template-columns:
-    repeat(auto-fill, minmax(240px, 1fr));
-
-  gap: 14px;
-
+  overflow-x: auto;
+  align-items: flex-start;
 }
 
 .hall-card {
+  min-width: 240px;
+  max-width: 260px;
 
   background: white;
-
   border: 2px solid #e2e8f0;
-
   border-radius: 16px;
 
-  padding: 18px;
-
-  cursor: pointer;
+  padding: 14px;
 
   box-shadow:
     0 4px 14px rgba(0,0,0,0.08);
 
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-
+  cursor: pointer;
 }
 
 .hall-card:hover {
-
   border-color: #2563eb;
-
-  box-shadow:
-    0 0 0 3px rgba(37,99,235,0.18);
-
 }
 
 .hall-card.active {
-
   border-color: #2563eb;
-
 }
 
 .hall-card-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 900;
-  margin-bottom: 8px;
+  color: #0f172a;
+  margin-bottom: 10px;
 }
 
 .hall-card-info {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
+  margin-bottom: 10px;
 }
 
 /*
 ========================================
-TREE СТОЛОВ
+TREE СТОЛОВ ВНУТРИ ЗАЛА
 ========================================
 */
 
-.table-tree {
-  max-width: 1200px;
-  margin: 14px auto 40px;
-  padding: 0 16px;
+.hall-card .table-tree {
   display: grid;
   gap: 8px;
+  margin: 0;
+  padding: 0;
 }
 
 .table-tree-row {
-
+  width: 100%;
   text-align: left;
 
   border: 2px solid #e2e8f0;
-
   border-radius: 10px;
 
-  padding: 11px 14px;
+  padding: 9px 11px;
 
-  background: white;
-
+  background: #f8fafc;
   color: #0f172a;
 
-  font-size: 16px;
-
+  font-size: 14px;
   font-weight: 800;
 
   cursor: pointer;
+}
 
+.table-tree-row:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
 }
 
 /*
@@ -325,35 +291,28 @@ HALL WRAP
 */
 
 .hall-wrap {
-
   max-width: 1500px;
-
   margin: 0 auto 80px;
-
   padding: 8px;
-
   overflow: auto;
-
 }
 
 /*
 ========================================
 HALL CANVAS
+обычный режим одного зала
 ========================================
 */
 
 .hall-canvas {
-
   position: relative;
 
   width: 1460px;
-
   height: 1180px;
 
   background: #ffffff;
 
   border: 2px solid #cbd5e1;
-
   border-radius: 14px;
 
   overflow: hidden;
@@ -365,11 +324,8 @@ HALL CANVAS
     top left;
 
   box-shadow:
-
     inset 0 0 0 1px rgba(0,0,0,0.03),
-
     0 6px 18px rgba(0,0,0,0.08);
-
 }
 
 /*
@@ -379,28 +335,21 @@ TABLE
 */
 
 .table-item {
-
   position: absolute;
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
   background: #7dd3fc;
-
   border: 2px solid #0284c7;
 
   color: #0f172a;
 
   font-weight: 800;
-
-  font-size:
-    var(--table-font-size);
+  font-size: var(--table-font-size);
 
   user-select: none;
-
   cursor: pointer;
 
   transform:
@@ -411,7 +360,6 @@ TABLE
 
   box-shadow:
     0 4px 10px rgba(0,0,0,0.18);
-
 }
 
 /*
@@ -473,33 +421,25 @@ LABEL
 /*
 ========================================
 MOSAIC ЗАЛОВ
-2 в строке
+2 зала в строке
+подсветка на самом canvas
 ========================================
 */
 
 .all-halls {
-
   max-width: 1500px;
-
   margin: 0 auto 80px;
-
   padding: 8px;
 
   display: grid;
-
-  grid-template-columns:
-    repeat(2, 1fr);
-
+  grid-template-columns: repeat(2, 1fr);
   gap: 18px;
-
 }
 
 .hall-block {
-
   background: white;
 
-  border: 3px solid transparent;
-
+  border: none;
   border-radius: 16px;
 
   padding: 14px;
@@ -508,64 +448,29 @@ MOSAIC ЗАЛОВ
     0 4px 14px rgba(0,0,0,0.08);
 
   overflow: hidden;
-
   cursor: pointer;
-
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.12s ease;
-
 }
 
 .hall-block:hover {
-
-  border-color: #2563eb;
-
   box-shadow:
-
-    0 0 0 4px rgba(37,99,235,0.18),
-
     0 8px 22px rgba(0,0,0,0.12);
-
-  transform: translateY(-2px);
-
-}
-
-.hall-block.active {
-
-  border-color: #2563eb;
-
-  box-shadow:
-
-    0 0 0 4px rgba(37,99,235,0.25),
-
-    0 8px 22px rgba(0,0,0,0.12);
-
 }
 
 .hall-block-title {
-
   font-size: 18px;
-
   font-weight: 900;
-
   margin-bottom: 10px;
-
 }
 
 .hall-canvas-all {
-
   position: relative;
 
   width: 1460px;
-
   height: 1180px;
 
   background: #ffffff;
 
   border: 2px solid #cbd5e1;
-
   border-radius: 14px;
 
   overflow: hidden;
@@ -575,7 +480,14 @@ MOSAIC ЗАЛОВ
 
   transform-origin:
     top left;
+}
 
+.hall-canvas-all:hover {
+  border-color: #2563eb;
+}
+
+.hall-block.active .hall-canvas-all {
+  border-color: #2563eb;
 }
 
 /*
@@ -589,15 +501,73 @@ DIALOG
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+
   background: white;
+
   border-radius: 16px;
+
   padding: 20px;
+
   width: 320px;
   max-width: calc(100vw - 32px);
-  box-shadow: 0 18px 50px rgba(0,0,0,0.28);
+
+  box-shadow:
+    0 18px 50px rgba(0,0,0,0.28);
+
   z-index: 1000;
 }
 
 .table-dialog.hidden {
   display: none;
+}
+
+.dialog-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.dialog-info {
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 14px;
+}
+
+.dialog-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.dialog-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#btnOpenOrder {
+  background: #2563eb;
+  color: white;
+}
+
+#btnCloseOrder {
+  background: #16a34a;
+  color: white;
+}
+
+#btnReserveTable {
+  background: #facc15;
+  color: #111827;
+}
+
+#btnCleanTable {
+  background: #7c3aed;
+  color: white;
+}
+
+#btnCloseDialog {
+  background: #e5e7eb;
+  color: #111827;
 }
