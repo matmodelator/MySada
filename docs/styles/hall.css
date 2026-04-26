@@ -1,9 +1,6 @@
 /*
 ========================================
-верхнее меню — 2 строки: Project/User сверху, Select/Hall снизу
-Grid — залы горизонтально, столы вертикально под своим залом
-Mosaic — 2 зала в строке
-подсветка Mosaic на .hall-canvas-all  | 1.1.1
+mosaic fields | v1.1.2
 ========================================
 */
 
@@ -118,8 +115,8 @@ Select  | Hall
 
 :root {
   --hall-scale: 0.75;
-  --table-scale: 0.75;
-  --table-font-size: 12px;
+  --table-scale: 0.85;
+  --table-font-size: 13px;
   --all-halls-scale: 0.42;
 }
 
@@ -365,25 +362,30 @@ TABLE
 /*
 ========================================
 TABLE STATUS
+для canvas и grid tree
 ========================================
 */
 
-.table-free {
+.table-free,
+.table-tree-row.table-free {
   background: #7dd3fc;
   border-color: #0284c7;
 }
 
-.table-occupied {
+.table-occupied,
+.table-tree-row.table-occupied {
   background: #fb7185;
   border-color: #be123c;
 }
 
-.table-reserved {
+.table-reserved,
+.table-tree-row.table-reserved {
   background: #facc15;
   border-color: #ca8a04;
 }
 
-.table-cleaning {
+.table-cleaning,
+.table-tree-row.table-cleaning {
   background: #c4b5fd;
   border-color: #7c3aed;
 }
@@ -422,7 +424,8 @@ LABEL
 ========================================
 MOSAIC ЗАЛОВ
 2 зала в строке
-подсветка на самом canvas
+без пустого белого поля
+подсветка на самом .hall-canvas-all
 ========================================
 */
 
@@ -462,6 +465,28 @@ MOSAIC ЗАЛОВ
   margin-bottom: 10px;
 }
 
+/*
+========================================
+MOSAIC SCALE BOX
+сюда переносится scale
+чтобы не было огромного белого поля
+========================================
+*/
+
+.hall-scale-box {
+  width: calc(1460px * var(--all-halls-scale));
+  height: calc(1180px * var(--all-halls-scale));
+
+  overflow: hidden;
+}
+
+/*
+========================================
+MOSAIC CANVAS
+сам зал без transform-поля в layout
+========================================
+*/
+
 .hall-canvas-all {
   position: relative;
 
@@ -488,6 +513,12 @@ MOSAIC ЗАЛОВ
 
 .hall-block.active .hall-canvas-all {
   border-color: #2563eb;
+}
+
+@media (max-width: 900px) {
+  .all-halls {
+    grid-template-columns: 1fr;
+  }
 }
 
 /*
@@ -565,9 +596,4 @@ DIALOG
 #btnCleanTable {
   background: #7c3aed;
   color: white;
-}
-
-#btnCloseDialog {
-  background: #e5e7eb;
-  color: #111827;
 }
