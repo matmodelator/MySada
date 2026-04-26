@@ -219,7 +219,7 @@ TABLE ITEM
 
   user-select: none;
 
-  cursor: default;
+  cursor: pointer;
 
   /*
   масштаб столов
@@ -235,6 +235,32 @@ TABLE ITEM
   box-shadow:
     0 4px 10px rgba(0,0,0,0.18);
 
+}
+
+/*
+========================================
+СТАТУСЫ СТОЛОВ
+========================================
+*/
+
+.table-free {
+  background: #7dd3fc;
+  border-color: #0284c7;
+}
+
+.table-occupied {
+  background: #fb7185;
+  border-color: #be123c;
+}
+
+.table-reserved {
+  background: #facc15;
+  border-color: #ca8a04;
+}
+
+.table-cleaning {
+  background: #c4b5fd;
+  border-color: #7c3aed;
 }
 
 /*
@@ -275,6 +301,81 @@ LABEL
 
   line-height: 1.1;
 
+}
+
+/*
+========================================
+ДИАЛОГ СТОЛА
+========================================
+*/
+
+.table-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.28);
+  z-index: 1000;
+}
+
+.table-dialog.hidden {
+  display: none;
+}
+
+.dialog-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.dialog-info {
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 14px;
+}
+
+.dialog-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.dialog-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#btnOpenOrder {
+  background: #2563eb;
+  color: white;
+}
+
+#btnCloseOrder {
+  background: #16a34a;
+  color: white;
+}
+
+#btnReserveTable {
+  background: #facc15;
+  color: #111827;
+}
+
+#btnCleanTable {
+  background: #7c3aed;
+  color: white;
+}
+
+#btnCloseDialog {
+  background: #e5e7eb;
+  color: #111827;
 }
 </style>
 </head>
@@ -324,14 +425,64 @@ LABEL
   <div id="hallCanvas" class="hall-canvas"></div>
 </main>
 
+<!--
+========================================
+ДИАЛОГ ДЕЙСТВИЙ СО СТОЛОМ
+========================================
+-->
+
+<div id="tableDialog" class="table-dialog hidden">
+
+  <div id="dialogTitle" class="dialog-title">
+    Table
+  </div>
+
+  <div id="dialogInfo" class="dialog-info">
+    Status
+  </div>
+
+  <div class="dialog-actions">
+
+    <button id="btnOpenOrder" type="button">
+      Open order
+    </button>
+
+    <button id="btnCloseOrder" type="button">
+      Close order
+    </button>
+
+    <button id="btnReserveTable" type="button">
+      Reserve table
+    </button>
+
+    <button id="btnCleanTable" type="button">
+      Cleaning
+    </button>
+
+    <button id="btnCloseDialog" type="button">
+      Cancel
+    </button>
+
+  </div>
+
+</div>
+
+<!--
+========================================
+КОНСОЛЬ
+========================================
+-->
+
 <div id="service-console">
+
   <div class="row" id="build-top">
-    Hall select | v4.0.0
+    выбор холла и обработки стола | v4.1.0
   </div>
 
   <div class="row" id="build-down">
     deploy: --
   </div>
+
 </div>
 
 <script type="module">
@@ -366,6 +517,30 @@ const hallCanvas =
 const buildDown =
   document.getElementById('build-down')
 
+const dialog =
+  document.getElementById('tableDialog')
+
+const dialogTitle =
+  document.getElementById('dialogTitle')
+
+const dialogInfo =
+  document.getElementById('dialogInfo')
+
+const btnOpenOrder =
+  document.getElementById('btnOpenOrder')
+
+const btnCloseOrder =
+  document.getElementById('btnCloseOrder')
+
+const btnReserveTable =
+  document.getElementById('btnReserveTable')
+
+const btnCleanTable =
+  document.getElementById('btnCleanTable')
+
+const btnCloseDialog =
+  document.getElementById('btnCloseDialog')
+
 /*
 ========================================
 STATE
@@ -386,6 +561,9 @@ let currentHallId =
 
 let currentHallName =
   ''
+
+let activeTable =
+  null
 
 /*
 ========================================
@@ -589,6 +767,11 @@ async function loadTables() {
   hallCanvas.innerHTML =
     ''
 
+  activeTable =
+    null
+
+  dialog.classList.add('hidden')
+
   if (!currentHallId) {
     setStatus('No hall selected')
     return
@@ -626,7 +809,7 @@ async function loadTables() {
 /*
 ========================================
 RENDER TABLE
-столы только отображаются
+столы отображаются и открывают диалог действий
 ========================================
 */
 
@@ -649,6 +832,9 @@ function renderTable(item) {
   const height =
     Number(item.height || 120)
 
+  const tableStatus =
+    item.table_status || 'free'
+
   let shapeClass =
     'table-square'
 
@@ -661,7 +847,13 @@ function renderTable(item) {
       'table-rect'
 
   el.className =
-    'table-item ' + shapeClass
+    'table-item '
+    + shapeClass
+    + ' table-'
+    + tableStatus
+
+  el.dataset.tableId =
+    item.table_id
 
   el.style.left =
     x + 'px'
@@ -686,8 +878,329 @@ function renderTable(item) {
 
   el.appendChild(label)
 
+  el.addEventListener('click', () => {
+    openTableDialog(item)
+  })
+
   hallCanvas.appendChild(el)
 }
+
+/*
+========================================
+ОТКРЫТЬ ДИАЛОГ СТОЛА
+========================================
+*/
+
+function openTableDialog(table) {
+  activeTable =
+    table
+
+  dialogTitle.textContent =
+    table.name || 'Table'
+
+  dialogInfo.textContent =
+    'status: '
+    + (table.table_status || 'free')
+    + ' | table_id: '
+    + table.table_id
+
+  dialog.classList.remove('hidden')
+
+  setStatus(
+    'Selected table: ' + (table.name || table.table_id)
+  )
+}
+
+/*
+========================================
+ОБНОВИТЬ СТОЛ НА ЭКРАНЕ
+========================================
+*/
+
+function updateTable(updatedTable) {
+  const oldEl =
+    hallCanvas.querySelector(
+      '[data-table-id="' + updatedTable.table_id + '"]'
+    )
+
+  if (oldEl)
+    oldEl.remove()
+
+  renderTable(updatedTable)
+}
+
+/*
+========================================
+1. ОТКРЫТЬ ЗАКАЗ
+orders = open
+tables = occupied
+========================================
+*/
+
+btnOpenOrder.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      if (!activeTable)
+        return
+
+      setStatus('Opening order...')
+
+      const { data: orderData, error: orderError } =
+        await supabase
+          .from("orders")
+          .insert({
+            project_id: activeTable.project_id,
+            hall_id: activeTable.hall_id,
+            table_id: activeTable.table_id,
+            guest_count: 2,
+            shift_id: activeTable.current_shift_id
+          })
+          .select()
+
+      console.log("OPEN ORDER DATA:", orderData)
+      console.log("OPEN ORDER ERROR:", orderError)
+
+      if (orderError) {
+        setStatus(
+          'Open order error: ' + orderError.message
+        )
+
+        alert("Не удалось открыть заказ")
+        return
+      }
+
+      await setTableStatus(
+        activeTable.table_id,
+        "occupied"
+      )
+
+    }
+    catch (err) {
+      console.error(err)
+
+      setStatus(
+        'Open order error: ' + err.message
+      )
+    }
+
+  }
+)
+
+/*
+========================================
+2. ЗАКРЫТЬ ЗАКАЗ
+orders = closed
+tables = free
+========================================
+*/
+
+btnCloseOrder.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      if (!activeTable)
+        return
+
+      setStatus('Finding open order...')
+
+      const { data: openOrder, error: findError } =
+        await supabase
+          .from("orders")
+          .select("*")
+          .eq("table_id", activeTable.table_id)
+          .eq("order_status", "open")
+          .order("opened_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+      console.log("FIND ORDER DATA:", openOrder)
+      console.log("FIND ORDER ERROR:", findError)
+
+      if (findError || !openOrder) {
+        setStatus('Open order not found')
+
+        alert("Открытый заказ не найден")
+        return
+      }
+
+      const { error: closeError } =
+        await supabase
+          .from("orders")
+          .update({
+            order_status: "closed",
+            closed_at: new Date().toISOString()
+          })
+          .eq("order_id", openOrder.order_id)
+
+      console.log("CLOSE ORDER ERROR:", closeError)
+
+      if (closeError) {
+        setStatus(
+          'Close order error: ' + closeError.message
+        )
+
+        alert("Не удалось закрыть заказ")
+        return
+      }
+
+      await setTableStatus(
+        activeTable.table_id,
+        "free"
+      )
+
+    }
+    catch (err) {
+      console.error(err)
+
+      setStatus(
+        'Close order error: ' + err.message
+      )
+    }
+
+  }
+)
+
+/*
+========================================
+3. ЗАРЕЗЕРВИРОВАТЬ СТОЛ
+tables = reserved
+========================================
+*/
+
+btnReserveTable.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      if (!activeTable)
+        return
+
+      await setTableStatus(
+        activeTable.table_id,
+        "reserved"
+      )
+
+    }
+    catch (err) {
+      console.error(err)
+
+      setStatus(
+        'Reserve table error: ' + err.message
+      )
+    }
+
+  }
+)
+
+/*
+========================================
+4. УБОРКА СТОЛА
+tables = cleaning
+========================================
+*/
+
+btnCleanTable.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      if (!activeTable)
+        return
+
+      await setTableStatus(
+        activeTable.table_id,
+        "cleaning"
+      )
+
+    }
+    catch (err) {
+      console.error(err)
+
+      setStatus(
+        'Cleaning table error: ' + err.message
+      )
+    }
+
+  }
+)
+
+/*
+========================================
+ОБЩАЯ ФУНКЦИЯ СМЕНЫ СТАТУСА СТОЛА
+========================================
+*/
+
+async function setTableStatus(
+  table_id,
+  table_status
+) {
+
+  setStatus(
+    'Updating table status: ' + table_status
+  )
+
+  const { data, error } =
+    await supabase
+      .from("tables")
+      .update({
+        table_status
+      })
+      .eq("table_id", table_id)
+      .select()
+      .single()
+
+  console.log("TABLE STATUS DATA:", data)
+  console.log("TABLE STATUS ERROR:", error)
+
+  if (error) {
+    setStatus(
+      'Table status error: ' + error.message
+    )
+
+    alert("Не удалось изменить статус стола")
+    return
+  }
+
+  if (data) {
+    updateTable(data)
+  }
+
+  dialog.classList.add("hidden")
+
+  activeTable =
+    null
+
+  setStatus(
+    'Table status updated: ' + table_status
+  )
+}
+
+/*
+========================================
+ЗАКРЫТЬ ДИАЛОГ СТОЛА
+========================================
+*/
+
+btnCloseDialog.addEventListener(
+  "click",
+  () => {
+
+    dialog.classList.add("hidden")
+
+    activeTable =
+      null
+
+    setStatus("Table dialog closed")
+
+  }
+)
 
 /*
 ========================================
@@ -792,7 +1305,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    выбор холла и регулировка размера | v3.2.0
+    фичи столов и регулировка размера | v3.3.0
   </div>
 
   <div class="row" id="build-down">
