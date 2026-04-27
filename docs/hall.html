@@ -679,20 +679,37 @@ function renderHallGrid() {
           + ' · '
           + status
 
-        row.addEventListener(
-          'click',
-          event => {
-            event.stopPropagation()
+ row.addEventListener(
+  'click',
+  event => {
+    event.stopPropagation()
 
-            setCurrentHall(
-              hallId
-            )
+    window.location.href =
+      'orders.html'
+      + '?project_id='
+      + table.project_id
+      + '&hall_id='
+      + table.hall_id
+      + '&table_id='
+      + table.table_id
+  }
+)
 
-            openTableDialog(
-              table
-            )
-          }
-        )
+row.addEventListener(
+  'contextmenu',
+  event => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    setCurrentHall(
+      hallId
+    )
+
+    openTableDialog(
+      table
+    )
+  }
+)
 
         tree.appendChild(row)
       })
@@ -1023,16 +1040,47 @@ function renderTableToCanvas(item, targetCanvas) {
 
   el.appendChild(label)
 
-  el.addEventListener(
-    'click',
-    event => {
-      event.stopPropagation()
+  /*
+========================================
+ЛЕВАЯ КНОПКА
+переход в список заказов стола
+========================================
+*/
 
-      openTableDialog(
-        item
-      )
-    }
-  )
+el.addEventListener(
+  'click',
+  event => {
+    event.stopPropagation()
+
+    window.location.href =
+      'orders.html'
+      + '?project_id='
+      + item.project_id
+      + '&hall_id='
+      + item.hall_id
+      + '&table_id='
+      + item.table_id
+  }
+)
+
+/*
+========================================
+ПРАВАЯ КНОПКА
+старый диалог действий стола
+========================================
+*/
+
+el.addEventListener(
+  'contextmenu',
+  event => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    openTableDialog(
+      item
+    )
+  }
+)
 
   targetCanvas.appendChild(el)
 }
@@ -1583,7 +1631,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    Select fix & button Mosaic  | v5.1.1
+    two buttonc mouse  | v5.2.0
   </div>
 
   <div class="row" id="build-down">
