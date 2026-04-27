@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+
+<title>MySada Orders</title>
+
+<link rel="stylesheet"
+      href="styles/console.css" />
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef1f6;
+  color: #243447;
+  min-height: 100vh;
+}
+
+.top-bar {
+  background: #2563eb;
+  color: white;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.top-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.top-buttons button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  background: white;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 18px auto 90px;
+  padding: 0 16px;
+}
+
+.info-panel {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.info-card {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.info-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.status {
+  color: #475569;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.orders-list {
+  display: grid;
+  gap: 12px;
+}
+
+.order-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.order-card.open {
+  border-color: #2563eb;
+}
+
+.order-card.closed {
+  border-color: #16a34a;
+}
+
+.order-title {
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.order-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.order-field {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.order-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+
+.order-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.empty {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  color: #64748b;
+  font-weight: 800;
+}
+
+@media (max-width: 800px) {
+  .info-panel,
+  .order-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="top-bar">
+  <div class="top-title">MySada Orders</div>
+
+  <div class="top-buttons">
+    <button id="backBtn" type="button">
+      Back to Hall
+    </button>
+
+    <button id="reloadBtn" type="button">
+      Reload
+    </button>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="info-panel">
+
+    <div class="info-card">
+      <div class="info-label">Project</div>
+      <div id="projectBox" class="info-value">loading...</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-label">Hall</div>
+      <div id="hallBox" class="info-value">loading...</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-label">Table</div>
+      <div id="tableBox" class="info-value">loading...</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-label">User</div>
+      <div id="userBox" class="info-value">loading...</div>
+    </div>
+
+  </section>
+
+  <div id="status" class="status">
+    Starting...
+  </div>
+
+  <section id="ordersList" class="orders-list"></section>
+
+</main>
+
+
+/*
+========================================
+DOM
+========================================
+*/
+
+const projectBox =
+  document.getElementById('projectBox')
+
+const hallBox =
+  document.getElementById('hallBox')
+
+const tableBox =
+  document.getElementById('tableBox')
+
+const userBox =
+  document.getElementById('userBox')
+
+const statusBox =
+  document.getElementById('status')
+
+const ordersList =
+  document.getElementById('ordersList')
+
+const buildDown =
+  document.getElementById('build-down')
+
+const backBtn =
+  document.getElementById('backBtn')
+
+const reloadBtn =
+  document.getElementById('reloadBtn')
+
+/*
+========================================
+STATE
+========================================
+*/
+
+let currentUser =
+  null
+
+let projectId =
+  null
+
+let hallId =
+  null
+
+let tableId =
+  null
+
+let projectName =
+  'Project'
+
+let hallName =
+  'Hall'
+
+let tableName =
+  'Table'
+
+/*
+========================================
+STATUS
+========================================
+*/
+
+function updateBuildLine(text) {
+  const now =
+    new Date()
+
+  const pad =
+    n => String(n).padStart(2, '0')
+
+  buildDown.textContent =
+    'deploy: '
+    + pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear()
+    + ' '
+    + pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes())
+    + ' | '
+    + text
+}
+
+function setStatus(text) {
+  statusBox.textContent =
+    text
+
+  console.log('[ORDERS]', text)
+
+  updateBuildLine(text)
+}
+
+/*
+========================================
+PARAMS
+берём project_id / hall_id / table_id из URL
+========================================
+*/
+
+function loadParams() {
+  const params =
+    new URLSearchParams(window.location.search)
+
+  projectId =
+    params.get('project_id')
+
+  hallId =
+    params.get('hall_id')
+
+  tableId =
+    params.get('table_id')
+
+  if (!projectId)
+    throw new Error('project_id is missing')
+
+  if (!hallId)
+    throw new Error('hall_id is missing')
+
+  if (!tableId)
+    throw new Error('table_id is missing')
+}
+
+/*
+========================================
+LOAD USER
+========================================
+*/
+
+async function loadUser() {
+  setStatus('Loading user...')
+
+  const { data, error } =
+    await supabase.auth.getUser()
+
+  if (error)
+    throw error
+
+  if (!data || !data.user)
+    throw new Error('User not logged in')
+
+  currentUser =
+    data.user
+
+  userBox.textContent =
+    currentUser.email || currentUser.id
+}
+
+/*
+========================================
+LOAD NAMES
+загружаем имена проекта / зала / стола
+========================================
+*/
+
+async function loadNames() {
+  setStatus('Loading names...')
+
+  const { data: project, error: projectError } =
+    await supabase
+      .from('projects')
+      .select('*')
+      .eq('project_id', projectId)
+      .maybeSingle()
+
+  if (projectError)
+    throw projectError
+
+  if (project) {
+    projectName =
+      project.name || project.project_name || projectId
+  }
+
+  const { data: hall, error: hallError } =
+    await supabase
+      .from('halls')
+      .select('*')
+      .eq('hall_id', hallId)
+      .maybeSingle()
+
+  if (hallError)
+    throw hallError
+
+  if (hall) {
+    hallName =
+      hall.name || hallId
+  }
+
+  const { data: table, error: tableError } =
+    await supabase
+      .from('tables')
+      .select('*')
+      .eq('table_id', tableId)
+      .maybeSingle()
+
+  if (tableError)
+    throw tableError
+
+  if (table) {
+    tableName =
+      table.name || tableId
+  }
+
+  projectBox.textContent =
+    projectName + ' / ' + projectId
+
+  hallBox.textContent =
+    hallName + ' / ' + hallId
+
+  tableBox.textContent =
+    tableName + ' / ' + tableId
+}
+
+/*
+========================================
+LOAD ORDERS
+загружаем все заказы выбранного стола
+========================================
+*/
+
+async function loadOrders() {
+  setStatus('Loading orders...')
+
+  ordersList.innerHTML =
+    ''
+
+  const { data, error } =
+    await supabase
+      .from('orders')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('hall_id', hallId)
+      .eq('table_id', tableId)
+      .order('opened_at', { ascending: false })
+
+  if (error)
+    throw error
+
+  if (!data || !data.length) {
+    ordersList.innerHTML =
+      '<div class="empty">No orders for this table</div>'
+
+    setStatus('No orders found')
+
+    return
+  }
+
+  data.forEach(renderOrder)
+
+  setStatus(
+    'Orders loaded: ' + data.length
+  )
+}
+
+/*
+========================================
+RENDER ORDER
+карточка одного заказа
+========================================
+*/
+
+function renderOrder(order) {
+  const card =
+    document.createElement('article')
+
+  const status =
+    order.order_status || order.status || 'open'
+
+  card.className =
+    'order-card ' + status
+
+  const title =
+    document.createElement('div')
+
+  title.className =
+    'order-title'
+
+  title.textContent =
+    'Order '
+    + (order.order_id || order.id || '')
+
+  card.appendChild(title)
+
+  const grid =
+    document.createElement('div')
+
+  grid.className =
+    'order-grid'
+
+  addField(grid, 'Status', status)
+  addField(grid, 'Guests', order.guest_count ?? '-')
+  addField(grid, 'Total', order.total ?? '-')
+  addField(grid, 'Opened', formatDate(order.opened_at))
+  addField(grid, 'Closed', formatDate(order.closed_at))
+  addField(grid, 'Shift', order.shift_id || '-')
+  addField(grid, 'Note', order.note || '-')
+  addField(grid, 'Created', formatDate(order.created_at))
+
+  card.appendChild(grid)
+
+  ordersList.appendChild(card)
+}
+
+/*
+========================================
+ADD FIELD
+поле внутри карточки заказа
+========================================
+*/
+
+function addField(parent, label, value) {
+  const box =
+    document.createElement('div')
+
+  box.className =
+    'order-field'
+
+  const labelEl =
+    document.createElement('div')
+
+  labelEl.className =
+    'order-label'
+
+  labelEl.textContent =
+    label
+
+  const valueEl =
+    document.createElement('div')
+
+  valueEl.className =
+    'order-value'
+
+  valueEl.textContent =
+    value
+
+  box.appendChild(labelEl)
+  box.appendChild(valueEl)
+
+  parent.appendChild(box)
+}
+
+/*
+========================================
+FORMAT DATE
+========================================
+*/
+
+function formatDate(value) {
+  if (!value)
+    return '-'
+
+  const date =
+    new Date(value)
+
+  if (Number.isNaN(date.getTime()))
+    return value
+
+  return date.toLocaleString()
+}
+
+/*
+========================================
+BUTTONS
+========================================
+*/
+
+backBtn.addEventListener(
+  'click',
+  () => {
+    window.location.href =
+      'hall.html'
+      + '?project_id='
+      + projectId
+      + '&hall_id='
+      + hallId
+  }
+)
+
+reloadBtn.addEventListener(
+  'click',
+  async () => {
+    try {
+      await loadOrders()
+    }
+    catch (err) {
+      console.error(err)
+
+      setStatus(
+        'Reload error: ' + err.message
+      )
+    }
+  }
+)
+
+/*
+========================================
+INIT
+========================================
+*/
+
+async function init() {
+  try {
+    console.log('ORDERS INIT START')
+
+    loadParams()
+
+    await loadUser()
+
+    await loadNames()
+
+    await loadOrders()
+  }
+  catch (err) {
+    console.error('ORDERS INIT ERROR:', err)
+
+    setStatus(
+      'Orders error: ' + err.message
+    )
+  }
+}
+
+init()
+
+</script>
+
+
+
+
+<!--
+========================================
+КОНСОЛЬ
+========================================
+-->
+
+<div id="service-console">
+
+  <div class="row" id="build-top">
+    two buttonc mouse  | v5.2.0
+  </div>
+
+  <div class="row" id="build-down">
+    deploy: --
+  </div>
+
+</div>
+
+<script>
+(function () {
+
+  const now = new Date();
+
+  const pad = n =>
+    String(n).padStart(2, '0');
+
+  const date =
+      pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear();
+
+  const time =
+      pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes());
+
+  document
+    .getElementById('build-down')
+    .textContent =
+      'deploy: ' + date + ' ' + time;
+
+})();
+</script>
+
+</body>
+</html>  
