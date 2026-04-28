@@ -1,8 +1,6 @@
-
-
 /*
 ========================================
-CONSOLE/TABS/GRID FIX | v1.6.2
+View Mode/Tables/Tabs info FIX | v1.6.3
 ========================================
 */
 
@@ -20,6 +18,25 @@ body {
 
 .hidden {
   display: none !important;
+}
+
+/*
+========================================
+ЕДИНАЯ ШИРИНА ВСЕГО
+========================================
+*/
+
+.top-info,
+.view-panel,
+.hall-tabs,
+.tabs-info,
+.hall-wrap,
+.hall-grid,
+.hall-console {
+  width: 1200px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /*
@@ -57,41 +74,16 @@ TOP BAR
   background: white;
   color: #2563eb;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.top-buttons button:hover {
-  filter: brightness(1.08);
-}
-
-/*
-========================================
-ЕДИНАЯ ШИРИНА ВЕРХА / РЕЖИМОВ / INFO / HALL / GRID / CONSOLE
-========================================
-*/
-
-.top-info,
-.view-panel,
-.hall-tabs,
-.tabs-info,
-.status,
-.hall-wrap,
-.hall-grid,
-.hall-console {
-  width: 1200px;
-  max-width: 1200px;
 }
 
 /*
 ========================================
 TOP INFO
-Project | User
-Select  | Hall
 ========================================
 */
 
 .top-info {
-  margin: 16px auto 10px;
+  margin-top: 16px;
   padding: 14px 18px;
   background: white;
   border-radius: 12px;
@@ -120,14 +112,6 @@ Select  | Hall
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
-  word-break: break-word;
-}
-
-.status {
-  margin: 10px auto;
-  padding: 0 16px;
-  color: #475569;
-  font-size: 14px;
 }
 
 /*
@@ -139,7 +123,8 @@ Select  | Hall
 :root {
   --hall-scale: 0.75;
   --table-scale: 0.85;
-  --table-font-size: 13px;
+
+  --table-font-size: 11px;
 
   --chair-size: 12px;
 
@@ -153,7 +138,7 @@ VIEW SWITCH
 */
 
 .view-panel {
-  margin: 10px auto;
+  margin-top: 10px;
   padding: 12px 16px;
   background: white;
   border-radius: 12px;
@@ -163,16 +148,7 @@ VIEW SWITCH
 .view-buttons {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
   align-items: center;
-}
-
-.view-label {
-  margin-left: auto;
-  font-size: 14px;
-  font-weight: 900;
-  font-family: Arial, sans-serif;
-  color: #334155;
 }
 
 .view-buttons button {
@@ -180,20 +156,30 @@ VIEW SWITCH
   border-radius: 999px;
   padding: 8px 16px;
   background: #f8fafc;
-  color: #334155;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.view-buttons button:hover {
-  border-color: #2563eb;
 }
 
 .view-buttons button.active {
   background: #2563eb;
   color: white;
-  border-color: #2563eb;
+}
+
+/*
+шрифт как у столов
+но менее жирный
+*/
+
+.view-label {
+
+  margin-left: auto;
+
+  font-size: var(--table-font-size);
+
+  font-weight: 600;
+
+  font-family: Arial, sans-serif;
+
 }
 
 /*
@@ -203,11 +189,10 @@ TABS
 */
 
 .hall-tabs {
-  margin: 10px auto;
+  margin-top: 10px;
   padding: 0 16px;
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
 .hall-tab {
@@ -215,97 +200,86 @@ TABS
   border-radius: 999px;
   padding: 9px 16px;
   background: white;
-  color: #334155;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.hall-tab:hover {
-  border-color: #2563eb;
 }
 
 .hall-tab.active {
   background: #2563eb;
   color: white;
-  border-color: #2563eb;
 }
 
 /*
 ========================================
 TABS INFO
 одна строка
-ширина как TOP
 ========================================
 */
 
 .tabs-info {
-  margin: 10px auto 10px;
-  padding: 8px 16px;
+
+  margin-top: 10px;
+
+  padding: 6px 16px;
 
   background: white;
 
   border: 1px solid #dbe3ef;
+
   border-radius: 12px;
 
-  box-shadow:
-    0 4px 14px rgba(0,0,0,0.08);
-
   display: flex;
+
   align-items: center;
-  flex-wrap: nowrap;
-  gap: 14px;
+
+  gap: 16px;
 
   white-space: nowrap;
+
   overflow-x: auto;
 
   font-size: 13px;
+
   font-weight: 800;
-  color: #0f172a;
+
 }
 
 /*
 ========================================
 GRID
-залы горизонтально
-столы вертикально внутри зала
-ширина строго как TOP
 ========================================
 */
 
 .hall-grid {
-  margin: 10px auto 40px;
+
+  margin-top: 10px;
+
   padding: 0 16px;
 
   display: flex;
+
   gap: 16px;
 
   overflow-x: auto;
-  align-items: flex-start;
+
 }
 
 .hall-card {
-  min-width: 300px;
-  max-width: 300px;
+
+  min-width: 310px;
+
+  max-width: 310px;
 
   background: white;
+
   border: 2px solid #e2e8f0;
+
   border-radius: 16px;
 
   padding: 14px;
 
   cursor: pointer;
 
-  transition: all 0.15s ease;
-}
-
-.hall-card:hover {
-  border-color: #2563eb;
-  transform: translateY(-1px);
-}
-
-.hall-card.active {
-  border-color: #2563eb;
 }
 
 .hall-card-title {
@@ -314,18 +288,11 @@ GRID
   margin-bottom: 10px;
 }
 
-.hall-card-info {
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 10px;
-}
-
 /*
 ========================================
 TABLE TREE
-кнопки одинаковой высоты
-текст в одну строку
-не обрезать
+одинаковая высота
+всё в одну строку
 ========================================
 */
 
@@ -335,75 +302,68 @@ TABLE TREE
 }
 
 .table-tree-row {
+
   width: 100%;
 
-  min-height: 42px;
-  height: 42px;
+  height: 40px;
 
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
+  min-height: 40px;
 
   padding: 0 10px;
 
+  border: 2px solid #e2e8f0;
+
+  border-radius: 10px;
+
   background: #f8fafc;
 
-  font-size: 11px;
-  line-height: 1;
+  font-size: var(--table-font-size);
+
   font-weight: 800;
 
-  cursor: pointer;
-
   display: flex;
+
   align-items: center;
-  justify-content: flex-start;
 
   white-space: nowrap;
+
   overflow: visible;
-  text-overflow: clip;
 
-  transition: all 0.15s ease;
-}
-
-.table-tree-row:hover {
-  filter: brightness(1.08);
-  box-shadow:
-    0 0 0 3px rgba(37,99,235,0.22);
-}
-
-.table-tree-row:active {
-  transform: scale(0.97);
 }
 
 /*
 ========================================
-HALL CANVAS
-поле зала строго под верхними панелями
+HALL
 ========================================
 */
 
 .hall-wrap {
-  margin: 0 auto 80px;
+
+  margin-top: 10px;
+
   padding: 8px 16px;
+
   overflow: auto;
+
 }
 
 .hall-canvas {
+
   position: relative;
 
   width: 1460px;
   height: 1180px;
 
-  margin: 0;
-
   background: white;
 
   border: 2px solid #cbd5e1;
+
   border-radius: 14px;
 
-  overflow: hidden;
-
   transform: scale(var(--hall-scale));
+
   transform-origin: top left;
+
 }
 
 /*
@@ -413,90 +373,47 @@ TABLE
 */
 
 .table-item {
+
   position: absolute;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   background: #7dd3fc;
+
   border: 2px solid #0284c7;
 
-  font-weight: 800;
   font-size: var(--table-font-size);
 
-  cursor: pointer;
+  font-weight: 800;
 
   transform: scale(var(--table-scale));
-  transform-origin: center;
 
-  transition: all 0.12s ease;
-}
-
-.table-item:hover {
-  filter: brightness(1.08);
-  box-shadow:
-    0 0 0 3px rgba(37,99,235,0.25);
-}
-
-.table-item:active {
-  transform:
-    scale(calc(var(--table-scale) * 0.95));
 }
 
 /*
 ========================================
 STATUS
-canvas + grid tree
 ========================================
 */
 
-.table-free,
-.table-tree-row.table-free {
+.table-free {
   background: #7dd3fc;
-  border-color: #0284c7;
 }
 
-.table-occupied,
-.table-tree-row.table-occupied {
+.table-occupied {
   background: #fb7185;
-  border-color: #be123c;
 }
 
-.table-reserved,
-.table-tree-row.table-reserved {
+.table-reserved {
   background: #facc15;
-  border-color: #ca8a04;
 }
 
-.table-cleaning,
-.table-tree-row.table-cleaning {
+.table-cleaning {
   background: #c4b5fd;
-  border-color: #7c3aed;
-}
-
-/*
-========================================
-SHAPES
-========================================
-*/
-
-.table-round {
-  border-radius: 50%;
-}
-
-.table-square {
-  border-radius: 8px;
-}
-
-.table-rect {
-  border-radius: 12px;
-}
-
-.table-label {
-  pointer-events: none;
-  text-align: center;
-  line-height: 1.1;
 }
 
 /*
@@ -506,6 +423,7 @@ CHAIRS
 */
 
 .chair-dot {
+
   position: absolute;
 
   width: var(--chair-size);
@@ -517,337 +435,58 @@ CHAIRS
   border-radius: 50%;
 
   background: #334155;
+
   border: 2px solid white;
 
-  pointer-events: none;
 }
 
 /*
 ========================================
-MOSAIC
-2 зала в строке
-справа info
-без лишнего белого поля
-НЕ ТРОГАТЬ
-========================================
-*/
-
-.all-halls {
-  max-width: 1500px;
-  margin: 0 auto 80px;
-  padding: 8px;
-
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-}
-
-.hall-block {
-  background: white;
-  border-radius: 16px;
-  padding: 14px;
-
-  box-shadow:
-    0 4px 14px rgba(0,0,0,0.08);
-
-  cursor: pointer;
-
-  display: grid;
-  grid-template-columns: auto 170px;
-  gap: 12px;
-
-  transition: all 0.15s ease;
-}
-
-.hall-block:hover {
-  box-shadow:
-    0 8px 22px rgba(0,0,0,0.12);
-}
-
-.hall-block-title {
-  grid-column: 1 / -1;
-
-  font-size: 18px;
-  font-weight: 900;
-  margin-bottom: 2px;
-}
-
-.hall-scale-box {
-  width: calc(1460px * var(--all-halls-scale));
-  height: calc(1180px * var(--all-halls-scale));
-  overflow: hidden;
-}
-
-.hall-canvas-all {
-  position: relative;
-
-  width: 1460px;
-  height: 1180px;
-
-  background: white;
-
-  border: 2px solid #cbd5e1;
-  border-radius: 14px;
-
-  transform: scale(var(--all-halls-scale));
-  transform-origin: top left;
-
-  transition: all 0.15s ease;
-}
-
-.hall-canvas-all:hover {
-  border-color: #2563eb;
-}
-
-.hall-block.active .hall-canvas-all {
-  border-color: #2563eb;
-}
-
-.hall-mosaic-info {
-  background: #f8fafc;
-  border: 1px solid #dbe3ef;
-  border-radius: 12px;
-  padding: 10px;
-
-  font-size: 12px;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1.45;
-
-  align-self: start;
-}
-
-/*
-========================================
-CONSOLE MODE
-ширина как top
+CONSOLE
 ========================================
 */
 
 .hall-console {
-  margin: 10px auto 80px;
+
+  margin-top: 10px;
+
   padding: 12px 16px;
 
   background: white;
+
   border-radius: 14px;
 
   box-shadow:
     0 4px 14px rgba(0,0,0,0.08);
 
-  overflow-x: auto;
 }
 
 .console-table {
+
   width: 100%;
+
   border-collapse: collapse;
+
   font-size: 13px;
+
   font-weight: 700;
+
 }
 
 .console-table th {
+
   background: #f1f5f9;
+
   border: 1px solid #dbe3ef;
+
   padding: 8px;
-  text-align: left;
+
 }
 
 .console-table td {
+
   border: 1px solid #e2e8f0;
+
   padding: 8px;
-  vertical-align: top;
-}
 
-.console-table tr:hover {
-  background: #eff6ff;
-}
-
-/*
-========================================
-DIALOG
-========================================
-*/
-
-.table-dialog {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-
-  background: white;
-  border-radius: 16px;
-
-  padding: 20px;
-
-  width: 440px;
-  max-width: calc(100vw - 32px);
-
-  box-shadow:
-    0 18px 50px rgba(0,0,0,0.28);
-
-  z-index: 1000;
-}
-
-.table-dialog.hidden {
-  display: none;
-}
-
-.dialog-title {
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
-
-.dialog-info {
-  font-size: 14px;
-  color: #475569;
-  margin-bottom: 14px;
-  line-height: 1.45;
-}
-
-/*
-info зала в grid — только информация, без кнопок
-*/
-
-.table-dialog.hall-info-mode .dialog-actions {
-  display: none;
-}
-
-/*
-========================================
-DIALOG BUTTONS
-все кнопки одинаковой высоты
-шире, чтобы помещались в одну строку
-========================================
-*/
-
-.dialog-actions {
-  display: grid;
-  gap: 10px;
-}
-
-.dialog-actions button {
-  min-height: 44px;
-
-  border: none;
-  border-radius: 10px;
-
-  padding: 0 14px;
-
-  font-size: 15px;
-  font-weight: 700;
-
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  white-space: nowrap;
-
-  transition:
-    filter 0.14s ease,
-    box-shadow 0.14s ease,
-    transform 0.08s ease;
-}
-
-.dialog-actions button:hover {
-  filter: brightness(1.12);
-  box-shadow:
-    0 0 0 3px rgba(37,99,235,0.18);
-}
-
-.dialog-actions button:active {
-  transform: scale(0.96);
-}
-
-#btnOpenOrder {
-  background: #2563eb;
-  color: white;
-}
-
-#btnCloseOrder {
-  background: #16a34a;
-  color: white;
-}
-
-#btnReserveTable {
-  background: #facc15;
-  color: #111827;
-}
-
-#btnCleanTable {
-  background: #c4b5fd;
-  color: #111827;
-}
-
-/*
-========================================
-CHAIR HALF BUTTONS
-Add | Remove
-полукнопки
-========================================
-*/
-
-.chair-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  width: 100%;
-}
-
-#btnAddChair,
-#btnRemoveChair {
-  min-height: 44px;
-}
-
-#btnAddChair {
-  border-radius: 10px 0 0 10px;
-  background: #1f2937;
-  color: white;
-}
-
-#btnRemoveChair {
-  border-radius: 0 10px 10px 0;
-  background: #e5e7eb;
-  color: #111827;
-}
-
-/*
-========================================
-MOBILE
-========================================
-*/
-
-@media (max-width: 900px) {
-  .top-info {
-    grid-template-columns: 1fr;
-  }
-
-  .top-info,
-  .view-panel,
-  .hall-tabs,
-  .tabs-info,
-  .status,
-  .hall-wrap,
-  .hall-grid,
-  .hall-console {
-    width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
-  }
-
-  .all-halls {
-    grid-template-columns: 1fr;
-  }
-
-  .hall-block {
-    grid-template-columns: 1fr;
-  }
-
-  .hall-mosaic-info {
-    width: 100%;
-  }
-
-  .table-dialog {
-    width: calc(100vw - 32px);
-  }
 }
