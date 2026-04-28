@@ -69,6 +69,10 @@
       Mosaic
     </button>
 
+    <button id="viewConsoleBtn" type="button">
+      Console
+    </button>
+
   </div>
 
 </div>
@@ -88,6 +92,8 @@
 </main>
 
 <div id="allHalls" class="all-halls hidden"></div>
+
+<div id="hallConsole" class="hall-console hidden"></div>
 
 <!--
 ========================================
@@ -126,11 +132,11 @@
     <div class="chair-actions">
 
       <button id="btnAddChair" type="button">
-        Add chair
+        Add Chair
       </button>
 
       <button id="btnRemoveChair" type="button">
-        Remove chair
+        Remove Chair
       </button>
 
     </div>
@@ -183,6 +189,9 @@ const hallCanvas =
 const allHalls =
   document.getElementById('allHalls')
 
+const hallConsole =
+  document.getElementById('hallConsole')
+
 let buildDown =
   document.getElementById('build-down')
 
@@ -194,6 +203,9 @@ const viewGridBtn =
 
 const viewAllBtn =
   document.getElementById('viewAllBtn')
+
+const viewConsoleBtn =
+  document.getElementById('viewConsoleBtn')
 
 const dialog =
   document.getElementById('tableDialog')
@@ -258,6 +270,9 @@ let tablesList =
 let ordersList =
   []
 
+let consoleLogs =
+  []
+
 /*
 ========================================
 STATUS
@@ -305,7 +320,62 @@ function setStatus(text) {
 
 /*
 ========================================
+CONSOLE ACCESS
+developer / owner / manager
+========================================
+*/
+
+function canUseConsole() {
+  if (!currentUser || !currentUser.role)
+    return false
+
+  return [
+    'developer',
+    'owner',
+    'manager'
+  ].includes(currentUser.role)
+}
+
+/*
+========================================
+CONSOLE LOG
+журнал действий
+========================================
+*/
+
+function addConsoleLog(action, details = {}) {
+  const item = {
+    time: new Date().toLocaleString(),
+    action,
+    user:
+      currentUser
+      ? currentUser.email + ' / ' + currentUser.role
+      : '-',
+    hall:
+      details.hall || currentHallName || '-',
+    table:
+      details.table || '-',
+    details:
+      details.message || ''
+  }
+
+  consoleLogs.unshift(item)
+
+  if (consoleLogs.length > 300) {
+    consoleLogs =
+      consoleLogs.slice(0, 300)
+  }
+
+  if (hallViewMode === 'console') {
+    renderConsole()
+  }
+}
+
+/*
+========================================
 LOAD USER
+берём текущего Supabase Auth пользователя
+и роль из public.users
 ========================================
 */
 
@@ -322,56 +392,52 @@ async function loadUser() {
     throw new Error('User not logged in')
 
   currentUser = {
-  user_id: data.user.id,
-  email: data.user.email,
-  name: data.user.email,
-  role: null
-}
+    user_id: data.user.id,
+    email: data.user.email,
+    name: data.user.email,
+    role: null
+  }
 
-  /*
-========================================
-LOAD USER ROLE FROM public.users
-========================================
-*/
+  const { data: appUser, error: appUserError } =
+    await supabase
+      .from('users')
+      .select('role')
+      .eq('user_id', currentUser.user_id)
+      .maybeSingle()
 
-const { data: appUser, error: appUserError } =
-  await supabase
-    .from('users')
-    .select('role')
-    .eq('user_id', currentUser.user_id)
-    .maybeSingle()
+  if (appUserError) {
+    console.error(appUserError)
+  }
 
-if (appUserError) {
-  console.error(appUserError)
-}
-
-if (appUser && appUser.role) {
-
-  currentUser.role =
-    appUser.role
-
-} else {
-
-  /*
-  fallback если пользователя нет
-  */
-
-  currentUser.role =
-    'developer'
-
-}
-
-userNameBox.textContent =
-  currentUser.name
-  + ' / '
-  + currentUser.role    
+  if (appUser && appUser.role) {
+    currentUser.role =
+      appUser.role
+  }
+  else {
+    currentUser.role =
+      'developer'
+  }
 
   userNameBox.textContent =
-    currentUser.name + ' / ' + currentUser.role
+    currentUser.name
+    + ' / '
+    + currentUser.role
 
   sessionStorage.setItem(
     'mysada_user',
     JSON.stringify(currentUser)
+  )
+
+  viewConsoleBtn.classList.toggle(
+    'hidden',
+    !canUseConsole()
+  )
+
+  addConsoleLog(
+    'user log in',
+    {
+      message: currentUser.email
+    }
   )
 
   return currentUser
@@ -380,6 +446,7 @@ userNameBox.textContent =
 /*
 ========================================
 LOAD PROJECT
+берём project из sessionStorage
 ========================================
 */
 
@@ -570,7 +637,6 @@ function getHallName(hallId) {
 /*
 ========================================
 SEATS
-стулья по умолчанию:
 round = 2
 square = 4
 rect = 6
@@ -588,174 +654,23 @@ function getDefaultSeats(shape) {
 }
 
 function getTableSeats(table) {
-  return Number(
-    table.seats
-    || table.chair_count
-    || getDefaultSeats(table.shape)
-  )
+  if (table.seats !== null && table.seats !== undefined)
+    return Number(table.seats)
+
+  if (table.chair_count !== null && table.chair_count !== undefined)
+    return Number(table.chair_count)
+
+  return getDefaultSeats(table.shape)
 }
 
 /*
 ========================================
-TABS INFO
+HALL INFO HTML
+для Tabs / Grid info / Mosaic info
 ========================================
 */
 
-function renderTabsInfo() {
-  if (!currentHallId)
-    return
-
-  const hallTables =
-    tablesList.filter(
-      table => table.hall_id === currentHallId
-    )
-
-  const free =
-    hallTables.filter(
-      table => (table.table_status || 'free') === 'free'
-    ).length
-
-  const occupied =
-    hallTables.filter(
-      table => table.table_status === 'occupied'
-    ).length
-
-  const reserved =
-    hallTables.filter(
-      table => table.table_status === 'reserved'
-    ).length
-
-  const cleaning =
-    hallTables.filter(
-      table => table.table_status === 'cleaning'
-    ).length
-
-  const chairs =
-    hallTables.reduce(
-      (sum, table) => sum + getTableSeats(table),
-      0
-    )
-
-  const openOrders =
-    ordersList.filter(order =>
-      order.hall_id === currentHallId
-      &&
-      (order.order_status || order.status) === 'open'
-    )
-
-  const clients =
-    openOrders.reduce(
-      (sum, order) => sum + Number(order.guest_count || 0),
-      0
-    )
-
-  const waiters =
-    new Set(
-      openOrders
-        .map(order => order.shift_id)
-        .filter(Boolean)
-    ).size
-
-  tabsInfo.innerHTML =
-    'Tables: ' + hallTables.length
-    + ' | Free: ' + free
-    + ' | Occupied: ' + occupied
-    + ' | Reserved: ' + reserved
-    + ' | Cleaning: ' + cleaning
-    + ' | Chairs: ' + chairs
-    + ' | Clients: ' + clients
-    + ' | Waiters in shift: ' + waiters
-}
-
-/*
-========================================
-SET CURRENT HALL
-========================================
-*/
-
-function setCurrentHall(hallId) {
-  currentHallId =
-    hallId
-
-  currentHallName =
-    getHallName(hallId)
-
-  hallSelect.value =
-    hallId
-
-  hallNameBox.textContent =
-    currentHallName + ' / ' + currentHallId
-
-  sessionStorage.setItem(
-    'mysada_current_hall_id',
-    currentHallId
-  )
-
-  renderHallTabs()
-  renderHallGrid()
-
-  if (hallViewMode !== 'all') {
-    renderCurrentHall()
-  }
-
-  if (hallViewMode === 'all') {
-    renderAllHalls()
-  }
-
-  setStatus(
-    'Selected hall: ' + currentHallName
-  )
-}
-
-/*
-========================================
-RENDER HALL TABS
-========================================
-*/
-
-function renderHallTabs() {
-  hallTabs.innerHTML =
-    ''
-
-  hallsList.forEach(hall => {
-    const hallId =
-      hall.hall_id || hall.id
-
-    const button =
-      document.createElement('button')
-
-    button.type =
-      'button'
-
-    button.className =
-      'hall-tab'
-
-    if (hallId === currentHallId) {
-      button.classList.add('active')
-    }
-
-    button.textContent =
-      (hall.name || hallId)
-      + ' · '
-      + countTablesForHall(hallId)
-
-    button.addEventListener('click', () => {
-      setCurrentHall(hallId)
-    })
-
-    hallTabs.appendChild(button)
-  })
-}
-
-/*
-========================================
-INFO ОКНО ДЛЯ ЗАЛА
-правый клик по белому фону в Grid
-========================================
-*/
-
-function showHallInfoDialog(hallId) {
-
+function getHallInfoHtml(hallId) {
   const hallTables =
     tablesList.filter(
       table => table.hall_id === hallId
@@ -807,12 +722,7 @@ function showHallInfoDialog(hallId) {
         .filter(Boolean)
     ).size
 
-  dialogTitle.textContent =
-    getHallName(hallId)
-
-      dialog.classList.add('hall-info-mode')
-      
-  dialogInfo.innerHTML =
+  return (
     'Tables: ' + hallTables.length
     + '<br>Free: ' + free
     + '<br>Occupied: ' + occupied
@@ -821,18 +731,143 @@ function showHallInfoDialog(hallId) {
     + '<br>Chairs: ' + chairs
     + '<br>Clients: ' + clients
     + '<br>Waiters in shift: ' + waiters
+  )
+}
 
-  activeTable = null
+/*
+========================================
+TABS INFO
+========================================
+*/
+
+function renderTabsInfo() {
+  if (!currentHallId)
+    return
+
+  tabsInfo.innerHTML =
+    getHallInfoHtml(currentHallId)
+}
+
+/*
+========================================
+SET CURRENT HALL
+========================================
+*/
+
+function setCurrentHall(hallId) {
+  currentHallId =
+    hallId
+
+  currentHallName =
+    getHallName(hallId)
+
+  hallSelect.value =
+    hallId
+
+  hallNameBox.textContent =
+    currentHallName + ' / ' + currentHallId
+
+  sessionStorage.setItem(
+    'mysada_current_hall_id',
+    currentHallId
+  )
+
+  renderHallTabs()
+  renderHallGrid()
+
+  if (hallViewMode !== 'all') {
+    renderCurrentHall()
+  }
+
+  if (hallViewMode === 'all') {
+    renderAllHalls()
+  }
+
+  if (hallViewMode === 'console') {
+    renderConsole()
+  }
+
+  addConsoleLog(
+    'select hall',
+    {
+      hall: currentHallName
+    }
+  )
+
+  setStatus(
+    'Selected hall: ' + currentHallName
+  )
+}
+
+/*
+========================================
+RENDER HALL TABS
+========================================
+*/
+
+function renderHallTabs() {
+  hallTabs.innerHTML =
+    ''
+
+  hallsList.forEach(hall => {
+    const hallId =
+      hall.hall_id || hall.id
+
+    const button =
+      document.createElement('button')
+
+    button.type =
+      'button'
+
+    button.className =
+      'hall-tab'
+
+    if (hallId === currentHallId) {
+      button.classList.add('active')
+    }
+
+    button.textContent =
+      (hall.name || hallId)
+      + ' · '
+      + countTablesForHall(hallId)
+
+    button.addEventListener('click', () => {
+      setCurrentHall(hallId)
+    })
+
+    hallTabs.appendChild(button)
+  })
+}
+
+/*
+========================================
+GRID HALL INFO
+правый клик по белому фону зала
+========================================
+*/
+
+function showHallInfoDialog(hallId) {
+  dialog.classList.add('hall-info-mode')
+
+  dialogTitle.textContent =
+    getHallName(hallId)
+
+  dialogInfo.innerHTML =
+    getHallInfoHtml(hallId)
+
+  activeTable =
+    null
 
   dialog.classList.remove('hidden')
-
 }
-      
+
 /*
 ========================================
 RENDER HALL GRID
-левая кнопка = orders.html
-правая кнопка = старый диалог
+левая кнопка по столу = orders.html
+правая кнопка по столу = действия
+левая кнопка по фону = Tabs
+правая кнопка по фону = info
 ========================================
 */
 
@@ -947,49 +982,33 @@ function renderHallGrid() {
         tree.appendChild(row)
       })
 
-   card.addEventListener(
-  'click',
-  event => {
+    card.addEventListener(
+      'click',
+      event => {
+        if (event.target.closest('.table-tree-row'))
+          return
 
-    if (
-      event.target.closest('.table-tree-row')
-    )
-      return
+        setCurrentHall(hallId)
 
-    setCurrentHall(
-      hallId
-    )
-
-    setHallViewMode(
-      'tabs'
+        setHallViewMode('tabs')
+      }
     )
 
-  }
-)
+    card.addEventListener(
+      'contextmenu',
+      event => {
+        if (event.target.closest('.table-tree-row'))
+          return
 
-card.addEventListener(
-  'contextmenu',
-  event => {
+        event.preventDefault()
+        event.stopPropagation()
 
-    if (
-      event.target.closest('.table-tree-row')
-    )
-      return
+        setCurrentHall(hallId)
 
-    event.preventDefault()
-    event.stopPropagation()
-
-    setCurrentHall(
-      hallId
+        showHallInfoDialog(hallId)
+      }
     )
 
-    showHallInfoDialog(
-      hallId
-    )
-
-  }
-)
-        
     hallGrid.appendChild(card)
   })
 }
@@ -997,11 +1016,24 @@ card.addEventListener(
 /*
 ========================================
 SET HALL VIEW MODE
-tabs | grid | all
+tabs | grid | all | console
 ========================================
 */
 
 function setHallViewMode(mode) {
+  if (mode === 'console' && !canUseConsole()) {
+    setStatus('Access denied: console')
+
+    addConsoleLog(
+      'errors',
+      {
+        message: 'Access denied: console'
+      }
+    )
+
+    return
+  }
+
   hallViewMode =
     mode
 
@@ -1025,6 +1057,11 @@ function setHallViewMode(mode) {
     mode === 'all'
   )
 
+  viewConsoleBtn.classList.toggle(
+    'active',
+    mode === 'console'
+  )
+
   hallTabs.classList.toggle(
     'hidden',
     mode !== 'tabs'
@@ -1042,12 +1079,17 @@ function setHallViewMode(mode) {
 
   singleHallWrap.classList.toggle(
     'hidden',
-    mode === 'all' || mode === 'grid'
+    mode === 'all' || mode === 'grid' || mode === 'console'
   )
 
   allHalls.classList.toggle(
     'hidden',
     mode !== 'all'
+  )
+
+  hallConsole.classList.toggle(
+    'hidden',
+    mode !== 'console'
   )
 
   dialog.classList.add('hidden')
@@ -1065,6 +1107,10 @@ function setHallViewMode(mode) {
   if (mode === 'tabs') {
     renderCurrentHall()
     renderTabsInfo()
+  }
+
+  if (mode === 'console') {
+    renderConsole()
   }
 
   setStatus(
@@ -1135,79 +1181,11 @@ function renderCurrentHall() {
   )
 }
 
- /*
-========================================
-HALL INFO
-========================================
-*/     
-      
-      function getHallInfoHtml(hallId) {
-  const hallTables =
-    tablesList.filter(
-      table => table.hall_id === hallId
-    )
-
-  const free =
-    hallTables.filter(
-      table => (table.table_status || 'free') === 'free'
-    ).length
-
-  const occupied =
-    hallTables.filter(
-      table => table.table_status === 'occupied'
-    ).length
-
-  const reserved =
-    hallTables.filter(
-      table => table.table_status === 'reserved'
-    ).length
-
-  const cleaning =
-    hallTables.filter(
-      table => table.table_status === 'cleaning'
-    ).length
-
-  const chairs =
-    hallTables.reduce(
-      (sum, table) => sum + getTableSeats(table),
-      0
-    )
-
-  const openOrders =
-    ordersList.filter(order =>
-      order.hall_id === hallId
-      &&
-      (order.order_status || order.status) === 'open'
-    )
-
-  const clients =
-    openOrders.reduce(
-      (sum, order) => sum + Number(order.guest_count || 0),
-      0
-    )
-
-  const waiters =
-    new Set(
-      openOrders
-        .map(order => order.shift_id)
-        .filter(Boolean)
-    ).size
-
-  return (
-    'Tables: ' + hallTables.length
-    + '<br>Free: ' + free
-    + '<br>Occupied: ' + occupied
-    + '<br>Reserved: ' + reserved
-    + '<br>Cleaning: ' + cleaning
-    + '<br>Chairs: ' + chairs
-    + '<br>Clients: ' + clients
-    + '<br>Waiters: ' + waiters
-  )
-}
 /*
 ========================================
 RENDER MOSAIC
-двойной клик по залу = перейти в Tabs этого зала
+двойной клик по залу = перейти в Tabs
+справа info
 ========================================
 */
 
@@ -1246,9 +1224,7 @@ function renderAllHalls() {
       'hall-block-title'
 
     title.textContent =
-      (hall.name || hallId)
-      + ' · tables: '
-      + countTablesForHall(hallId)
+      hall.name || hallId
 
     const scaleBox =
       document.createElement('div')
@@ -1267,18 +1243,18 @@ function renderAllHalls() {
 
     scaleBox.appendChild(canvas)
 
-   const info =
-  document.createElement('div')
+    const info =
+      document.createElement('div')
 
-info.className =
-  'hall-mosaic-info'
+    info.className =
+      'hall-mosaic-info'
 
-info.innerHTML =
-  getHallInfoHtml(hallId)     
+    info.innerHTML =
+      getHallInfoHtml(hallId)
 
-   block.appendChild(title)
-   block.appendChild(scaleBox)
-   block.appendChild(info)
+    block.appendChild(title)
+    block.appendChild(scaleBox)
+    block.appendChild(info)
 
     allHalls.appendChild(block)
 
@@ -1315,6 +1291,65 @@ info.innerHTML =
 
   setStatus(
     'Mosaic rendered: ' + hallsList.length
+  )
+}
+
+/*
+========================================
+RENDER CONSOLE
+логи действий
+========================================
+*/
+
+function renderConsole() {
+  hallConsole.innerHTML =
+    ''
+
+  const table =
+    document.createElement('table')
+
+  table.className =
+    'console-table'
+
+  table.innerHTML =
+    `
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Action</th>
+        <th>User</th>
+        <th>Hall</th>
+        <th>Table</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    `
+
+  const tbody =
+    table.querySelector('tbody')
+
+  consoleLogs.forEach(log => {
+    const tr =
+      document.createElement('tr')
+
+    tr.innerHTML =
+      `
+      <td>${log.time}</td>
+      <td>${log.action}</td>
+      <td>${log.user}</td>
+      <td>${log.hall}</td>
+      <td>${log.table}</td>
+      <td>${log.details}</td>
+      `
+
+    tbody.appendChild(tr)
+  })
+
+  hallConsole.appendChild(table)
+
+  setStatus(
+    'Console logs: ' + consoleLogs.length
   )
 }
 
@@ -1397,7 +1432,7 @@ function renderChairs(parent, table, width, height) {
 ========================================
 RENDER TABLE TO CANVAS
 левая кнопка = orders.html
-правая кнопка = старый диалог
+правая кнопка = действия
 ========================================
 */
 
@@ -1511,6 +1546,8 @@ function renderTableToCanvas(item, targetCanvas) {
 */
 
 function openTableDialog(table) {
+  dialog.classList.remove('hall-info-mode')
+
   activeTable =
     table
 
@@ -1528,8 +1565,6 @@ function openTableDialog(table) {
     + table.table_id
 
   dialog.classList.remove('hidden')
-
-      dialog.classList.remove('hall-info-mode')
 
   setStatus(
     'Selected table: ' + (table.name || table.table_id)
@@ -1606,6 +1641,11 @@ function updateTable(updatedTable) {
     return
   }
 
+  if (hallViewMode === 'console') {
+    renderConsole()
+    return
+  }
+
   renderHallGrid()
 }
 
@@ -1631,7 +1671,7 @@ btnOpenOrder.addEventListener(
             project_id: activeTable.project_id,
             hall_id: activeTable.hall_id,
             table_id: activeTable.table_id,
-            guest_count: 2,
+            guest_count: 0,
             shift_id: activeTable.current_shift_id
           })
           .select()
@@ -1640,8 +1680,12 @@ btnOpenOrder.addEventListener(
       console.log('OPEN ORDER ERROR:', orderError)
 
       if (orderError) {
-        setStatus(
-          'Open order error: ' + orderError.message
+        addConsoleLog(
+          'errors',
+          {
+            table: activeTable.name || activeTable.table_id,
+            message: orderError.message
+          }
         )
 
         alert('Не удалось открыть заказ')
@@ -1652,6 +1696,13 @@ btnOpenOrder.addEventListener(
         addOrderInMemory(orderData[0])
       }
 
+      addConsoleLog(
+        'open order',
+        {
+          table: activeTable.name || activeTable.table_id
+        }
+      )
+
       await setTableStatus(
         activeTable.table_id,
         'occupied'
@@ -1659,6 +1710,13 @@ btnOpenOrder.addEventListener(
     }
     catch (err) {
       console.error(err)
+
+      addConsoleLog(
+        'errors',
+        {
+          message: err.message
+        }
+      )
 
       setStatus(
         'Open order error: ' + err.message
@@ -1696,7 +1754,13 @@ btnCloseOrder.addEventListener(
       console.log('FIND ORDER ERROR:', findError)
 
       if (findError || !openOrder) {
-        setStatus('Open order not found')
+        addConsoleLog(
+          'errors',
+          {
+            table: activeTable.name || activeTable.table_id,
+            message: 'Open order not found'
+          }
+        )
 
         alert('Открытый заказ не найден')
         return
@@ -1717,8 +1781,12 @@ btnCloseOrder.addEventListener(
       console.log('CLOSE ORDER ERROR:', closeError)
 
       if (closeError) {
-        setStatus(
-          'Close order error: ' + closeError.message
+        addConsoleLog(
+          'errors',
+          {
+            table: activeTable.name || activeTable.table_id,
+            message: closeError.message
+          }
         )
 
         alert('Не удалось закрыть заказ')
@@ -1727,6 +1795,13 @@ btnCloseOrder.addEventListener(
 
       updateOrderInMemory(closedOrder)
 
+      addConsoleLog(
+        'close order',
+        {
+          table: activeTable.name || activeTable.table_id
+        }
+      )
+
       await setTableStatus(
         activeTable.table_id,
         'free'
@@ -1734,6 +1809,13 @@ btnCloseOrder.addEventListener(
     }
     catch (err) {
       console.error(err)
+
+      addConsoleLog(
+        'errors',
+        {
+          message: err.message
+        }
+      )
 
       setStatus(
         'Close order error: ' + err.message
@@ -1755,6 +1837,13 @@ btnReserveTable.addEventListener(
       if (!activeTable)
         return
 
+      addConsoleLog(
+        'reserve table',
+        {
+          table: activeTable.name || activeTable.table_id
+        }
+      )
+
       await setTableStatus(
         activeTable.table_id,
         'reserved'
@@ -1762,6 +1851,13 @@ btnReserveTable.addEventListener(
     }
     catch (err) {
       console.error(err)
+
+      addConsoleLog(
+        'errors',
+        {
+          message: err.message
+        }
+      )
 
       setStatus(
         'Reserve table error: ' + err.message
@@ -1783,6 +1879,13 @@ btnCleanTable.addEventListener(
       if (!activeTable)
         return
 
+      addConsoleLog(
+        'cleaning',
+        {
+          table: activeTable.name || activeTable.table_id
+        }
+      )
+
       await setTableStatus(
         activeTable.table_id,
         'cleaning'
@@ -1790,6 +1893,13 @@ btnCleanTable.addEventListener(
     }
     catch (err) {
       console.error(err)
+
+      addConsoleLog(
+        'errors',
+        {
+          message: err.message
+        }
+      )
 
       setStatus(
         'Cleaning table error: ' + err.message
@@ -1801,6 +1911,7 @@ btnCleanTable.addEventListener(
 /*
 ========================================
 ADD / REMOVE CHAIR
+не пишем в Console по финальному списку событий
 ========================================
 */
 
@@ -1843,6 +1954,14 @@ async function updateTableSeats(table, seats) {
       .single()
 
   if (error) {
+    addConsoleLog(
+      'errors',
+      {
+        table: table.name || table.table_id,
+        message: error.message
+      }
+    )
+
     alert('Could not update chairs')
 
     setStatus(
@@ -1888,8 +2007,11 @@ async function setTableStatus(
   console.log('TABLE STATUS ERROR:', error)
 
   if (error) {
-    setStatus(
-      'Table status error: ' + error.message
+    addConsoleLog(
+      'errors',
+      {
+        message: error.message
+      }
     )
 
     alert('Не удалось изменить статус стола')
@@ -1954,6 +2076,8 @@ document.addEventListener(
 
     dialog.classList.add('hidden')
 
+    dialog.classList.remove('hall-info-mode')
+
     activeTable =
       null
 
@@ -1982,6 +2106,13 @@ hallSelect.addEventListener(
     }
     catch (err) {
       console.error(err)
+
+      addConsoleLog(
+        'errors',
+        {
+          message: err.message
+        }
+      )
 
       setStatus(
         'Select hall error: ' + err.message
@@ -2017,6 +2148,13 @@ viewAllBtn.addEventListener(
   }
 )
 
+viewConsoleBtn.addEventListener(
+  'click',
+  () => {
+    setHallViewMode('console')
+  }
+)
+
 /*
 ========================================
 BUTTONS
@@ -2028,6 +2166,13 @@ document
   .addEventListener(
     'click',
     () => {
+      addConsoleLog(
+        'user log out',
+        {
+          message: 'Back to index'
+        }
+      )
+
       window.location.href =
         'index.html'
     }
@@ -2052,6 +2197,13 @@ document
       }
       catch (err) {
         console.error(err)
+
+        addConsoleLog(
+          'errors',
+          {
+            message: err.message
+          }
+        )
 
         setStatus(
           'Reload error: ' + err.message
@@ -2084,6 +2236,16 @@ function subscribeTablesRealtime() {
 
         if (!payload.new)
           return
+
+        addConsoleLog(
+          'realtime updates',
+          {
+            table: payload.new.name || payload.new.table_id,
+            message:
+              'table_status: '
+              + (payload.new.table_status || 'free')
+          }
+        )
 
         updateTable(
           payload.new
@@ -2139,6 +2301,13 @@ async function init() {
   catch (err) {
     console.error('HALL INIT ERROR:', err)
 
+    addConsoleLog(
+      'errors',
+      {
+        message: err.message
+      }
+    )
+
     setStatus(
       'Hall error: ' + err.message
     )
@@ -2158,7 +2327,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    mosaic info | v5.6.0
+    console logs mode | v5.7.0
   </div>
 
   <div class="row" id="build-down">
