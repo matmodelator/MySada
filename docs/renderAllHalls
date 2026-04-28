@@ -1135,6 +1135,75 @@ function renderCurrentHall() {
   )
 }
 
+ /*
+========================================
+HALL INFO
+========================================
+*/     
+      
+      function getHallInfoHtml(hallId) {
+  const hallTables =
+    tablesList.filter(
+      table => table.hall_id === hallId
+    )
+
+  const free =
+    hallTables.filter(
+      table => (table.table_status || 'free') === 'free'
+    ).length
+
+  const occupied =
+    hallTables.filter(
+      table => table.table_status === 'occupied'
+    ).length
+
+  const reserved =
+    hallTables.filter(
+      table => table.table_status === 'reserved'
+    ).length
+
+  const cleaning =
+    hallTables.filter(
+      table => table.table_status === 'cleaning'
+    ).length
+
+  const chairs =
+    hallTables.reduce(
+      (sum, table) => sum + getTableSeats(table),
+      0
+    )
+
+  const openOrders =
+    ordersList.filter(order =>
+      order.hall_id === hallId
+      &&
+      (order.order_status || order.status) === 'open'
+    )
+
+  const clients =
+    openOrders.reduce(
+      (sum, order) => sum + Number(order.guest_count || 0),
+      0
+    )
+
+  const waiters =
+    new Set(
+      openOrders
+        .map(order => order.shift_id)
+        .filter(Boolean)
+    ).size
+
+  return (
+    'Tables: ' + hallTables.length
+    + '<br>Free: ' + free
+    + '<br>Occupied: ' + occupied
+    + '<br>Reserved: ' + reserved
+    + '<br>Cleaning: ' + cleaning
+    + '<br>Chairs: ' + chairs
+    + '<br>Clients: ' + clients
+    + '<br>Waiters: ' + waiters
+  )
+}
 /*
 ========================================
 RENDER MOSAIC
@@ -1198,8 +1267,18 @@ function renderAllHalls() {
 
     scaleBox.appendChild(canvas)
 
-    block.appendChild(title)
-    block.appendChild(scaleBox)
+   const info =
+  document.createElement('div')
+
+info.className =
+  'hall-mosaic-info'
+
+info.innerHTML =
+  getHallInfoHtml(hallId)     
+
+   block.appendChild(title)
+   block.appendChild(scaleBox)
+   block.appendChild(info)
 
     allHalls.appendChild(block)
 
