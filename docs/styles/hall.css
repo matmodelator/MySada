@@ -1,6 +1,6 @@
 /*
 ========================================
-user role/fix grid | v1.4.0
+CHAIR HALF BUTTONS | v1.4.1
 ========================================
 */
 
@@ -583,15 +583,82 @@ BUTTONS
 }
 
 /*
-CHAIR BUTTONS
+========================================
+CHAIR HALF BUTTONS
+Add | Remove
+========================================
+*/
+
+.chair-actions {
+  display: flex;
+  width: 100%;
+  margin-top: 6px;
+}
+
+/*
+левая половина
 */
 
 #btnAddChair {
-  background: #1f2937;
+  flex: 1;
+
+  border: none;
+  border-radius: 10px 0 0 10px;
+
+  padding: 11px 0;
+
+  background: #1f2937; /* dark */
   color: white;
+
+  font-weight: 800;
+  cursor: pointer;
+
+  transition:
+    filter 0.14s ease,
+    box-shadow 0.14s ease,
+    transform 0.08s ease;
 }
 
+/*
+правая половина
+*/
+
 #btnRemoveChair {
-  background: #e5e7eb;
+  flex: 1;
+
+  border: none;
+  border-radius: 0 10px 10px 0;
+
+  padding: 11px 0;
+
+  background: #e5e7eb; /* bright */
   color: #111827;
+
+  font-weight: 800;
+  cursor: pointer;
+
+  transition:
+    filter 0.14s ease,
+    box-shadow 0.14s ease,
+    transform 0.08s ease;
+}
+
+/*
+hover
+*/
+
+#btnAddChair:hover,
+#btnRemoveChair:hover {
+  filter: brightness(1.1);
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.18);
+}
+
+/*
+pressed
+*/
+
+#btnAddChair:active,
+#btnRemoveChair:active {
+  transform: scale(0.97);
 }
