@@ -1,6 +1,6 @@
 /*
 ========================================
-hall-mosaic-info | v1.5.0
+CONSOLE MODE | v1.6.0
 ========================================
 */
 
@@ -512,6 +512,65 @@ MOSAIC
   font-weight: 800;
   color: #0f172a;
   line-height: 1.45;
+}
+
+/*
+========================================
+CONSOLE MODE
+========================================
+*/
+
+.hall-console {
+  max-width: 1500px;
+  margin: 12px auto 80px;
+  padding: 12px 16px;
+
+  background: white;
+  border-radius: 14px;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.08);
+
+  overflow-x: auto;
+}
+
+.console-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.console-table th {
+  background: #f1f5f9;
+  border: 1px solid #dbe3ef;
+  padding: 8px;
+  text-align: left;
+}
+
+.console-table td {
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+}
+
+.console-table tr:hover {
+  background: #eff6ff;
+}
+
+.console-status-free {
+  color: #0284c7;
+}
+
+.console-status-occupied {
+  color: #be123c;
+}
+
+.console-status-reserved {
+  color: #ca8a04;
+}
+
+.console-status-cleaning {
+  color: #7c3aed;
 }
 
 /*
