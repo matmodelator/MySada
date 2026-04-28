@@ -1,6 +1,6 @@
 /*
 ========================================
-CHAIR HALF BUTTONS | v1.4.1
+hall-mosaic-info | v1.5.0
 ========================================
 */
 
@@ -491,6 +491,27 @@ MOSAIC
 
 .hall-block.active .hall-canvas-all {
   border-color: #2563eb;
+}
+
+.hall-block {
+  display: grid;
+  grid-template-columns: auto 160px;
+  gap: 12px;
+}
+
+.hall-block-title {
+  grid-column: 1 / -1;
+}
+
+.hall-mosaic-info {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.45;
 }
 
 /*
