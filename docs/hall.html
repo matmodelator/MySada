@@ -322,11 +322,49 @@ async function loadUser() {
     throw new Error('User not logged in')
 
   currentUser = {
-    user_id: data.user.id,
-    email: data.user.email,
-    name: data.user.email,
-    role: 'user'
-  }
+  user_id: data.user.id,
+  email: data.user.email,
+  name: data.user.email,
+  role: null
+}
+
+  /*
+========================================
+LOAD USER ROLE FROM public.users
+========================================
+*/
+
+const { data: appUser, error: appUserError } =
+  await supabase
+    .from('users')
+    .select('role')
+    .eq('user_id', currentUser.user_id)
+    .maybeSingle()
+
+if (appUserError) {
+  console.error(appUserError)
+}
+
+if (appUser && appUser.role) {
+
+  currentUser.role =
+    appUser.role
+
+} else {
+
+  /*
+  fallback если пользователя нет
+  */
+
+  currentUser.role =
+    'developer'
+
+}
+
+userNameBox.textContent =
+  currentUser.name
+  + ' / '
+  + currentUser.role    
 
   userNameBox.textContent =
     currentUser.name + ' / ' + currentUser.role
@@ -772,6 +810,8 @@ function showHallInfoDialog(hallId) {
   dialogTitle.textContent =
     getHallName(hallId)
 
+      dialog.classList.add('hall-info-mode')
+      
   dialogInfo.innerHTML =
     'Tables: ' + hallTables.length
     + '<br>Free: ' + free
@@ -1410,6 +1450,8 @@ function openTableDialog(table) {
 
   dialog.classList.remove('hidden')
 
+      dialog.classList.remove('hall-info-mode')
+
   setStatus(
     'Selected table: ' + (table.name || table.table_id)
   )
@@ -2037,7 +2079,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    click/hover/buttons/grid | v5.4.0
+    user role/fix grid | v5.5.0
   </div>
 
   <div class="row" id="build-down">
