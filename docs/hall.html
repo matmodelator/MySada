@@ -711,6 +711,85 @@ function renderHallTabs() {
 
 /*
 ========================================
+INFO ОКНО ДЛЯ ЗАЛА
+правый клик по белому фону в Grid
+========================================
+*/
+
+function showHallInfoDialog(hallId) {
+
+  const hallTables =
+    tablesList.filter(
+      table => table.hall_id === hallId
+    )
+
+  const free =
+    hallTables.filter(
+      table => (table.table_status || 'free') === 'free'
+    ).length
+
+  const occupied =
+    hallTables.filter(
+      table => table.table_status === 'occupied'
+    ).length
+
+  const reserved =
+    hallTables.filter(
+      table => table.table_status === 'reserved'
+    ).length
+
+  const cleaning =
+    hallTables.filter(
+      table => table.table_status === 'cleaning'
+    ).length
+
+  const chairs =
+    hallTables.reduce(
+      (sum, table) => sum + getTableSeats(table),
+      0
+    )
+
+  const openOrders =
+    ordersList.filter(order =>
+      order.hall_id === hallId
+      &&
+      (order.order_status || order.status) === 'open'
+    )
+
+  const clients =
+    openOrders.reduce(
+      (sum, order) => sum + Number(order.guest_count || 0),
+      0
+    )
+
+  const waiters =
+    new Set(
+      openOrders
+        .map(order => order.shift_id)
+        .filter(Boolean)
+    ).size
+
+  dialogTitle.textContent =
+    getHallName(hallId)
+
+  dialogInfo.innerHTML =
+    'Tables: ' + hallTables.length
+    + '<br>Free: ' + free
+    + '<br>Occupied: ' + occupied
+    + '<br>Reserved: ' + reserved
+    + '<br>Cleaning: ' + cleaning
+    + '<br>Chairs: ' + chairs
+    + '<br>Clients: ' + clients
+    + '<br>Waiters in shift: ' + waiters
+
+  activeTable = null
+
+  dialog.classList.remove('hidden')
+
+}
+      
+/*
+========================================
 RENDER HALL GRID
 левая кнопка = orders.html
 правая кнопка = старый диалог
@@ -828,13 +907,49 @@ function renderHallGrid() {
         tree.appendChild(row)
       })
 
-    card.addEventListener(
-      'click',
-      () => {
-        setCurrentHall(hallId)
-      }
+   card.addEventListener(
+  'click',
+  event => {
+
+    if (
+      event.target.closest('.table-tree-row')
+    )
+      return
+
+    setCurrentHall(
+      hallId
     )
 
+    setHallViewMode(
+      'tabs'
+    )
+
+  }
+)
+
+card.addEventListener(
+  'contextmenu',
+  event => {
+
+    if (
+      event.target.closest('.table-tree-row')
+    )
+      return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    setCurrentHall(
+      hallId
+    )
+
+    showHallInfoDialog(
+      hallId
+    )
+
+  }
+)
+        
     hallGrid.appendChild(card)
   })
 }
@@ -1922,7 +2037,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    chairs tabs mosaic dblclick | v5.3.0
+    click/hover/buttons/grid | v5.4.0
   </div>
 
   <div class="row" id="build-down">
