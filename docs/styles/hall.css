@@ -1,8 +1,6 @@
-
-
 /*
 ========================================
-chairs | v1.2.0
+click/hover/buttons/grid | v1.3.0
 ========================================
 */
 
@@ -120,6 +118,11 @@ Select  | Hall
   --table-scale: 0.85;
   --table-font-size: 13px;
   --all-halls-scale: 0.42;
+
+  /*
+  размер стульев
+  */
+  --chair-size: 12px;
 }
 
 /*
@@ -151,6 +154,21 @@ VIEW SWITCH
   color: #334155;
   font-weight: 800;
   cursor: pointer;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
+}
+
+.view-buttons button:hover {
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.18);
+}
+
+.view-buttons button:active {
+  transform: scale(0.97);
 }
 
 .view-buttons button.active {
@@ -182,6 +200,21 @@ TABS
   color: #334155;
   font-weight: 800;
   cursor: pointer;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
+}
+
+.hall-tab:hover {
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.18);
+}
+
+.hall-tab:active {
+  transform: scale(0.97);
 }
 
 .hall-tab.active {
@@ -224,10 +257,22 @@ GRID ЗАЛОВ
     0 4px 14px rgba(0,0,0,0.08);
 
   cursor: pointer;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
 }
 
 .hall-card:hover {
   border-color: #2563eb;
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.18),
+    0 6px 18px rgba(0,0,0,0.1);
+}
+
+.hall-card:active {
+  transform: scale(0.985);
 }
 
 .hall-card.active {
@@ -276,11 +321,22 @@ TREE СТОЛОВ ВНУТРИ ЗАЛА
   font-weight: 800;
 
   cursor: pointer;
+
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.08s ease,
+    box-shadow 0.18s ease;
 }
 
 .table-tree-row:hover {
   border-color: #2563eb;
-  background: #eff6ff;
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.18);
+}
+
+.table-tree-row:active {
+  transform: scale(0.97);
 }
 
 /*
@@ -359,6 +415,24 @@ TABLE
 
   box-shadow:
     0 4px 10px rgba(0,0,0,0.18);
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
+}
+
+.table-item:hover {
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,0.18),
+    0 4px 10px rgba(0,0,0,0.18);
+}
+
+.table-item:active {
+  transform:
+    scale(var(--table-scale))
+    translateY(1px);
 }
 
 /*
@@ -424,10 +498,9 @@ LABEL
 
 /*
 ========================================
-CHAIRS 
+CHAIRS
 ========================================
 */
-
 
 .tabs-info {
   max-width: 1200px;
@@ -444,13 +517,17 @@ CHAIRS
 
 .chair-dot {
   position: absolute;
-  width: 12px;
-  height: 12px;
-  margin-left: -6px;
-  margin-top: -6px;
+
+  width: var(--chair-size);
+  height: var(--chair-size);
+
+  margin-left: calc(var(--chair-size) / -2);
+  margin-top: calc(var(--chair-size) / -2);
+
   border-radius: 50%;
   background: #334155;
   border: 2px solid white;
+
   pointer-events: none;
   z-index: 3;
 }
@@ -461,10 +538,14 @@ CHAIRS
   gap: 8px;
 }
 
-#btnAddChair,
-#btnRemoveChair {
-  background: #0f172a;
+#btnAddChair {
+  background: #374151;
   color: white;
+}
+
+#btnRemoveChair {
+  background: #e5e7eb;
+  color: #111827;
 }
 
 /*
@@ -499,11 +580,19 @@ MOSAIC ЗАЛОВ
 
   overflow: hidden;
   cursor: pointer;
+
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
 }
 
 .hall-block:hover {
   box-shadow:
     0 8px 22px rgba(0,0,0,0.12);
+}
+
+.hall-block:active {
+  transform: scale(0.985);
 }
 
 .hall-block-title {
@@ -552,14 +641,22 @@ MOSAIC CANVAS
 
   transform-origin:
     top left;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .hall-canvas-all:hover {
   border-color: #2563eb;
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,0.18);
 }
 
 .hall-block.active .hall-canvas-all {
   border-color: #2563eb;
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,0.18);
 }
 
 @media (max-width: 900px) {
@@ -623,6 +720,19 @@ DIALOG
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
+}
+
+.dialog-actions button:hover {
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.18);
+}
+
+.dialog-actions button:active {
+  transform: scale(0.97);
 }
 
 #btnOpenOrder {
@@ -641,6 +751,6 @@ DIALOG
 }
 
 #btnCleanTable {
-  background: #7c3aed;
-  color: white;
+  background: #ede9fe;
+  color: #111827;
 }
