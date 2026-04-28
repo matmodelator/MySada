@@ -79,6 +79,8 @@
 
 <div id="hallTabs" class="hall-tabs"></div>
 
+<div id="tabsInfo" class="tabs-info hidden"></div>
+
 <div id="hallGrid" class="hall-grid hidden"></div>
 
 <main id="singleHallWrap" class="hall-wrap">
@@ -121,6 +123,18 @@
       Cleaning
     </button>
 
+    <div class="chair-actions">
+
+      <button id="btnAddChair" type="button">
+        Add chair
+      </button>
+
+      <button id="btnRemoveChair" type="button">
+        Remove chair
+      </button>
+
+    </div>
+
   </div>
 
 </div>
@@ -153,6 +167,9 @@ const statusBox =
 
 const hallTabs =
   document.getElementById('hallTabs')
+
+const tabsInfo =
+  document.getElementById('tabsInfo')
 
 const hallGrid =
   document.getElementById('hallGrid')
@@ -199,6 +216,12 @@ const btnReserveTable =
 const btnCleanTable =
   document.getElementById('btnCleanTable')
 
+const btnAddChair =
+  document.getElementById('btnAddChair')
+
+const btnRemoveChair =
+  document.getElementById('btnRemoveChair')
+
 /*
 ========================================
 STATE
@@ -230,6 +253,9 @@ let hallsList =
   []
 
 let tablesList =
+  []
+
+let ordersList =
   []
 
 /*
@@ -280,7 +306,6 @@ function setStatus(text) {
 /*
 ========================================
 LOAD USER
-берём текущего Supabase Auth пользователя
 ========================================
 */
 
@@ -317,7 +342,6 @@ async function loadUser() {
 /*
 ========================================
 LOAD PROJECT
-берём project из sessionStorage после Upload в index.html
 ========================================
 */
 
@@ -351,7 +375,7 @@ function loadProjectFromSession() {
 /*
 ========================================
 LOAD PROJECT DATA
-сразу грузим все залы и все столы проекта из Supabase
+залы / столы / заказы
 ========================================
 */
 
@@ -384,18 +408,31 @@ async function loadProjectData() {
   tablesList =
     tables || []
 
+  const { data: orders, error: ordersError } =
+    await supabase
+      .from('orders')
+      .select('*')
+      .eq('project_id', currentProjectId)
+
+  if (ordersError)
+    throw ordersError
+
+  ordersList =
+    orders || []
+
   setStatus(
     'Project data loaded: halls '
     + hallsList.length
     + ', tables '
     + tablesList.length
+    + ', orders '
+    + ordersList.length
   )
 }
 
 /*
 ========================================
 LOAD HALL LIST
-строим список залов из уже загруженных данных
 ========================================
 */
 
@@ -494,8 +531,107 @@ function getHallName(hallId) {
 
 /*
 ========================================
+SEATS
+стулья по умолчанию:
+round = 2
+square = 4
+rect = 6
+========================================
+*/
+
+function getDefaultSeats(shape) {
+  if (shape === 'round')
+    return 2
+
+  if (shape === 'rect')
+    return 6
+
+  return 4
+}
+
+function getTableSeats(table) {
+  return Number(
+    table.seats
+    || table.chair_count
+    || getDefaultSeats(table.shape)
+  )
+}
+
+/*
+========================================
+TABS INFO
+========================================
+*/
+
+function renderTabsInfo() {
+  if (!currentHallId)
+    return
+
+  const hallTables =
+    tablesList.filter(
+      table => table.hall_id === currentHallId
+    )
+
+  const free =
+    hallTables.filter(
+      table => (table.table_status || 'free') === 'free'
+    ).length
+
+  const occupied =
+    hallTables.filter(
+      table => table.table_status === 'occupied'
+    ).length
+
+  const reserved =
+    hallTables.filter(
+      table => table.table_status === 'reserved'
+    ).length
+
+  const cleaning =
+    hallTables.filter(
+      table => table.table_status === 'cleaning'
+    ).length
+
+  const chairs =
+    hallTables.reduce(
+      (sum, table) => sum + getTableSeats(table),
+      0
+    )
+
+  const openOrders =
+    ordersList.filter(order =>
+      order.hall_id === currentHallId
+      &&
+      (order.order_status || order.status) === 'open'
+    )
+
+  const clients =
+    openOrders.reduce(
+      (sum, order) => sum + Number(order.guest_count || 0),
+      0
+    )
+
+  const waiters =
+    new Set(
+      openOrders
+        .map(order => order.shift_id)
+        .filter(Boolean)
+    ).size
+
+  tabsInfo.innerHTML =
+    'Tables: ' + hallTables.length
+    + ' | Free: ' + free
+    + ' | Occupied: ' + occupied
+    + ' | Reserved: ' + reserved
+    + ' | Cleaning: ' + cleaning
+    + ' | Chairs: ' + chairs
+    + ' | Clients: ' + clients
+    + ' | Waiters in shift: ' + waiters
+}
+
+/*
+========================================
 SET CURRENT HALL
-выбор активного зала
 ========================================
 */
 
@@ -536,7 +672,6 @@ function setCurrentHall(hallId) {
 /*
 ========================================
 RENDER HALL TABS
-закладки залов
 ========================================
 */
 
@@ -577,8 +712,8 @@ function renderHallTabs() {
 /*
 ========================================
 RENDER HALL GRID
-залы горизонтально
-столы вертикально под своим залом
+левая кнопка = orders.html
+правая кнопка = старый диалог
 ========================================
 */
 
@@ -641,25 +776,6 @@ function renderHallGrid() {
         table =>
           table.hall_id === hallId
       )
-      .sort((a, b) => {
-        const aName =
-          Number(a.name)
-
-        const bName =
-          Number(b.name)
-
-        if (
-          Number.isFinite(aName)
-          &&
-          Number.isFinite(bName)
-        ) {
-          return aName - bName
-        }
-
-        return String(a.name || '').localeCompare(
-          String(b.name || '')
-        )
-      })
       .forEach(table => {
         const row =
           document.createElement('button')
@@ -678,38 +794,36 @@ function renderHallGrid() {
           (table.name || table.table_id)
           + ' · '
           + status
+          + ' · chairs '
+          + getTableSeats(table)
 
- row.addEventListener(
-  'click',
-  event => {
-    event.stopPropagation()
+        row.addEventListener(
+          'click',
+          event => {
+            event.stopPropagation()
 
-    window.location.href =
-      'orders.html'
-      + '?project_id='
-      + table.project_id
-      + '&hall_id='
-      + table.hall_id
-      + '&table_id='
-      + table.table_id
-  }
-)
+            window.location.href =
+              'orders.html'
+              + '?project_id='
+              + table.project_id
+              + '&hall_id='
+              + table.hall_id
+              + '&table_id='
+              + table.table_id
+          }
+        )
 
-row.addEventListener(
-  'contextmenu',
-  event => {
-    event.preventDefault()
-    event.stopPropagation()
+        row.addEventListener(
+          'contextmenu',
+          event => {
+            event.preventDefault()
+            event.stopPropagation()
 
-    setCurrentHall(
-      hallId
-    )
+            setCurrentHall(hallId)
 
-    openTableDialog(
-      table
-    )
-  }
-)
+            openTableDialog(table)
+          }
+        )
 
         tree.appendChild(row)
       })
@@ -717,9 +831,7 @@ row.addEventListener(
     card.addEventListener(
       'click',
       () => {
-        setCurrentHall(
-          hallId
-        )
+        setCurrentHall(hallId)
       }
     )
 
@@ -763,6 +875,11 @@ function setHallViewMode(mode) {
     mode !== 'tabs'
   )
 
+  tabsInfo.classList.toggle(
+    'hidden',
+    mode !== 'tabs'
+  )
+
   hallGrid.classList.toggle(
     'hidden',
     mode !== 'grid'
@@ -792,6 +909,7 @@ function setHallViewMode(mode) {
 
   if (mode === 'tabs') {
     renderCurrentHall()
+    renderTabsInfo()
   }
 
   setStatus(
@@ -802,7 +920,6 @@ function setHallViewMode(mode) {
 /*
 ========================================
 LOAD TABLES
-грузим столы выбранного зала из уже загруженных данных
 ========================================
 */
 
@@ -813,7 +930,7 @@ function loadTables() {
 /*
 ========================================
 RENDER CURRENT HALL
-один выбранный зал
+Tabs mode
 ========================================
 */
 
@@ -837,6 +954,8 @@ function renderCurrentHall() {
     )
 
   if (!tablesForHall.length) {
+    renderTabsInfo()
+
     setStatus(
       'No tables found for hall: ' + currentHallName
     )
@@ -851,6 +970,8 @@ function renderCurrentHall() {
     )
   })
 
+  renderTabsInfo()
+
   setStatus(
     'Tables rendered: '
     + tablesForHall.length
@@ -861,8 +982,8 @@ function renderCurrentHall() {
 
 /*
 ========================================
-RENDER Mosaic 
-все залы одновременно
+RENDER MOSAIC
+двойной клик по залу = перейти в Tabs этого зала
 ========================================
 */
 
@@ -930,9 +1051,18 @@ function renderAllHalls() {
     block.addEventListener(
       'click',
       () => {
-        setCurrentHall(
-          hallId
-        )
+        setCurrentHall(hallId)
+      }
+    )
+
+    block.addEventListener(
+      'dblclick',
+      event => {
+        event.stopPropagation()
+
+        setCurrentHall(hallId)
+
+        setHallViewMode('tabs')
       }
     )
 
@@ -957,7 +1087,6 @@ function renderAllHalls() {
 /*
 ========================================
 RENDER TABLE
-совместимость со старым названием функции
 ========================================
 */
 
@@ -970,8 +1099,71 @@ function renderTable(item) {
 
 /*
 ========================================
+RENDER CHAIRS
+только Tabs
+========================================
+*/
+
+function renderChairs(parent, table, width, height) {
+  const seats =
+    getTableSeats(table)
+
+  const shape =
+    table.shape || 'square'
+
+  let positions =
+    []
+
+  if (shape === 'round') {
+    positions = [
+      { x: width / 2, y: -10 },
+      { x: width / 2, y: height + 10 }
+    ]
+  }
+  else if (shape === 'rect') {
+    positions = [
+      { x: width * 0.33, y: -10 },
+      { x: width * 0.66, y: -10 },
+      { x: width * 0.33, y: height + 10 },
+      { x: width * 0.66, y: height + 10 },
+      { x: -10, y: height / 2 },
+      { x: width + 10, y: height / 2 }
+    ]
+  }
+  else {
+    positions = [
+      { x: width / 2, y: -10 },
+      { x: width / 2, y: height + 10 },
+      { x: -10, y: height / 2 },
+      { x: width + 10, y: height / 2 }
+    ]
+  }
+
+  for (let i = 0; i < seats; i++) {
+    const chair =
+      document.createElement('div')
+
+    const pos =
+      positions[i % positions.length]
+
+    chair.className =
+      'chair-dot'
+
+    chair.style.left =
+      pos.x + 'px'
+
+    chair.style.top =
+      pos.y + 'px'
+
+    parent.appendChild(chair)
+  }
+}
+
+/*
+========================================
 RENDER TABLE TO CANVAS
-столы отображаются и открывают диалог действий
+левая кнопка = orders.html
+правая кнопка = старый диалог
 ========================================
 */
 
@@ -1040,47 +1232,40 @@ function renderTableToCanvas(item, targetCanvas) {
 
   el.appendChild(label)
 
-  /*
-========================================
-ЛЕВАЯ КНОПКА
-переход в список заказов стола
-========================================
-*/
-
-el.addEventListener(
-  'click',
-  event => {
-    event.stopPropagation()
-
-    window.location.href =
-      'orders.html'
-      + '?project_id='
-      + item.project_id
-      + '&hall_id='
-      + item.hall_id
-      + '&table_id='
-      + item.table_id
-  }
-)
-
-/*
-========================================
-ПРАВАЯ КНОПКА
-старый диалог действий стола
-========================================
-*/
-
-el.addEventListener(
-  'contextmenu',
-  event => {
-    event.preventDefault()
-    event.stopPropagation()
-
-    openTableDialog(
-      item
+  if (targetCanvas === hallCanvas) {
+    renderChairs(
+      el,
+      item,
+      width,
+      height
     )
   }
-)
+
+  el.addEventListener(
+    'click',
+    event => {
+      event.stopPropagation()
+
+      window.location.href =
+        'orders.html'
+        + '?project_id='
+        + item.project_id
+        + '&hall_id='
+        + item.hall_id
+        + '&table_id='
+        + item.table_id
+    }
+  )
+
+  el.addEventListener(
+    'contextmenu',
+    event => {
+      event.preventDefault()
+      event.stopPropagation()
+
+      openTableDialog(item)
+    }
+  )
 
   targetCanvas.appendChild(el)
 }
@@ -1103,6 +1288,8 @@ function openTableDialog(table) {
     + getHallName(table.hall_id)
     + ' | status: '
     + (table.table_status || 'free')
+    + ' | chairs: '
+    + getTableSeats(table)
     + ' | table_id: '
     + table.table_id
 
@@ -1115,8 +1302,7 @@ function openTableDialog(table) {
 
 /*
 ========================================
-ОБНОВИТЬ СТОЛ В ПАМЯТИ
-чтобы при переключении зала статус не откатился
+UPDATE TABLE MEMORY
 ========================================
 */
 
@@ -1132,7 +1318,42 @@ function updateTableInMemory(updatedTable) {
 
 /*
 ========================================
-ОБНОВИТЬ СТОЛ НА ЭКРАНЕ
+UPDATE ORDER MEMORY
+========================================
+*/
+
+function addOrderInMemory(order) {
+  if (!order)
+    return
+
+  ordersList =
+    [
+      order,
+      ...ordersList
+    ]
+}
+
+function updateOrderInMemory(updatedOrder) {
+  if (!updatedOrder)
+    return
+
+  ordersList =
+    ordersList.map(order => {
+      if (
+        order.order_id === updatedOrder.order_id
+        ||
+        order.id === updatedOrder.id
+      ) {
+        return updatedOrder
+      }
+
+      return order
+    })
+}
+
+/*
+========================================
+UPDATE TABLE SCREEN
 ========================================
 */
 
@@ -1154,14 +1375,12 @@ function updateTable(updatedTable) {
 
 /*
 ========================================
-1. ОТКРЫТЬ ЗАКАЗ
-orders = open
-tables = occupied
+OPEN ORDER
 ========================================
 */
 
 btnOpenOrder.addEventListener(
-  "click",
+  'click',
   async () => {
     try {
       if (!activeTable)
@@ -1171,7 +1390,7 @@ btnOpenOrder.addEventListener(
 
       const { data: orderData, error: orderError } =
         await supabase
-          .from("orders")
+          .from('orders')
           .insert({
             project_id: activeTable.project_id,
             hall_id: activeTable.hall_id,
@@ -1181,21 +1400,25 @@ btnOpenOrder.addEventListener(
           })
           .select()
 
-      console.log("OPEN ORDER DATA:", orderData)
-      console.log("OPEN ORDER ERROR:", orderError)
+      console.log('OPEN ORDER DATA:', orderData)
+      console.log('OPEN ORDER ERROR:', orderError)
 
       if (orderError) {
         setStatus(
           'Open order error: ' + orderError.message
         )
 
-        alert("Не удалось открыть заказ")
+        alert('Не удалось открыть заказ')
         return
+      }
+
+      if (orderData && orderData[0]) {
+        addOrderInMemory(orderData[0])
       }
 
       await setTableStatus(
         activeTable.table_id,
-        "occupied"
+        'occupied'
       )
     }
     catch (err) {
@@ -1210,14 +1433,12 @@ btnOpenOrder.addEventListener(
 
 /*
 ========================================
-2. ЗАКРЫТЬ ЗАКАЗ
-orders = closed
-tables = free
+CLOSE ORDER
 ========================================
 */
 
 btnCloseOrder.addEventListener(
-  "click",
+  'click',
   async () => {
     try {
       if (!activeTable)
@@ -1227,47 +1448,52 @@ btnCloseOrder.addEventListener(
 
       const { data: openOrder, error: findError } =
         await supabase
-          .from("orders")
-          .select("*")
-          .eq("table_id", activeTable.table_id)
-          .eq("order_status", "open")
-          .order("opened_at", { ascending: false })
+          .from('orders')
+          .select('*')
+          .eq('table_id', activeTable.table_id)
+          .eq('order_status', 'open')
+          .order('opened_at', { ascending: false })
           .limit(1)
           .maybeSingle()
 
-      console.log("FIND ORDER DATA:", openOrder)
-      console.log("FIND ORDER ERROR:", findError)
+      console.log('FIND ORDER DATA:', openOrder)
+      console.log('FIND ORDER ERROR:', findError)
 
       if (findError || !openOrder) {
         setStatus('Open order not found')
 
-        alert("Открытый заказ не найден")
+        alert('Открытый заказ не найден')
         return
       }
 
-      const { error: closeError } =
+      const { data: closedOrder, error: closeError } =
         await supabase
-          .from("orders")
+          .from('orders')
           .update({
-            order_status: "closed",
+            order_status: 'closed',
             closed_at: new Date().toISOString()
           })
-          .eq("order_id", openOrder.order_id)
+          .eq('order_id', openOrder.order_id)
+          .select()
+          .single()
 
-      console.log("CLOSE ORDER ERROR:", closeError)
+      console.log('CLOSE ORDER DATA:', closedOrder)
+      console.log('CLOSE ORDER ERROR:', closeError)
 
       if (closeError) {
         setStatus(
           'Close order error: ' + closeError.message
         )
 
-        alert("Не удалось закрыть заказ")
+        alert('Не удалось закрыть заказ')
         return
       }
 
+      updateOrderInMemory(closedOrder)
+
       await setTableStatus(
         activeTable.table_id,
-        "free"
+        'free'
       )
     }
     catch (err) {
@@ -1282,13 +1508,12 @@ btnCloseOrder.addEventListener(
 
 /*
 ========================================
-3. ЗАРЕЗЕРВИРОВАТЬ СТОЛ
-tables = reserved
+RESERVE TABLE
 ========================================
 */
 
 btnReserveTable.addEventListener(
-  "click",
+  'click',
   async () => {
     try {
       if (!activeTable)
@@ -1296,7 +1521,7 @@ btnReserveTable.addEventListener(
 
       await setTableStatus(
         activeTable.table_id,
-        "reserved"
+        'reserved'
       )
     }
     catch (err) {
@@ -1311,13 +1536,12 @@ btnReserveTable.addEventListener(
 
 /*
 ========================================
-4. УБОРКА СТОЛА
-tables = cleaning
+CLEAN TABLE
 ========================================
 */
 
 btnCleanTable.addEventListener(
-  "click",
+  'click',
   async () => {
     try {
       if (!activeTable)
@@ -1325,7 +1549,7 @@ btnCleanTable.addEventListener(
 
       await setTableStatus(
         activeTable.table_id,
-        "cleaning"
+        'cleaning'
       )
     }
     catch (err) {
@@ -1340,7 +1564,69 @@ btnCleanTable.addEventListener(
 
 /*
 ========================================
-ОБЩАЯ ФУНКЦИЯ СМЕНЫ СТАТУСА СТОЛА
+ADD / REMOVE CHAIR
+========================================
+*/
+
+btnAddChair.addEventListener(
+  'click',
+  async () => {
+    if (!activeTable)
+      return
+
+    await updateTableSeats(
+      activeTable,
+      getTableSeats(activeTable) + 1
+    )
+  }
+)
+
+btnRemoveChair.addEventListener(
+  'click',
+  async () => {
+    if (!activeTable)
+      return
+
+    await updateTableSeats(
+      activeTable,
+      Math.max(
+        0,
+        getTableSeats(activeTable) - 1
+      )
+    )
+  }
+)
+
+async function updateTableSeats(table, seats) {
+  const { data, error } =
+    await supabase
+      .from('tables')
+      .update({ seats })
+      .eq('table_id', table.table_id)
+      .select()
+      .single()
+
+  if (error) {
+    alert('Could not update chairs')
+
+    setStatus(
+      'Chair update error: ' + error.message
+    )
+
+    return
+  }
+
+  updateTable(data)
+
+  activeTable =
+    data
+
+  openTableDialog(data)
+}
+
+/*
+========================================
+SET TABLE STATUS
 ========================================
 */
 
@@ -1354,23 +1640,23 @@ async function setTableStatus(
 
   const { data, error } =
     await supabase
-      .from("tables")
+      .from('tables')
       .update({
         table_status
       })
-      .eq("table_id", table_id)
+      .eq('table_id', table_id)
       .select()
       .single()
 
-  console.log("TABLE STATUS DATA:", data)
-  console.log("TABLE STATUS ERROR:", error)
+  console.log('TABLE STATUS DATA:', data)
+  console.log('TABLE STATUS ERROR:', error)
 
   if (error) {
     setStatus(
       'Table status error: ' + error.message
     )
 
-    alert("Не удалось изменить статус стола")
+    alert('Не удалось изменить статус стола')
     return
   }
 
@@ -1378,7 +1664,7 @@ async function setTableStatus(
     updateTable(data)
   }
 
-  dialog.classList.add("hidden")
+  dialog.classList.add('hidden')
 
   activeTable =
     null
@@ -1390,8 +1676,7 @@ async function setTableStatus(
 
 /*
 ========================================
-КЛИК ВНУТРИ ДИАЛОГА
-не закрывает диалог
+DIALOG CLICK
 ========================================
 */
 
@@ -1404,7 +1689,7 @@ dialog.addEventListener(
 
 /*
 ========================================
-ЗАКРЫТЬ ДИАЛОГ КЛИКОМ МИМО ПОЛЯ
+CLOSE DIALOG BY OUTSIDE CLICK
 ========================================
 */
 
@@ -1443,33 +1728,35 @@ document.addEventListener(
 /*
 ========================================
 SELECT HALL
-при выборе зала грузим его столы
+остаемся в текущем режиме
 ========================================
 */
 
-hallSelect.addEventListener('change', () => {
-  try {
-    setCurrentHall(
-      hallSelect.value
-    )
+hallSelect.addEventListener(
+  'change',
+  () => {
+    try {
+      setCurrentHall(
+        hallSelect.value
+      )
 
-    setHallViewMode(
-      hallViewMode
-    )
-  }
-  catch (err) {
-    console.error(err)
+      setHallViewMode(
+        hallViewMode
+      )
+    }
+    catch (err) {
+      console.error(err)
 
-    setStatus(
-      'Select hall error: ' + err.message
-    )
+      setStatus(
+        'Select hall error: ' + err.message
+      )
+    }
   }
-})
+)
 
 /*
 ========================================
 VIEW BUTTONS
-переключение режимов представления залов
 ========================================
 */
 
@@ -1502,44 +1789,48 @@ BUTTONS
 
 document
   .getElementById('backBtn')
-  .addEventListener('click', () => {
-    window.location.href =
-      'index.html'
-  })
+  .addEventListener(
+    'click',
+    () => {
+      window.location.href =
+        'index.html'
+    }
+  )
 
 document
   .getElementById('reloadBtn')
-  .addEventListener('click', async () => {
-    try {
-      await loadProjectData()
+  .addEventListener(
+    'click',
+    async () => {
+      try {
+        await loadProjectData()
 
-      loadHallList()
+        loadHallList()
 
-      renderHallTabs()
-      renderHallGrid()
+        renderHallTabs()
+        renderHallGrid()
 
-      setHallViewMode(
-        hallViewMode
-      )
+        setHallViewMode(
+          hallViewMode
+        )
+      }
+      catch (err) {
+        console.error(err)
+
+        setStatus(
+          'Reload error: ' + err.message
+        )
+      }
     }
-    catch (err) {
-      console.error(err)
-
-      setStatus(
-        'Reload error: ' + err.message
-      )
-    }
-  })
+  )
 
 /*
 ========================================
 REALTIME TABLES
-слушаем изменения столов проекта
 ========================================
 */
 
 function subscribeTablesRealtime() {
-
   setStatus('Realtime subscribe tables...')
 
   supabase
@@ -1553,7 +1844,6 @@ function subscribeTablesRealtime() {
         filter: 'project_id=eq.' + currentProjectId
       },
       payload => {
-
         console.log('REALTIME TABLE:', payload)
 
         if (!payload.new)
@@ -1562,17 +1852,16 @@ function subscribeTablesRealtime() {
         updateTable(
           payload.new
         )
-
       }
     )
-    .subscribe()
-
+    .subscribe(status => {
+      console.log('REALTIME STATUS:', status)
+    })
 }
-      
+
 /*
 ========================================
 INIT
-загрузка пользователя, проекта, всех залов и всех столов
 ========================================
 */
 
@@ -1586,7 +1875,7 @@ async function init() {
 
     await loadProjectData()
 
-    subscribeTablesRealtime()    
+    subscribeTablesRealtime()
 
     const hallId =
       loadHallList()
@@ -1597,7 +1886,9 @@ async function init() {
     if (
       savedHallId
       &&
-      hallsList.some(hall => (hall.hall_id || hall.id) === savedHallId)
+      hallsList.some(
+        hall => (hall.hall_id || hall.id) === savedHallId
+      )
     ) {
       setCurrentHall(savedHallId)
     }
@@ -1631,7 +1922,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    two buttonc mouse  | v5.2.0
+    chairs tabs mosaic dblclick | v5.3.0
   </div>
 
   <div class="row" id="build-down">
