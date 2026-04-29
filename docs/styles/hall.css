@@ -1,10 +1,9 @@
-
-
 /*
 ========================================
-CONSOLE/TABS/GRID FIX | v1.6.2
+CONSOLE/TABS/GRID FIX | v1.6.1
 ========================================
 */
+
 
 * {
   box-sizing: border-box;
@@ -66,7 +65,7 @@ TOP BAR
 
 /*
 ========================================
-ЕДИНАЯ ШИРИНА ВЕРХА / РЕЖИМОВ / INFO / HALL / GRID / CONSOLE
+ЕДИНАЯ ШИРИНА ВЕРХА / РЕЖИМОВ / INFO / CONSOLE
 ========================================
 */
 
@@ -75,10 +74,7 @@ TOP BAR
 .hall-tabs,
 .tabs-info,
 .status,
-.hall-wrap,
-.hall-grid,
 .hall-console {
-  width: 1200px;
   max-width: 1200px;
 }
 
@@ -164,15 +160,6 @@ VIEW SWITCH
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  align-items: center;
-}
-
-.view-label {
-  margin-left: auto;
-  font-size: 14px;
-  font-weight: 900;
-  font-family: Arial, sans-serif;
-  color: #334155;
 }
 
 .view-buttons button {
@@ -234,14 +221,13 @@ TABS
 /*
 ========================================
 TABS INFO
-одна строка
-ширина как TOP
+панель над полем зала
 ========================================
 */
 
 .tabs-info {
   margin: 10px auto 10px;
-  padding: 8px 16px;
+  padding: 12px 16px;
 
   background: white;
 
@@ -252,14 +238,10 @@ TABS INFO
     0 4px 14px rgba(0,0,0,0.08);
 
   display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
 
-  white-space: nowrap;
-  overflow-x: auto;
-
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -269,11 +251,11 @@ TABS INFO
 GRID
 залы горизонтально
 столы вертикально внутри зала
-ширина строго как TOP
 ========================================
 */
 
 .hall-grid {
+  max-width: 1200px;
   margin: 10px auto 40px;
   padding: 0 16px;
 
@@ -285,8 +267,8 @@ GRID
 }
 
 .hall-card {
-  min-width: 300px;
-  max-width: 300px;
+  min-width: 260px;
+  max-width: 280px;
 
   background: white;
   border: 2px solid #e2e8f0;
@@ -323,9 +305,6 @@ GRID
 /*
 ========================================
 TABLE TREE
-кнопки одинаковой высоты
-текст в одну строку
-не обрезать
 ========================================
 */
 
@@ -335,31 +314,17 @@ TABLE TREE
 }
 
 .table-tree-row {
-  width: 100%;
-
-  min-height: 42px;
-  height: 42px;
-
   border: 2px solid #e2e8f0;
   border-radius: 10px;
-
-  padding: 0 10px;
-
+  padding: 9px 11px;
   background: #f8fafc;
 
-  font-size: 11px;
-  line-height: 1;
+  font-size: 14px;
   font-weight: 800;
 
   cursor: pointer;
 
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
+  min-height: 40px;
 
   transition: all 0.15s ease;
 }
@@ -382,6 +347,7 @@ HALL CANVAS
 */
 
 .hall-wrap {
+  max-width: 1200px;
   margin: 0 auto 80px;
   padding: 8px 16px;
   overflow: auto;
@@ -528,7 +494,6 @@ MOSAIC
 2 зала в строке
 справа info
 без лишнего белого поля
-НЕ ТРОГАТЬ
 ========================================
 */
 
@@ -821,18 +786,6 @@ MOBILE
 @media (max-width: 900px) {
   .top-info {
     grid-template-columns: 1fr;
-  }
-
-  .top-info,
-  .view-panel,
-  .hall-tabs,
-  .tabs-info,
-  .status,
-  .hall-wrap,
-  .hall-grid,
-  .hall-console {
-    width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
   }
 
   .all-halls {
