@@ -2,7 +2,7 @@
 
 /*
 ========================================
-Hand FIX | v1.6.4
+Tads FIX | v1.6.5
 ========================================
 */
 
@@ -240,7 +240,10 @@ TABS INFO
 */
 
 .tabs-info {
-  margin: 10px auto 10px;
+  width: 1200px;
+  max-width: 1200px;
+
+  margin: 10px auto;
   padding: 8px 16px;
 
   background: white;
@@ -248,20 +251,18 @@ TABS INFO
   border: 1px solid #dbe3ef;
   border-radius: 12px;
 
-  box-shadow:
-    0 4px 14px rgba(0,0,0,0.08);
-
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
+
+  flex-wrap: nowrap;     /* запрещает перенос элементов */
+  white-space: nowrap;   /* запрещает перенос текста */
+
   gap: 14px;
 
-  white-space: nowrap;
-  overflow-x: auto;
+  overflow-x: auto;      /* если не помещается — появляется скролл */
 
   font-size: 13px;
   font-weight: 800;
-  color: #0f172a;
 }
 
 /*
@@ -382,8 +383,12 @@ HALL CANVAS
 */
 
 .hall-wrap {
+  width: 1200px;
+  max-width: 1200px;
+
   margin: 0 auto 80px;
   padding: 8px 16px;
+
   overflow: auto;
 }
 
