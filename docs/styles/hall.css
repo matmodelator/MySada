@@ -2,7 +2,7 @@
 
 /*
 ========================================
-root into comment | v1.6.7
+hand fix mosaic & tabs | v1.6.8
 ========================================
 */
 
@@ -395,8 +395,8 @@ HALL CANVAS
 .hall-canvas {
   position: relative;
 
-  width: 1460px;
-  height: 1180px;
+  width: 1200px;
+  height: 800px;
 
   margin: 0;
 
@@ -406,9 +406,6 @@ HALL CANVAS
   border-radius: 14px;
 
   overflow: hidden;
-
-  transform: scale(var(--hall-scale));
-  transform-origin: top left;
 }
 
 /*
@@ -428,11 +425,12 @@ TABLE
   border: 2px solid #0284c7;
 
   font-weight: 800;
-  font-size: var(--table-font-size);
+
+  font-size: 13px;      /* было: var(--table-font-size) */
 
   cursor: pointer;
 
-  transform: scale(var(--table-scale));
+  transform: scale(0.85);   /* было: var(--table-scale) */
   transform-origin: center;
 
   transition: all 0.12s ease;
@@ -445,10 +443,8 @@ TABLE
 }
 
 .table-item:active {
-  transform:
-    scale(calc(var(--table-scale) * 0.95));
+  transform: scale(0.8);   /* 0.85 × 0.95 */
 }
-
 /*
 ========================================
 STATUS
@@ -513,11 +509,11 @@ CHAIRS
 .chair-dot {
   position: absolute;
 
-  width: var(--chair-size);
-  height: var(--chair-size);
+  width: 12px;
+  height: 12px;
 
-  margin-left: calc(var(--chair-size) / -2);
-  margin-top: calc(var(--chair-size) / -2);
+  margin-left: -6px;   /* 12 / 2 */
+  margin-top: -6px;    /* 12 / 2 */
 
   border-radius: 50%;
 
@@ -578,8 +574,8 @@ MOSAIC
 }
 
 .hall-scale-box {
-  width: calc(1460px * var(--all-halls-scale));
-  height: calc(1180px * var(--all-halls-scale));
+  width: 600px;
+  height: 500px;
   overflow: hidden;
 }
 
@@ -594,7 +590,7 @@ MOSAIC
   border: 2px solid #cbd5e1;
   border-radius: 14px;
 
-  transform: scale(var(--all-halls-scale));
+  transform: scale(0.42);
   transform-origin: top left;
 
   transition: all 0.15s ease;
