@@ -1023,6 +1023,14 @@ function setHallViewMode(mode) {
   hallViewMode =
     mode
 
+      const viewLabel =
+  document.querySelector('.view-label')
+
+if (viewLabel) {
+  viewLabel.textContent =
+    'View Mode: ' + mode
+}
+
   sessionStorage.setItem(
     'mysada_hall_view_mode',
     mode
@@ -1100,8 +1108,8 @@ function setHallViewMode(mode) {
   }
 
   setStatus(
-    'View mode: ' + mode
-  )
+  'Ready'
+)
 }
 
 /*
@@ -2313,7 +2321,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   fix View Mode  | v5.7.2
+   fix View Mode, Tabs info  | v5.7.3
   </div>
 
   <div class="row" id="build-down">
