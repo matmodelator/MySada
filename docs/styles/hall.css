@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix mosaic & tabs | v1.6.8
+hand fix padding | v1.6.9
 ========================================
 */
 
@@ -387,7 +387,7 @@ HALL CANVAS
   max-width: 1200px;
 
   margin: 0 auto 80px;
-  padding: 8px 16px;
+  /*padding: 8px 16px;*/
 
   overflow: auto;
 }
