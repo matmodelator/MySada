@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix padding | v1.6.9
+hand fix transform | v1.6.10
 ========================================
 */
 
@@ -400,6 +400,9 @@ HALL CANVAS
 
   margin: 0;
 
+  transform: scale(0.75);
+  transform-origin: top left;
+  
   background: white;
 
   border: 2px solid #cbd5e1;
