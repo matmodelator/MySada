@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix all-halls| v1.6.16
+никакого белого поля во всю ширину| v1.6.17
 ========================================
 */
 
@@ -541,13 +541,13 @@ MOSAIC
 */
 
 .all-halls {
-  width: 1130px;
-  margin: 0 auto 80px;
-  padding: 0;
+  display: inline-grid;
 
-  display: grid;
   grid-template-columns: repeat(2, 560px);
   gap: 10px;
+
+  margin: 0 auto 80px;
+  padding: 0;
 }
 
 .hall-block {
