@@ -1443,12 +1443,8 @@ function renderTableToCanvas(item, targetCanvas) {
   const y =
     Number(item.y || 0)
 
-  const width =
-    Number(item.width || 120)
-
-  const height =
-    Number(item.height || 120)
-
+  
+      
   const tableStatus =
     item.table_status || 'free'
 
@@ -1478,11 +1474,7 @@ function renderTableToCanvas(item, targetCanvas) {
   el.style.top =
     y + 'px'
 
-  el.style.width =
-    width + 'px'
-
-  el.style.height =
-    height + 'px'
+ 
 
   const label =
     document.createElement('div')
@@ -1497,10 +1489,10 @@ function renderTableToCanvas(item, targetCanvas) {
 
   if (targetCanvas === hallCanvas) {
     renderChairs(
-      el,
+       el,
       item,
-      width,
-      height
+      el.offsetWidth,
+      el.offsetHeight
     )
   }
 
@@ -2321,7 +2313,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   fix View Mode, Tabs info  | v5.7.3
+   fix Tables size  | v5.7.4
   </div>
 
   <div class="row" id="build-down">
