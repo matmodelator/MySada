@@ -1363,7 +1363,7 @@ function renderTable(item) {
 RENDER CHAIRS
 только Tabs
 ========================================
-*/
+
 
 function renderChairs(parent, table, width, height) {
   const seats =
@@ -1418,7 +1418,7 @@ function renderChairs(parent, table, width, height) {
 
     parent.appendChild(chair)
   }
-}
+} */
 
 /*
 ========================================
@@ -1477,24 +1477,27 @@ const y =
  
 
   const label =
-    document.createElement('div')
+  document.createElement('div')
 
-  label.className =
-    'table-label'
+label.className =
+  'table-label'
 
-  label.textContent =
-    item.name || 'Table'
+label.textContent =
+  (item.name || 'Table')
+  + ' · '
+  + getTableSeats(item)
+  + ' pax'
 
-  el.appendChild(label)
+el.appendChild(label)
 
-  if (targetCanvas === hallCanvas) {
+ /* if (targetCanvas === hallCanvas) {
     renderChairs(
        el,
       item,
       el.offsetWidth,
       el.offsetHeight
     )
-  }
+  }*/
 
   el.addEventListener(
     'click',
@@ -2313,7 +2316,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   fix Table scale & unfo  | v5.7.5
+  seats instead chairs  | v5.7.6
   </div>
 
   <div class="row" id="build-down">
