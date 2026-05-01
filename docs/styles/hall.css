@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix canvas scale| v1.6.13
+hand fix table scale| v1.6.12
 ========================================
 */
 
@@ -398,9 +398,8 @@ HALL CANVAS
   width: 1200px;
   height: 800px;
 
-  transform: scale(0.75);
+  margin: 0;
 
-  transform-origin: top left;
 
   
   background: white;
