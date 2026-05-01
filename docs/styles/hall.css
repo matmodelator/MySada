@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix mosaic 3 level box| v1.6.15
+hand fix all-halls| v1.6.16
 ========================================
 */
 
@@ -541,16 +541,12 @@ MOSAIC
 */
 
 .all-halls {
-  max-width: 1500px;
+  width: 1130px;
   margin: 0 auto 80px;
-  padding: 0px;
+  padding: 0;
 
   display: grid;
-
-  grid-template-columns: repeat(2, auto);
-
-  justify-content: center;
-
+  grid-template-columns: repeat(2, 560px);
   gap: 10px;
 }
 
