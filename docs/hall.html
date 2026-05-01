@@ -1440,11 +1440,23 @@ const layoutScale =
     ? 0.7
     : 0.35
 
+const hallTables =
+  tablesList.filter(table =>
+    table.hall_id === item.hall_id
+  )
+
+const minY =
+  Math.min(
+    ...hallTables.map(table =>
+      Number(table.y || 0) * layoutScale
+    )
+  )
+
 const x =
   Number(item.x || 0) * layoutScale
 
 const y =
-  Number(item.y || 0) * layoutScale
+  Number(item.y || 0) * layoutScale - minY
   
       
   const tableStatus =
@@ -2318,11 +2330,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-✅ в Tabs координаты столов уменьшатся до 70%
-✅ белое поле зала не сожмётся
-✅ размер столов не изменится
-✅ столы перестанут обрезаться справа/снизу
-✅ в Mosaic будет отдельный масштаб 0.35  | v5.7.8
+up tables   | v5.7.9
   </div>
 
   <div class="row" id="build-down">
