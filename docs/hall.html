@@ -1455,8 +1455,11 @@ const minY =
 const x =
   Number(item.x || 0) * layoutScale
 
+const topPadding =
+  20
+
 const y =
-  Number(item.y || 0) * layoutScale - minY
+  Number(item.y || 0) * layoutScale - minY + topPadding
   
       
   const tableStatus =
@@ -1496,7 +1499,7 @@ const y =
 label.className =
   'table-label'
 
-label.textContent =
+label.innerHTML =
   (item.name || 'Table')
   + '<br>'
   + getTableSeats(item)
@@ -2330,7 +2333,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-up tables   | v5.7.9
+top padding/ table title  | v5.7.10
   </div>
 
   <div class="row" id="build-down">
