@@ -3,8 +3,11 @@
 /*
 ========================================
 MOSAIC
-2 зала в строке
-без лишних белых полей| v1.7.0
+2 карточки в строке
+ширина строки фиксирована
+расположение строго под top-info
+никаких растяжений
+никаких случайных переносов| v1.7.1
 ========================================
 */
 
@@ -536,22 +539,42 @@ CHAIRS
 ========================================
 MOSAIC
 2 зала в строке
-без лишних белых полей
+строго под top-info
+без растяжения
 ========================================
 */
 
 .all-halls {
-  width: fit-content;
-  margin: 0 auto 80px;
+
+  /* ключевое — привязка под top-info */
+
+  width: 100%;
+
+  margin: 10px 0 80px 0;
   padding: 0;
 
   display: grid;
-  grid-template-columns: repeat(2, 560px);
+
+  /* строго 2 карточки */
+
+  grid-template-columns: 560px 560px;
+
+  /* центрирование под top-info */
+
+  justify-content: center;
+
   gap: 10px;
+
+  box-sizing: border-box;
 }
 
+
+/* карточка */
+
 .hall-block {
+
   width: 560px;
+
   padding: 0;
   margin: 0;
 
@@ -562,37 +585,43 @@ MOSAIC
   cursor: pointer;
 
   display: grid;
+
   grid-template-columns: 400px 150px;
+
   grid-template-rows: auto 480px;
+
   gap: 10px;
 
   overflow: hidden;
+
+  box-sizing: border-box;
 }
 
-/* title только над залом, не на всю карточку */
+
+/* title только над залом */
 
 .hall-block-title {
+
   grid-column: 1;
-  grid-row: 1;
 
   width: 400px;
-  max-width: 400px;
 
   margin: 0;
   padding: 0 0 4px 0;
 
   font-size: 16px;
   font-weight: 900;
-  line-height: 1.1;
 
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-/* окно под зал */
+
+/* окно зала */
 
 .hall-scale-box {
+
   grid-column: 1;
   grid-row: 2;
 
@@ -605,9 +634,11 @@ MOSAIC
   overflow: hidden;
 }
 
+
 /* сам зал */
 
 .hall-canvas-all {
+
   position: relative;
 
   width: 400px;
@@ -622,26 +653,17 @@ MOSAIC
   border-radius: 14px;
 
   overflow: hidden;
-
-  transition: border-color 0.15s ease;
 }
 
-.hall-canvas-all:hover {
-  border-color: #2563eb;
-}
-
-.hall-block.active .hall-canvas-all {
-  border-color: #2563eb;
-}
 
 /* info справа */
 
 .hall-mosaic-info {
+
   grid-column: 2;
   grid-row: 2;
 
   width: 150px;
-  height: fit-content;
 
   margin: 0;
   padding: 10px;
@@ -653,10 +675,8 @@ MOSAIC
 
   font-size: 12px;
   font-weight: 800;
-  color: #0f172a;
-  line-height: 1.45;
 
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /*
