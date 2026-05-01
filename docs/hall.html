@@ -717,13 +717,13 @@ function getHallInfoHtml(hallId) {
 
   return (
     'Tables: ' + hallTables.length
-    + 'Free: ' + free
-    + 'Occupied: ' + occupied
-    + 'Reserved: ' + reserved
-    + 'Cleaning: ' + cleaning
-    + 'Chairs: ' + chairs
-    + 'Clients: ' + clients
-    + 'Waiters: ' + waiters
+    + '/  Free: ' + free
+    + '/  Occupied: ' + occupied
+    + '/  Reserved: ' + reserved
+    + '/  Cleaning: ' + cleaning
+    + '/  Chairs: ' + chairs
+    + '/  Seats: ' + clients
+    + '/  Waiters: ' + waiters
   )
 }
 
@@ -1436,13 +1436,27 @@ function renderTableToCanvas(item, targetCanvas) {
     item.shape || 'square'
 
 const layoutScale =
-  0.75
+  0.7
+
+const canvasRect =
+  targetCanvas.getBoundingClientRect()
+
+const parentRect =
+  targetCanvas.offsetParent
+    ? targetCanvas.offsetParent.getBoundingClientRect()
+    : { left: 0, top: 0 }
+
+const offsetX =
+  canvasRect.left - parentRect.left
+
+const offsetY =
+  canvasRect.top - parentRect.top
 
 const x =
-  Number(item.x || 0) * layoutScale
+  offsetX + Number(item.x || 0) * layoutScale
 
 const y =
-  Number(item.y || 0) * layoutScale
+  offsetY + Number(item.y || 0) * layoutScale
   
       
   const tableStatus =
@@ -1475,7 +1489,7 @@ const y =
     y + 'px'
 
  
-
+/* Table Title */
   const label =
   document.createElement('div')
 
@@ -1484,9 +1498,9 @@ label.className =
 
 label.textContent =
   (item.name || 'Table')
-  + ' · '
+  + '<br>'
   + getTableSeats(item)
-  + ' pax'
+  + 'seats'
 
 el.appendChild(label)
 
@@ -2316,7 +2330,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-  seats instead chairs  | v5.7.6
+  scale fix  | v5.7.7
   </div>
 
   <div class="row" id="build-down">
