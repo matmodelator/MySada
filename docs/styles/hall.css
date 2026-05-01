@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix table scale| v1.6.12
+hand fix mosaic scale| v1.6.14
 ========================================
 */
 
@@ -130,22 +130,7 @@ Select  | Hall
   font-size: 14px;
 }
 
-/*
-========================================
-МАСШТАБ
-========================================
 
-
-:root {
-  --hall-scale: 0.75;
-  --table-scale: 0.85;
-  --table-font-size: 13px;
-
-  --chair-size: 12px;
-
-  --all-halls-scale: 0.42;
-}
-*/
 /*
 ========================================
 VIEW SWITCH
@@ -525,7 +510,7 @@ SHAPES
 ========================================
 CHAIRS
 ========================================
-*/
+
 
 .chair-dot {
   position: absolute;
@@ -543,6 +528,7 @@ CHAIRS
 
   pointer-events: none;
 }
+*/
 
 /*
 ========================================
@@ -595,24 +581,22 @@ MOSAIC
 }
 
 .hall-scale-box {
-  width: 600px;
-  height: 500px;
+  width: 590px;
+  height: 480px;
   overflow: hidden;
 }
 
 .hall-canvas-all {
   position: relative;
 
-  width: 1460px;
-  height: 1180px;
+  width: 500px;
+  height: 480px;
 
   background: white;
 
   border: 2px solid #cbd5e1;
   border-radius: 14px;
 
-  transform: scale(0.42);
-  transform-origin: top left;
 
   transition: all 0.15s ease;
 }
