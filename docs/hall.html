@@ -1436,27 +1436,15 @@ function renderTableToCanvas(item, targetCanvas) {
     item.shape || 'square'
 
 const layoutScale =
-  0.7
-
-const canvasRect =
-  targetCanvas.getBoundingClientRect()
-
-const parentRect =
-  targetCanvas.offsetParent
-    ? targetCanvas.offsetParent.getBoundingClientRect()
-    : { left: 0, top: 0 }
-
-const offsetX =
-  canvasRect.left - parentRect.left
-
-const offsetY =
-  canvasRect.top - parentRect.top
+  targetCanvas === hallCanvas
+    ? 0.7
+    : 0.35
 
 const x =
-  offsetX + Number(item.x || 0) * layoutScale
+  Number(item.x || 0) * layoutScale
 
 const y =
-  offsetY + Number(item.y || 0) * layoutScale
+  Number(item.y || 0) * layoutScale
   
       
   const tableStatus =
@@ -2330,7 +2318,11 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-  scale fix  | v5.7.7
+✅ в Tabs координаты столов уменьшатся до 70%
+✅ белое поле зала не сожмётся
+✅ размер столов не изменится
+✅ столы перестанут обрезаться справа/снизу
+✅ в Mosaic будет отдельный масштаб 0.35  | v5.7.8
   </div>
 
   <div class="row" id="build-down">
