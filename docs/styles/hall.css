@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix mosaic scale| v1.6.14
+hand fix mosaic 3 level box| v1.6.15
 ========================================
 */
 
@@ -543,17 +543,21 @@ MOSAIC
 .all-halls {
   max-width: 1500px;
   margin: 0 auto 80px;
-  padding: 8px;
+  padding: 0px;
 
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
+
+  grid-template-columns: repeat(2, auto);
+
+  justify-content: center;
+
+  gap: 10px;
 }
 
 .hall-block {
   background: white;
   border-radius: 16px;
-  padding: 14px;
+  padding: 0px;
 
   box-shadow:
     0 4px 14px rgba(0,0,0,0.08);
@@ -561,8 +565,8 @@ MOSAIC
   cursor: pointer;
 
   display: grid;
-  grid-template-columns: auto 170px;
-  gap: 12px;
+  grid-template-columns: 400px 150px;
+  gap: 10px;
 
   transition: all 0.15s ease;
 }
@@ -581,7 +585,7 @@ MOSAIC
 }
 
 .hall-scale-box {
-  width: 590px;
+  width: 400px;
   height: 480px;
   overflow: hidden;
 }
@@ -589,7 +593,7 @@ MOSAIC
 .hall-canvas-all {
   position: relative;
 
-  width: 500px;
+  width: 400px;
   height: 480px;
 
   background: white;
