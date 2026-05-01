@@ -2,7 +2,7 @@
 
 /*
 ========================================
-никакого белого поля во всю ширину| v1.6.17
+hall-block-title| v1.6.18
 ========================================
 */
 
@@ -573,7 +573,14 @@ MOSAIC
 }
 
 .hall-block-title {
-  grid-column: 1 / -1;
+
+  grid-column: 1;
+
+  width: 400px;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   font-size: 18px;
   font-weight: 900;
