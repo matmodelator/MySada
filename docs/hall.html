@@ -717,13 +717,13 @@ function getHallInfoHtml(hallId) {
 
   return (
     'Tables: ' + hallTables.length
-    + '<br>Free: ' + free
-    + '<br>Occupied: ' + occupied
-    + '<br>Reserved: ' + reserved
-    + '<br>Cleaning: ' + cleaning
-    + '<br>Chairs: ' + chairs
-    + '<br>Clients: ' + clients
-    + '<br>Waiters in shift: ' + waiters
+    + 'Free: ' + free
+    + 'Occupied: ' + occupied
+    + 'Reserved: ' + reserved
+    + 'Cleaning: ' + cleaning
+    + 'Chairs: ' + chairs
+    + 'Clients: ' + clients
+    + 'Waiters: ' + waiters
   )
 }
 
@@ -1107,9 +1107,7 @@ if (viewLabel) {
     renderConsole()
   }
 
-  setStatus(
-  'Ready'
-)
+  
 }
 
 /*
@@ -1437,12 +1435,14 @@ function renderTableToCanvas(item, targetCanvas) {
   const shape =
     item.shape || 'square'
 
-  const x =
-    Number(item.x || 0)
+const layoutScale =
+  0.75
 
-  const y =
-    Number(item.y || 0)
+const x =
+  Number(item.x || 0) * layoutScale
 
+const y =
+  Number(item.y || 0) * layoutScale
   
       
   const tableStatus =
@@ -2313,7 +2313,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   fix Tables size  | v5.7.4
+   fix Table scale & unfo  | v5.7.5
   </div>
 
   <div class="row" id="build-down">
