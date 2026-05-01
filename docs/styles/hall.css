@@ -2,7 +2,7 @@
 
 /*
 ========================================
-hand fix transform | v1.6.10
+hand fix table size| v1.6.11
 ========================================
 */
 
@@ -400,8 +400,7 @@ HALL CANVAS
 
   margin: 0;
 
-  transform: scale(0.75);
-  transform-origin: top left;
+
   
   background: white;
 
@@ -420,7 +419,30 @@ TABLE
 .table-item {
   position: absolute;
 
-  display: flex;
+/*    РАЗМЕРЫ СТОЛОВ
+   базовый размер системы = 120 */
+
+.table-round {
+
+  width: 120px;
+  height: 120px;
+
+  border-radius: 50%;
+}
+
+.table-square {
+
+  width: 120px;
+  height: 120px;
+}
+
+.table-rect {
+
+  width: 180px;
+  height: 120px;
+}
+
+    display: flex;
   align-items: center;
   justify-content: center;
 
@@ -433,7 +455,7 @@ TABLE
 
   cursor: pointer;
 
-  transform: scale(0.85);   /* было: var(--table-scale) */
+  transform: scale(0.8);   /* было: var(--table-scale) */
   transform-origin: center;
 
   transition: all 0.12s ease;
