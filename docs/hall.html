@@ -1199,11 +1199,6 @@ function renderAllHalls() {
     const hallId =
       hall.hall_id || hall.id
 
-    const block =
-      document.createElement('section')
-
-    block.className =
-      'hall-block'
 
     if (hallId === currentHallId) {
       block.classList.add('active')
@@ -1235,39 +1230,28 @@ function renderAllHalls() {
 
     scaleBox.appendChild(canvas)
 
-   /* const info =
-      document.createElement('div')
-
-    info.className =
-      'hall-mosaic-info'
-
-    info.innerHTML =
-      getHallInfoHtml(hallId)
-
-    block.appendChild(info) */
-    block.appendChild(title)
-    block.appendChild(scaleBox)
+ 
+    allHalls.appendChild(title)
+    allHalls.appendChild(scaleBox)
     
 
-    allHalls.appendChild(block)
+    scaleBox.addEventListener(
+  'click',
+  () => {
+    setCurrentHall(hallId)
+  }
+)
 
-    block.addEventListener(
-      'click',
-      () => {
-        setCurrentHall(hallId)
-      }
-    )
+scaleBox.addEventListener(
+  'dblclick',
+  event => {
+    event.stopPropagation()
 
-    block.addEventListener(
-      'dblclick',
-      event => {
-        event.stopPropagation()
+    setCurrentHall(hallId)
 
-        setCurrentHall(hallId)
-
-        setHallViewMode('tabs')
-      }
-    )
+    setHallViewMode('tabs')
+  }
+)
 
     /*tablesList
       .filter(
@@ -2334,7 +2318,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-fix  error minus Tables | v5.7.14
+ minus Block | v5.7.15
   </div>
 
   <div class="row" id="build-down">
