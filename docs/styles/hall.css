@@ -1,8 +1,7 @@
 
 /*
 ========================================
-MOSAIC
-width задаётся только из JS| v1.7.6
+back tables| v1.7.7
 ========================================
 */
 
@@ -417,11 +416,20 @@ TABLE
 
   cursor: pointer;
 
-  transform: scale(0.75);
-  transform-origin: center;
+/* размер столов в tabs */
 
-  transition: all 0.12s ease;
+.table-item {
+  transform-origin: center;
+  transform: scale(0.75);
 }
+
+/* размер столов в mosaic */
+
+.hall-canvas-all .table-item {
+  transform-origin: top left;
+  transform: scale(var(--mosaic-scale));
+}
+
 
 /* РАЗМЕРЫ СТОЛОВ
    базовый размер системы = 120 */
@@ -582,7 +590,7 @@ MOSAIC
      scaleBox.style.width = boxWidth + 'px'
   */
 
-  height: 480px;           /* высота зала */
+  height: 400px;           /* высота зала */
 
   margin: 0;
 
