@@ -1198,9 +1198,7 @@ function renderAllHalls() {
 
 
   /*
-  ========================================
   ШИРИНА ОДНОГО ЗАЛА
-  ========================================
   */
 
   const hallsCount =
@@ -1219,9 +1217,7 @@ function renderAllHalls() {
 
 
     /*
-    ========================================
     SCALE BOX
-    ========================================
     */
 
     const scaleBox =
@@ -1245,9 +1241,7 @@ function renderAllHalls() {
 
 
     /*
-    ========================================
     TITLE ВНУТРИ SCALE
-    ========================================
     */
 
     const title =
@@ -1257,14 +1251,14 @@ function renderAllHalls() {
       'hall-block-title'
 
     /*
-    ВЫВОД ШИРИНЫ В TITLE
-    */
+    ВЫВОД ШИРИНЫ В TITLE — не убивать!!!
+    
 
     title.textContent =
       (hall.name || hallId)
       + ' · '
       + boxWidth
-      + ' px'
+      + ' px'*/
 
 
 
@@ -1609,7 +1603,6 @@ function renderTableToCanvas(item, targetCanvas) {
   el.style.top =
     y + 'px'
 
-}
 
 /* передаем масштаб mosaic в css */
 
@@ -2284,7 +2277,7 @@ viewGridBtn.addEventListener(
 viewAllBtn.addEventListener(
   'click',
   () => {
-    setHallViewMode('all')
+    setHallViewMode('mosaic')
   }
 )
 
@@ -2467,7 +2460,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- TABLE TO CANVAS/ передаем масштаб mosaic в css | v5.7.19
+ siyntax | v5.7.20
   </div>
 
   <div class="row" id="build-down">
