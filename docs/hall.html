@@ -1079,7 +1079,7 @@ if (viewLabel) {
 
   allHalls.classList.toggle(
     'hidden',
-    mode !== 'mosaic'
+    mode !== 'all'
   )
 
   hallConsole.classList.toggle(
@@ -1245,14 +1245,14 @@ function renderAllHalls() {
 
     /*
     ВЫВОД ШИРИНЫ В TITLE - не убивать!!!
-    
+    */
 
     title.textContent =
       (hall.name || hallId)
       + ' · '
       + boxWidth
       + ' px'
-*/
+
 
 
     /*      CANVAS      */
@@ -1313,7 +1313,7 @@ tablesList
     )
   })
 
-  })
+
 
 
   setStatus(
@@ -2373,7 +2373,7 @@ init()
 
   <div class="row" id="build-top">
   MOSAIC
-Масштаб и привязка — внутри renderTableToCanvas | v5.8.0
+Title | v5.8.1
   </div>
 
   <div class="row" id="build-down">
