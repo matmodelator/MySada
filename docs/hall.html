@@ -1178,6 +1178,7 @@ function renderCurrentHall() {
 RENDER MOSAIC
 title внутри scale
 квадраты подряд
+ширина = 1200 / число залов
 ========================================
 */
 
@@ -1194,13 +1195,33 @@ function renderAllHalls() {
     return
   }
 
+
+  /*
+  ========================================
+  ШИРИНА ОДНОГО ЗАЛА
+  ========================================
+  */
+
+  const hallsCount =
+    hallsList.length || 1
+
+  const boxWidth =
+    Math.floor(1200 / hallsCount)
+
+
+
   hallsList.forEach(hall => {
 
     const hallId =
       hall.hall_id || hall.id
 
 
-    /* SCALE BOX */
+
+    /*
+    ========================================
+    SCALE BOX
+    ========================================
+    */
 
     const scaleBox =
       document.createElement('div')
@@ -1208,12 +1229,25 @@ function renderAllHalls() {
     scaleBox.className =
       'hall-scale-box'
 
+    /*
+    ШИРИНА = 1200 / число залов
+    */
+
+    scaleBox.style.width =
+      boxWidth + 'px'
+
+
     if (hallId === currentHallId) {
       scaleBox.classList.add('active')
     }
 
 
-    /* TITLE ВНУТРИ SCALE */
+
+    /*
+    ========================================
+    TITLE ВНУТРИ SCALE
+    ========================================
+    */
 
     const title =
       document.createElement('div')
@@ -1221,11 +1255,23 @@ function renderAllHalls() {
     title.className =
       'hall-block-title'
 
+    /*
+    ВЫВОД ШИРИНЫ В TITLE
+    */
+
     title.textContent =
-      hall.name || hallId
+      (hall.name || hallId)
+      + ' · '
+      + boxWidth
+      + ' px'
 
 
-    /* CANVAS */
+
+    /*
+    ========================================
+    CANVAS
+    ========================================
+    */
 
     const canvas =
       document.createElement('div')
@@ -1237,7 +1283,12 @@ function renderAllHalls() {
       hallId
 
 
-    /* СОБИРАЕМ */
+
+    /*
+    ========================================
+    СОБИРАЕМ
+    ========================================
+    */
 
     scaleBox.appendChild(title)
     scaleBox.appendChild(canvas)
@@ -1245,7 +1296,12 @@ function renderAllHalls() {
     allHalls.appendChild(scaleBox)
 
 
-    /* EVENTS */
+
+    /*
+    ========================================
+    EVENTS
+    ========================================
+    */
 
     scaleBox.addEventListener(
       'click',
@@ -1284,8 +1340,12 @@ function renderAllHalls() {
 
   })
 
+
   setStatus(
-    'Mosaic rendered: ' + hallsList.length
+    'Mosaic rendered: '
+    + hallsList.length
+    + ' | boxWidth: '
+    + boxWidth
   )
 
 }
