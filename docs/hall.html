@@ -1244,9 +1244,10 @@ function renderAllHalls() {
     info.innerHTML =
       getHallInfoHtml(hallId)
 
-    block.appendChild(title) */
+    block.appendChild(info) */
+    block.appendChild(title)
     block.appendChild(scaleBox)
-    block.appendChild(info)
+    
 
     allHalls.appendChild(block)
 
@@ -2333,7 +2334,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-remove info-mosaic  | v5.7.11
+fix  block.appendChild(info) | v5.7.12
   </div>
 
   <div class="row" id="build-down">
