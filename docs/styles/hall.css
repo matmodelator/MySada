@@ -3,11 +3,7 @@
 /*
 ========================================
 MOSAIC
-2 карточки в строке
-ширина строки фиксирована
-расположение строго под top-info
-никаких растяжений
-никаких случайных переносов| v1.7.1
+все в линию| v1.7.2
 ========================================
 */
 
@@ -544,55 +540,38 @@ MOSAIC
 ========================================
 */
 
+/* все в линию */
 .all-halls {
+  display: flex;
 
-  /* ключевое — привязка под top-info */
-
-  width: 100%;
-
-  margin: 10px 0 80px 0;
-  padding: 0;
-
-  display: grid;
-
-  /* строго 2 карточки */
-
-  grid-template-columns: 560px 560px;
-
-  /* центрирование под top-info */
-
-  justify-content: center;
+  flex-direction: row;
 
   gap: 10px;
 
-  box-sizing: border-box;
+  margin: 10px 0 80px 0;
+
+  padding: 0;
+
+  overflow-x: auto;
 }
 
 
 /* карточка */
-
 .hall-block {
 
-  width: 560px;
+  display: flex;
+  flex-direction: column;
+
+  width: 300px;
 
   padding: 0;
   margin: 0;
 
   background: transparent;
+
   box-shadow: none;
-  border-radius: 0;
 
   cursor: pointer;
-
-  display: grid;
-
-  grid-template-columns: 400px 150px;
-
-  grid-template-rows: auto 480px;
-
-  gap: 10px;
-
-  overflow: hidden;
 
   box-sizing: border-box;
 }
@@ -641,22 +620,22 @@ MOSAIC
 
   position: relative;
 
-  width: 400px;
-  height: 480px;
+  width: 300px;
 
-  margin: 0;
-  padding: 0;
+  height: 480px;
 
   background: white;
 
   border: 2px solid #cbd5e1;
+
   border-radius: 14px;
 
-  overflow: hidden;
+  box-sizing: border-box;
+
 }
 
 
-/* info справа */
+/* info справа 
 
 .hall-mosaic-info {
 
@@ -677,7 +656,7 @@ MOSAIC
   font-weight: 800;
 
   box-sizing: border-box;
-}
+} */
 
 /*
 ========================================
