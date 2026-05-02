@@ -1079,7 +1079,7 @@ if (viewLabel) {
 
   allHalls.classList.toggle(
     'hidden',
-    mode !== 'all'
+    mode !== 'mosaic'
   )
 
   hallConsole.classList.toggle(
@@ -1197,11 +1197,7 @@ function renderAllHalls() {
   }
 
 
-  /*
-  ========================================
-  ШИРИНА ОДНОГО ЗАЛА
-  ========================================
-  */
+  /*   ШИРИНА ОДНОГО ЗАЛА  */
 
   const hallsCount =
     hallsList.length || 1
@@ -1218,11 +1214,7 @@ function renderAllHalls() {
 
 
 
-    /*
-    ========================================
-    SCALE BOX
-    ========================================
-    */
+    /*    SCALE BOX    */
 
     const scaleBox =
       document.createElement('div')
@@ -1230,9 +1222,7 @@ function renderAllHalls() {
     scaleBox.className =
       'hall-scale-box'
 
-    /*
-    ШИРИНА = 1200 / число залов
-    */
+    /*     ШИРИНА = 1200 / число залов    */
 
     scaleBox.style.width =
       boxWidth + 'px'
@@ -1244,11 +1234,8 @@ function renderAllHalls() {
 
 
 
-    /*
-    ========================================
-    TITLE ВНУТРИ SCALE
-    ========================================
-    */
+    /*      TITLE ВНУТРИ SCALE     */
+   
 
     const title =
       document.createElement('div')
@@ -1257,22 +1244,18 @@ function renderAllHalls() {
       'hall-block-title'
 
     /*
-    ВЫВОД ШИРИНЫ В TITLE
-    */
+    ВЫВОД ШИРИНЫ В TITLE - не убивать!!!
+    
 
     title.textContent =
       (hall.name || hallId)
       + ' · '
       + boxWidth
       + ' px'
+*/
 
 
-
-    /*
-    ========================================
-    CANVAS
-    ========================================
-    */
+    /*      CANVAS      */
 
     const canvas =
       document.createElement('div')
@@ -1285,11 +1268,7 @@ function renderAllHalls() {
 
 
 
-    /*
-    ========================================
-    СОБИРАЕМ
-    ========================================
-    */
+    /*     СОБИРАЕМ     */
 
     scaleBox.appendChild(title)
     scaleBox.appendChild(canvas)
@@ -1298,11 +1277,7 @@ function renderAllHalls() {
 
 
 
-    /*
-    ========================================
-    EVENTS
-    ========================================
-    */
+    /*       EVENTS       */
 
     scaleBox.addEventListener(
       'click',
@@ -1325,19 +1300,18 @@ function renderAllHalls() {
     )
 
 
-    /*
-    tablesList
-      .filter(
-        table =>
-          table.hall_id === hallId
-      )
-      .forEach(table => {
-        renderTableToCanvas(
-          table,
-          canvas
-        )
-      })
-    */
+    /* вставляем столы внутрь зала mosaic */
+
+tablesList
+  .filter(table =>
+    table.hall_id === hallId
+  )
+  .forEach(table => {
+    renderTableToCanvas(
+      table,
+      canvas
+    )
+  })
 
   })
 
@@ -1503,7 +1477,7 @@ function renderTableToCanvas(item, targetCanvas) {
 const layoutScale =
   targetCanvas === hallCanvas
     ? 0.7
-    : 0.35
+    : 0.2
 
 const hallTables =
   tablesList.filter(table =>
@@ -2398,10 +2372,8 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- RENDER MOSAIC
-title внутри scale
-квадраты подряд
-ширина = 1200 / число залов | v5.7.17
+  MOSAIC
+Масштаб и привязка — внутри renderTableToCanvas | v5.8.0
   </div>
 
   <div class="row" id="build-down">
