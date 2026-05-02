@@ -1611,6 +1611,20 @@ function renderTableToCanvas(item, targetCanvas) {
 
 }
 
+/* передаем масштаб mosaic в css */
+
+if (isMosaic) {
+
+  targetCanvas.style.setProperty(
+
+    '--mosaic-scale',
+
+    layoutScale
+
+  )
+
+}
+      
  
 /* Table Title */
   const label =
@@ -2453,7 +2467,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- TABLE TO CANVAS/ tabs or mosaic | v5.7.18
+ TABLE TO CANVAS/ передаем масштаб mosaic в css | v5.7.19
   </div>
 
   <div class="row" id="build-down">
