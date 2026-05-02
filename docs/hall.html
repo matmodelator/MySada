@@ -1309,7 +1309,8 @@ tablesList
   .forEach(table => {
     renderTableToCanvas(
       table,
-      canvas
+      canvas,
+               boxWidth / 1460
     )
   })
 
@@ -1467,7 +1468,7 @@ RENDER TABLE TO CANVAS
 ========================================
 */
 
-function renderTableToCanvas(item, targetCanvas) {
+function renderTableToCanvas(item, targetCanvas, mosaicScale = 1) {
   const el =
     document.createElement('div')
 
@@ -1524,11 +1525,17 @@ const y =
   el.dataset.tableId =
     item.table_id
 
-  el.style.left =
-    x + 'px'
+  tableEl.style.left =
+  (Number(item.x) * mosaicScale) + 'px'
 
-  el.style.top =
-    y + 'px'
+  tableEl.style.top =
+  (Number(item.y) * mosaicScale) + 'px'
+
+  
+      tableEl.style.transform =
+      'scale(' + mosaicScale + ')'
+      tableEl.style.transformOrigin =
+      'top left'   
 
  
 /* Table Title */
@@ -2373,7 +2380,7 @@ init()
 
   <div class="row" id="build-top">
   MOSAIC
-скобки | v5.8.2
+renderTableToCanvas | v5.8.3
   </div>
 
   <div class="row" id="build-down">
