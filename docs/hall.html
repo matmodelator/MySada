@@ -1176,17 +1176,16 @@ function renderCurrentHall() {
 /*
 ========================================
 RENDER MOSAIC
-двойной клик по залу = перейти в Tabs
-справа info
+title внутри scale
+квадраты подряд
 ========================================
 */
 
 function renderAllHalls() {
-  allHalls.innerHTML =
-    ''
 
-  activeTable =
-    null
+  allHalls.innerHTML = ''
+
+  activeTable = null
 
   dialog.classList.add('hidden')
 
@@ -1196,13 +1195,25 @@ function renderAllHalls() {
   }
 
   hallsList.forEach(hall => {
+
     const hallId =
       hall.hall_id || hall.id
 
 
+    /* SCALE BOX */
+
+    const scaleBox =
+      document.createElement('div')
+
+    scaleBox.className =
+      'hall-scale-box'
+
     if (hallId === currentHallId) {
-      block.classList.add('active')
+      scaleBox.classList.add('active')
     }
+
+
+    /* TITLE ВНУТРИ SCALE */
 
     const title =
       document.createElement('div')
@@ -1213,11 +1224,8 @@ function renderAllHalls() {
     title.textContent =
       hall.name || hallId
 
-    const scaleBox =
-      document.createElement('div')
 
-    scaleBox.className =
-      'hall-scale-box'
+    /* CANVAS */
 
     const canvas =
       document.createElement('div')
@@ -1228,32 +1236,40 @@ function renderAllHalls() {
     canvas.dataset.hallId =
       hallId
 
+
+    /* СОБИРАЕМ */
+
+    scaleBox.appendChild(title)
     scaleBox.appendChild(canvas)
 
- 
-    allHalls.appendChild(title)
     allHalls.appendChild(scaleBox)
-    
+
+
+    /* EVENTS */
 
     scaleBox.addEventListener(
-  'click',
-  () => {
-    setCurrentHall(hallId)
-  }
-)
+      'click',
+      () => {
+        setCurrentHall(hallId)
+      }
+    )
 
-scaleBox.addEventListener(
-  'dblclick',
-  event => {
-    event.stopPropagation()
+    scaleBox.addEventListener(
+      'dblclick',
+      event => {
 
-    setCurrentHall(hallId)
+        event.stopPropagation()
 
-    setHallViewMode('tabs')
-  }
-)
+        setCurrentHall(hallId)
 
-    /*tablesList
+        setHallViewMode('tabs')
+
+      }
+    )
+
+
+    /*
+    tablesList
       .filter(
         table =>
           table.hall_id === hallId
@@ -1263,12 +1279,15 @@ scaleBox.addEventListener(
           table,
           canvas
         )
-      })*/
+      })
+    */
+
   })
 
   setStatus(
     'Mosaic rendered: ' + hallsList.length
   )
+
 }
 
 /*
@@ -2318,7 +2337,9 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- minus Block | v5.7.15
+ RENDER MOSAIC
+title внутри scale
+квадраты подряд | v5.7.16
   </div>
 
   <div class="row" id="build-down">
