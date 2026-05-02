@@ -1,7 +1,7 @@
 
 /*
 ========================================
-back tables| v1.7.7
+НЕ передаем масштаб mosaic в css| v1.7.8
 ========================================
 */
 
@@ -423,12 +423,12 @@ TABLE
   transform: scale(0.75);
 }
 
-/* размер столов в mosaic */
+/* размер столов в mosaic 
 
 .hall-canvas-all .table-item {
   transform-origin: top left;
   transform: scale(var(--mosaic-scale));
-}
+}*/
 
 
 /* РАЗМЕРЫ СТОЛОВ
