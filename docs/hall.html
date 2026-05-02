@@ -1325,7 +1325,7 @@ function renderAllHalls() {
     )
 
 
-    /*
+
     tablesList
       .filter(
         table =>
@@ -1337,7 +1337,7 @@ function renderAllHalls() {
           canvas
         )
       })
-    */
+    
 
   })
 
@@ -1494,39 +1494,89 @@ RENDER TABLE TO CANVAS
 */
 
 function renderTableToCanvas(item, targetCanvas) {
+
   const el =
     document.createElement('div')
 
   const shape =
     item.shape || 'square'
 
-const layoutScale =
-  targetCanvas === hallCanvas
-    ? 0.7
-    : 0.35
 
-const hallTables =
-  tablesList.filter(table =>
-    table.hall_id === item.hall_id
-  )
+  /* определяем режим: tabs или mosaic */
 
-const minY =
-  Math.min(
-    ...hallTables.map(table =>
-      Number(table.y || 0) * layoutScale
+  const isMosaic =
+    targetCanvas.classList.contains('hall-canvas-all')
+
+
+  /* ширина одного зала в mosaic = 1200 / число залов */
+
+  const mosaicTotalWidth =
+    1200
+
+  const hallsCount =
+    hallsList.length || 1
+
+  const mosaicHallWidth =
+    mosaicTotalWidth / hallsCount
+
+
+  /* базовая ширина исходного зала */
+
+  const baseHallWidth =
+    1460
+
+
+  /* масштаб координат */
+
+  const layoutScale =
+    isMosaic
+      ? mosaicHallWidth / baseHallWidth
+      : 0.7
+
+
+  /* все столы текущего зала */
+
+  const hallTables =
+    tablesList.filter(table =>
+      table.hall_id === item.hall_id
     )
-  )
 
-const x =
-  Number(item.x || 0) * layoutScale
 
-const topPadding =
-  20
+  /* верхний стол */
 
-const y =
-  Number(item.y || 0) * layoutScale - minY + topPadding
-  
-      
+  const minY =
+    Math.min(
+      ...hallTables.map(table =>
+        Number(table.y || 0) * layoutScale
+      )
+    )
+
+
+  /* отступы */
+
+  const topPadding =
+    isMosaic
+      ? 4
+      : 20
+
+  const leftPadding =
+    0
+
+
+  /* финальные координаты */
+
+  const x =
+    Number(item.x || 0) * layoutScale
+    + leftPadding
+
+  const y =
+    Number(item.y || 0) * layoutScale
+    - minY
+    + topPadding
+
+
+  /* статус и форма */
+
   const tableStatus =
     item.table_status || 'free'
 
@@ -1541,20 +1591,25 @@ const y =
     shapeClass =
       'table-rect'
 
+
   el.className =
     'table-item '
     + shapeClass
     + ' table-'
     + tableStatus
 
+
   el.dataset.tableId =
     item.table_id
+
 
   el.style.left =
     x + 'px'
 
   el.style.top =
     y + 'px'
+
+}
 
  
 /* Table Title */
@@ -2398,10 +2453,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- RENDER MOSAIC
-title внутри scale
-квадраты подряд
-ширина = 1200 / число залов | v5.7.17
+ TABLE TO CANVAS/ tabs or mosaic | v5.7.18
   </div>
 
   <div class="row" id="build-down">
