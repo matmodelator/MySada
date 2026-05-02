@@ -2,7 +2,7 @@
 /*
 ========================================
 MOSAIC
-как TOP INFO:| v1.8.2
+hall-scale-box:| v1.8.3
 ========================================
 */
 
@@ -597,23 +597,23 @@ MOSAIC
 
 .hall-scale-box {
 
-  display: inline-block;   /* блоки идут подряд */
+  /* flex-элемент, не растягивается и не сжимается */
+
+  flex: 0 0 auto;
 
   /* width задаётся ТОЛЬКО из JS:
      scaleBox.style.width = boxWidth + 'px'
   */
 
-  height: 480px;           /* высота зала */
+  height: 300px;
 
   margin: 0;
 
   padding: 0;
 
-  vertical-align: top;     /* выравнивание по верхнему краю */
-
   box-sizing: border-box;
 
-  font-size: 14px;         /* возвращаем текст */
+  font-size: 14px;
 
 }
 
