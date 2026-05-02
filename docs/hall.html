@@ -1525,18 +1525,17 @@ const y =
   el.dataset.tableId =
     item.table_id
 
-  tableEl.style.left =
-  (Number(item.x) * mosaicScale) + 'px'
+   el.style.left =
+    x + 'px'
 
-  tableEl.style.top =
-  (Number(item.y) * mosaicScale) + 'px'
+  el.style.top =
+    y + 'px'
 
-  
-      tableEl.style.transform =
-      'scale(' + mosaicScale + ')'
-      tableEl.style.transformOrigin =
-      'top left'   
+  el.style.transform =
+    'scale(' + layoutScale + ')'
 
+  el.style.transformOrigin =
+    'top left'
  
 /* Table Title */
   const label =
@@ -2379,8 +2378,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-  MOSAIC
-renderTableToCanvas | v5.8.3
+el fix | v5.8.4
   </div>
 
   <div class="row" id="build-down">
