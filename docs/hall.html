@@ -79,23 +79,26 @@
 <div class="view-panel">
 
   <div class="view-buttons">
-
-            
+           
   <button id="viewTabsBtn" type="button">Tabs</button>
   <button id="viewGridBtn" type="button">Grid</button>
   <button id="viewAllBtn" type="button">Mosaic</button>
   <button id="viewConsoleBtn" type="button">Console</button>
 
-  <button id="gridStatusSwitchBtn"
-        class="grid-status-switch all"
-        type="button">
-  All
-</button>
+  </div>
 
-<div class="view-label">
-  View Mode
-</div>
+ <div class="view-mode-box">
 
+    <div class="view-label">
+      View Mode
+    </div>
+
+    <button id="gridStatusSwitchBtn"
+            class="grid-status-switch all hidden"
+            type="button">
+      All
+    </button>
+     
 </div>
 
 </div>
@@ -1089,6 +1092,19 @@ function setHallViewMode(mode) {
 
   hallViewMode =
     mode
+
+/*
+----------------------------------------
+Grid status switch показываем только в Grid
+----------------------------------------
+*/
+
+if (gridStatusSwitchBtn) {
+  gridStatusSwitchBtn.classList.toggle(
+    'hidden',
+    mode !== 'grid'
+  )
+}      
 
       const viewLabel =
   document.querySelector('.view-label')
@@ -2413,9 +2429,7 @@ if (newOrderBtn) {
 
       setHallViewMode('grid')
 
-      setStatus(
-        'New Order: Grid Free'
-      )
+      setStatus('New Order: Grid Free')
     }
   )
 }
@@ -2539,7 +2553,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-excess FIX | v6.0.5
+gridStatusSwitchBtn | v6.0.6
   </div>
 
   <div class="row" id="build-down">
