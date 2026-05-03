@@ -20,6 +20,13 @@
 <body>
 
 <header class="top-bar">
+
+  <button id="newOrderBtn"
+          class="new-order-main-btn"
+          type="button">
+    New Order
+  </button>
+
   <div class="top-title">MySada Hall</div>
 
   <div class="top-buttons">
@@ -27,13 +34,6 @@
     <button id="reloadBtn" type="button">Reload</button>
   </div>
 
-   <div class="top-left">
-  <div class="top-title">MySada Hall</div>
-
-  <button id="newOrderBtn" class="new-order-main-btn" type="button">
-    New Order
-  </button>
-</div>   
 </header>
 
 <div id="newOrderDialog" class="dialog hidden">
@@ -80,6 +80,24 @@
 
   <div class="view-buttons">
 
+        <!--
+========================================
+GRID FILTER SWITCH
+========================================
+-->
+
+<div class="grid-filter">
+
+  <button id="filterAllBtn" type="button">
+    All
+  </button>
+
+  <button id="filterFreeBtn" type="button">
+    Free
+  </button>
+
+</div>
+        
   <button id="viewTabsBtn" type="button">Tabs</button>
   <button id="viewGridBtn" type="button">Grid</button>
   <button id="viewAllBtn" type="button">Mosaic</button>
@@ -250,6 +268,12 @@ const btnAddChair =
 const btnRemoveChair =
   document.getElementById('btnRemoveChair')
 
+const filterAllBtn =
+  document.getElementById('filterAllBtn')
+
+const filterFreeBtn =
+  document.getElementById('filterFreeBtn')
+      
 /*
 ========================================
 STATE
@@ -289,6 +313,17 @@ let ordersList =
 let consoleLogs =
   []
 
+ /*
+========================================
+GRID FILTER STATE
+onlyFreeTables = true
+значит Grid показывает только свободные столы
+========================================
+*/
+
+let onlyFreeTables =
+  false
+      
 /*
 ========================================
 STATUS
@@ -880,7 +915,7 @@ function showHallInfoDialog(hallId) {
 /*
 ========================================
 RENDER HALL GRID
-левая кнопка по столу = orders.html
+левая кнопка по столу = order.html
 правая кнопка по столу = действия
 левая кнопка по фону = Tabs
 правая кнопка по фону = info
@@ -941,11 +976,26 @@ function renderHallGrid() {
 
     card.appendChild(tree)
 
-    tablesList
-      .filter(
-        table =>
-          table.hall_id === hallId
-      )
+      
+        /* All/Free Filtr */
+       
+   tablesList
+  .filter(table => {
+
+    if (table.hall_id !== hallId)
+      return false
+
+    if (
+      onlyFreeTables &&
+      (table.table_status || 'free') !== 'free'
+    )
+      return false
+
+    return true
+  })
+
+
+         
       .forEach(table => {
         const row =
           document.createElement('button')
@@ -973,7 +1023,7 @@ function renderHallGrid() {
             event.stopPropagation()
 
             window.location.href =
-              'orders.html'
+              'order.html'
               + '?project_id='
               + table.project_id
               + '&hall_id='
@@ -1029,6 +1079,62 @@ function renderHallGrid() {
   })
 }
 
+/*
+========================================
+GRID FILTER BUTTONS
+========================================
+*/
+
+filterAllBtn.addEventListener(
+  'click',
+  () => {
+
+    onlyFreeTables =
+      false
+
+    updateFilterUI()
+
+    renderHallGrid()
+
+    setStatus('Grid filter: ALL')
+  }
+)
+
+filterFreeBtn.addEventListener(
+  'click',
+  () => {
+
+    onlyFreeTables =
+      true
+
+    updateFilterUI()
+
+    renderHallGrid()
+
+    setStatus('Grid filter: FREE')
+  }
+)
+
+/*
+========================================
+FILTER UI STATE подсветка кнопок
+========================================
+*/
+
+function updateFilterUI() {
+
+  filterAllBtn.classList.toggle(
+    'active',
+    !onlyFreeTables
+  )
+
+  filterFreeBtn.classList.toggle(
+    'active',
+    onlyFreeTables
+  )
+
+}
+      
 /*
 ========================================
 SET HALL VIEW MODE
@@ -1492,7 +1598,7 @@ function renderChairs(parent, table, width, height) {
 /*
 ========================================
 RENDER TABLE TO CANVAS
-левая кнопка = orders.html
+левая кнопка = order.html
 правая кнопка = действия
 ========================================
 */
@@ -2294,212 +2400,29 @@ document
       
 /*
 ========================================
-NEW ORDER BUTTON
-левая жирная кнопка в header
-показывает все свободные столы всех залов
+NEW ORDER BUTTON → сразу Grid + FREE
 ========================================
-*/
-
-/*
-----------------------------------------
-DOM
-забираем готовые элементы из HTML
-ВАЖНО:
-диалог уже есть в HTML, поэтому здесь ничего не создаём
-----------------------------------------
 */
 
 const newOrderBtn =
   document.getElementById('newOrderBtn')
 
-const newOrderDialog =
-  document.getElementById('newOrderDialog')
-
-const freeTablesList =
-  document.getElementById('freeTablesList')
-
-const closeNewOrderBtn =
-  document.getElementById('closeNewOrderBtn')
-
-
-/*
-----------------------------------------
-OPEN BUTTON
-клик по New Order открывает список свободных столов
-----------------------------------------
-*/
-
 if (newOrderBtn) {
   newOrderBtn.addEventListener(
     'click',
     () => {
-      openNewOrderDialog()
+
+      onlyFreeTables =
+        true
+
+      updateFilterUI()
+
+      setHallViewMode('grid')
+
+      setStatus(
+        'New Order: grid FREE mode'
+      )
     }
-  )
-}
-
-
-/*
-----------------------------------------
-CLOSE BUTTON
-закрывает диалог New Order
-----------------------------------------
-*/
-
-if (closeNewOrderBtn) {
-  closeNewOrderBtn.addEventListener(
-    'click',
-    () => {
-      newOrderDialog.classList.add('hidden')
-    }
-  )
-}
-
-
-/*
-========================================
-OPEN NEW ORDER DIALOG
-строит список свободных столов
-========================================
-*/
-
-function openNewOrderDialog() {
-
-  /*
-  ----------------------------------------
-  защита от отсутствующих HTML-элементов
-  ----------------------------------------
-  */
-
-  if (!newOrderDialog || !freeTablesList)
-    return
-
-
-  /*
-  ----------------------------------------
-  очищаем старый список перед новым выводом
-  ----------------------------------------
-  */
-
-  freeTablesList.innerHTML =
-    ''
-
-
-  /*
-  ----------------------------------------
-  берём ВСЕ свободные столы ВСЕХ залов
-  currentHallId тут специально НЕ используется
-  ----------------------------------------
-  */
-
-  const freeTables =
-    tablesList.filter(table =>
-      (table.table_status || 'free') === 'free'
-    )
-
-
-  /*
-  ----------------------------------------
-  если свободных столов нет
-  ----------------------------------------
-  */
-
-  if (!freeTables.length) {
-    freeTablesList.innerHTML =
-      '<div>No free tables</div>'
-
-    newOrderDialog.classList.remove('hidden')
-
-    setStatus('No free tables')
-
-    return
-  }
-
-
-  /*
-  ----------------------------------------
-  создаём кнопку для каждого свободного стола
-  ----------------------------------------
-  */
-
-  freeTables.forEach(table => {
-
-    const btn =
-      document.createElement('button')
-
-    btn.type =
-      'button'
-
-    btn.className =
-      'free-table-btn'
-
-
-    /*
-    ----------------------------------------
-    текст кнопки:
-    Hall | Table | seats
-    ----------------------------------------
-    */
-
-    btn.textContent =
-      getHallName(table.hall_id)
-      + ' | '
-      + (table.name || 'Table')
-      + ' | '
-      + getTableSeats(table)
-      + ' seats'
-
-
-    /*
-    ----------------------------------------
-    клик по свободному столу:
-    переход в order.html с project_id / hall_id / table_id
-    ----------------------------------------
-    */
-
-    btn.addEventListener(
-      'click',
-      () => {
-        window.location.href =
-          'order.html'
-          + '?project_id='
-          + table.project_id
-          + '&hall_id='
-          + table.hall_id
-          + '&table_id='
-          + table.table_id
-      }
-    )
-
-
-    /*
-    ----------------------------------------
-    добавляем кнопку стола в список
-    ----------------------------------------
-    */
-
-    freeTablesList.appendChild(btn)
-
-  })
-
-
-  /*
-  ----------------------------------------
-  показываем диалог
-  ----------------------------------------
-  */
-
-  newOrderDialog.classList.remove('hidden')
-
-
-  /*
-  ----------------------------------------
-  служебный статус уходит в console/build-line
-  ----------------------------------------
-  */
-
-  setStatus(
-    'Free tables offered: ' + freeTables.length
   )
 }
       
@@ -2605,7 +2528,9 @@ async function init() {
     )
   }
 }
-
+      
+updateFilterUI() 
+      
 init()
 
 </script>
@@ -2619,9 +2544,9 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-NEW ORDER BUTTON
-левая жирная кнопка в header
-показывает все свободные столы всех залов | v6.0.2
+GRID FILTER
+NEW ORDER BUTTON →  Grid + FREE
+        fix header | v6.0.3
   </div>
 
   <div class="row" id="build-down">
