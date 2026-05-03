@@ -2291,10 +2291,11 @@ document
       }
     }
   )
-
+      
 /*
 ========================================
 NEW ORDER BUTTON
+левая жирная кнопка в header
 показывает все свободные столы всех залов
 ========================================
 */
@@ -2302,152 +2303,122 @@ NEW ORDER BUTTON
 /*
 ----------------------------------------
 DOM
+забираем готовые элементы из HTML
+ВАЖНО:
+диалог уже есть в HTML, поэтому здесь ничего не создаём
 ----------------------------------------
 */
 
 const newOrderBtn =
   document.getElementById('newOrderBtn')
 
-let newOrderDialog =
+const newOrderDialog =
   document.getElementById('newOrderDialog')
 
-let freeTablesList =
+const freeTablesList =
   document.getElementById('freeTablesList')
 
+const closeNewOrderBtn =
+  document.getElementById('closeNewOrderBtn')
+
 
 /*
 ----------------------------------------
-CREATE DIALOG
-создаем если его нет в HTML
-----------------------------------------
-*/
-
-if (!newOrderDialog) {
-
-  newOrderDialog =
-    document.createElement('div')
-
-  newOrderDialog.id =
-    'newOrderDialog'
-
-  newOrderDialog.className =
-    'dialog hidden'
-
-  newOrderDialog.innerHTML =
-    `
-    <div class="dialog-box">
-
-      <h3>
-        New Order
-      </h3>
-
-      <div id="freeTablesList"
-           class="free-tables-list">
-      </div>
-
-      <button id="closeNewOrderBtn"
-              type="button">
-        Close
-      </button>
-
-    </div>
-    `
-
-  document.body.appendChild(
-    newOrderDialog
-  )
-
-  freeTablesList =
-    newOrderDialog.querySelector(
-      '#freeTablesList'
-    )
-
-  const closeBtn =
-    newOrderDialog.querySelector(
-      '#closeNewOrderBtn'
-    )
-
-  closeBtn.addEventListener(
-    'click',
-    () => {
-      newOrderDialog.classList.add(
-        'hidden'
-      )
-  }
- )
-
-/*
-----------------------------------------
-BUTTON CLICK
+OPEN BUTTON
+клик по New Order открывает список свободных столов
 ----------------------------------------
 */
 
 if (newOrderBtn) {
-
   newOrderBtn.addEventListener(
     'click',
     () => {
-
       openNewOrderDialog()
-
     }
   )
+}
 
+
+/*
+----------------------------------------
+CLOSE BUTTON
+закрывает диалог New Order
+----------------------------------------
+*/
+
+if (closeNewOrderBtn) {
+  closeNewOrderBtn.addEventListener(
+    'click',
+    () => {
+      newOrderDialog.classList.add('hidden')
+    }
+  )
 }
 
 
 /*
 ========================================
 OPEN NEW ORDER DIALOG
+строит список свободных столов
 ========================================
 */
 
 function openNewOrderDialog() {
 
-  freeTablesList.innerHTML =
-    ''
+  /*
+  ----------------------------------------
+  защита от отсутствующих HTML-элементов
+  ----------------------------------------
+  */
+
+  if (!newOrderDialog || !freeTablesList)
+    return
+
 
   /*
   ----------------------------------------
-  берем ВСЕ свободные столы
-  всех залов
+  очищаем старый список перед новым выводом
+  ----------------------------------------
+  */
+
+  freeTablesList.innerHTML =
+    ''
+
+
+  /*
+  ----------------------------------------
+  берём ВСЕ свободные столы ВСЕХ залов
+  currentHallId тут специально НЕ используется
   ----------------------------------------
   */
 
   const freeTables =
     tablesList.filter(table =>
-      (table.table_status || 'free')
-        === 'free'
+      (table.table_status || 'free') === 'free'
     )
 
 
   /*
   ----------------------------------------
-  если нет свободных
+  если свободных столов нет
   ----------------------------------------
   */
 
   if (!freeTables.length) {
-
     freeTablesList.innerHTML =
       '<div>No free tables</div>'
 
-    newOrderDialog.classList.remove(
-      'hidden'
-    )
+    newOrderDialog.classList.remove('hidden')
 
-    setStatus(
-      'No free tables'
-    )
+    setStatus('No free tables')
 
     return
-
   }
 
 
   /*
   ----------------------------------------
-  создаем кнопки столов
+  создаём кнопку для каждого свободного стола
   ----------------------------------------
   */
 
@@ -2462,16 +2433,16 @@ function openNewOrderDialog() {
     btn.className =
       'free-table-btn'
 
+
     /*
     ----------------------------------------
-    текст кнопки
+    текст кнопки:
+    Hall | Table | seats
     ----------------------------------------
     */
 
     btn.textContent =
-      getHallName(
-        table.hall_id
-      )
+      getHallName(table.hall_id)
       + ' | '
       + (table.name || 'Table')
       + ' | '
@@ -2481,56 +2452,55 @@ function openNewOrderDialog() {
 
     /*
     ----------------------------------------
-    переход в orders.html
+    клик по свободному столу:
+    переход в order.html с project_id / hall_id / table_id
     ----------------------------------------
     */
 
     btn.addEventListener(
       'click',
       () => {
-
         window.location.href =
-          'orders.html'
+          'order.html'
           + '?project_id='
           + table.project_id
           + '&hall_id='
           + table.hall_id
           + '&table_id='
           + table.table_id
-
       }
     )
 
 
-    freeTablesList.appendChild(
-      btn
-    )
+    /*
+    ----------------------------------------
+    добавляем кнопку стола в список
+    ----------------------------------------
+    */
+
+    freeTablesList.appendChild(btn)
 
   })
 
 
   /*
   ----------------------------------------
-  открыть диалог
+  показываем диалог
   ----------------------------------------
   */
 
-  newOrderDialog.classList.remove(
-    'hidden'
-  )
+  newOrderDialog.classList.remove('hidden')
 
 
   /*
   ----------------------------------------
-  статус
+  служебный статус уходит в console/build-line
   ----------------------------------------
   */
 
   setStatus(
-    'Free tables offered: '
-    + freeTables.length
+    'Free tables offered: ' + freeTables.length
   )
-
 }
       
       
@@ -2649,7 +2619,9 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-syntax hall | v6.0.1
+NEW ORDER BUTTON
+левая жирная кнопка в header
+показывает все свободные столы всех залов | v6.0.2
   </div>
 
   <div class="row" id="build-down">
