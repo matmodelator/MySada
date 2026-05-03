@@ -26,8 +26,30 @@
     <button id="backBtn" type="button">Back</button>
     <button id="reloadBtn" type="button">Reload</button>
   </div>
+
+   <div class="top-left">
+  <div class="top-title">MySada Hall</div>
+
+  <button id="newOrderBtn" class="new-order-main-btn" type="button">
+    New Order
+  </button>
+</div>   
 </header>
 
+<div id="newOrderDialog" class="dialog hidden">
+  <div class="dialog-box">
+
+    <h3>New Order</h3>
+
+    <div id="freeTablesList" class="free-tables-list"></div>
+
+    <button id="closeNewOrderBtn" type="button">
+      Close
+    </button>
+
+  </div>
+</div>
+      
 <section class="top-info">
 
   <div class="info-card">
@@ -1574,7 +1596,7 @@ el.appendChild(label)
       event.stopPropagation()
 
       window.location.href =
-        'orders.html'
+        'order.html'
         + '?project_id='
         + item.project_id
         + '&hall_id='
@@ -2272,6 +2294,249 @@ document
 
 /*
 ========================================
+NEW ORDER BUTTON
+показывает все свободные столы всех залов
+========================================
+*/
+
+/*
+----------------------------------------
+DOM
+----------------------------------------
+*/
+
+const newOrderBtn =
+  document.getElementById('newOrderBtn')
+
+let newOrderDialog =
+  document.getElementById('newOrderDialog')
+
+let freeTablesList =
+  document.getElementById('freeTablesList')
+
+
+/*
+----------------------------------------
+CREATE DIALOG
+создаем если его нет в HTML
+----------------------------------------
+*/
+
+if (!newOrderDialog) {
+
+  newOrderDialog =
+    document.createElement('div')
+
+  newOrderDialog.id =
+    'newOrderDialog'
+
+  newOrderDialog.className =
+    'dialog hidden'
+
+  newOrderDialog.innerHTML =
+    `
+    <div class="dialog-box">
+
+      <h3>
+        New Order
+      </h3>
+
+      <div id="freeTablesList"
+           class="free-tables-list">
+      </div>
+
+      <button id="closeNewOrderBtn"
+              type="button">
+        Close
+      </button>
+
+    </div>
+    `
+
+  document.body.appendChild(
+    newOrderDialog
+  )
+
+  freeTablesList =
+    newOrderDialog.querySelector(
+      '#freeTablesList'
+    )
+
+  const closeBtn =
+    newOrderDialog.querySelector(
+      '#closeNewOrderBtn'
+    )
+
+  closeBtn.addEventListener(
+    'click',
+    () => {
+      newOrderDialog.classList.add(
+        'hidden'
+      )
+    )
+}
+
+
+/*
+----------------------------------------
+BUTTON CLICK
+----------------------------------------
+*/
+
+if (newOrderBtn) {
+
+  newOrderBtn.addEventListener(
+    'click',
+    () => {
+
+      openNewOrderDialog()
+
+    }
+  )
+
+}
+
+
+/*
+========================================
+OPEN NEW ORDER DIALOG
+========================================
+*/
+
+function openNewOrderDialog() {
+
+  freeTablesList.innerHTML =
+    ''
+
+  /*
+  ----------------------------------------
+  берем ВСЕ свободные столы
+  всех залов
+  ----------------------------------------
+  */
+
+  const freeTables =
+    tablesList.filter(table =>
+      (table.table_status || 'free')
+        === 'free'
+    )
+
+
+  /*
+  ----------------------------------------
+  если нет свободных
+  ----------------------------------------
+  */
+
+  if (!freeTables.length) {
+
+    freeTablesList.innerHTML =
+      '<div>No free tables</div>'
+
+    newOrderDialog.classList.remove(
+      'hidden'
+    )
+
+    setStatus(
+      'No free tables'
+    )
+
+    return
+
+  }
+
+
+  /*
+  ----------------------------------------
+  создаем кнопки столов
+  ----------------------------------------
+  */
+
+  freeTables.forEach(table => {
+
+    const btn =
+      document.createElement('button')
+
+    btn.type =
+      'button'
+
+    btn.className =
+      'free-table-btn'
+
+    /*
+    ----------------------------------------
+    текст кнопки
+    ----------------------------------------
+    */
+
+    btn.textContent =
+      getHallName(
+        table.hall_id
+      )
+      + ' | '
+      + (table.name || 'Table')
+      + ' | '
+      + getTableSeats(table)
+      + ' seats'
+
+
+    /*
+    ----------------------------------------
+    переход в orders.html
+    ----------------------------------------
+    */
+
+    btn.addEventListener(
+      'click',
+      () => {
+
+        window.location.href =
+          'orders.html'
+          + '?project_id='
+          + table.project_id
+          + '&hall_id='
+          + table.hall_id
+          + '&table_id='
+          + table.table_id
+
+      }
+    )
+
+
+    freeTablesList.appendChild(
+      btn
+    )
+
+  })
+
+
+  /*
+  ----------------------------------------
+  открыть диалог
+  ----------------------------------------
+  */
+
+  newOrderDialog.classList.remove(
+    'hidden'
+  )
+
+
+  /*
+  ----------------------------------------
+  статус
+  ----------------------------------------
+  */
+
+  setStatus(
+    'Free tables offered: '
+    + freeTables.length
+  )
+
+}
+      
+      
+/*
+========================================
 REALTIME TABLES
 ========================================
 */
@@ -2385,9 +2650,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-function setStatus(text) {
-  вывод на экран отключён 
- вывод в консоль | v5.9.0
+ORDER | v6.0.0
   </div>
 
   <div class="row" id="build-down">
