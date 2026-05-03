@@ -1,7 +1,7 @@
 
 /*
 ========================================
-фикс дёргания при смене Grid / Mosaic | v1.9.0
+NEW ORDER BUTTON | v1.10.0
 ========================================
 */
 
@@ -866,6 +866,34 @@ Add | Remove
   border-radius: 0 10px 10px 0;
   background: #e5e7eb;
   color: #111827;
+}
+
+/*
+========================================
+NEW ORDER BUTTON
+========================================
+*/
+
+
+.top-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.new-order-main-btn {
+  padding: 10px 18px;
+  border: 2px solid white;
+  border-radius: 999px;
+  background: #16a34a;
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.new-order-main-btn:hover {
+  background: #15803d;
 }
 
 /*
