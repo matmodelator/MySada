@@ -304,12 +304,19 @@ function updateBuildLine(text) {
 }
 
 function setStatus(text) {
-  statusBox.textContent =
-    text
+
+  /* вывод на экран отключён */
+
+  // statusBox.textContent = text
+
+  /* вывод в консоль */
 
   console.log('[HALL]', text)
 
+  /* сервисная строка остаётся */
+
   updateBuildLine(text)
+
 }
 
 /*
@@ -2378,7 +2385,9 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-remove mosaic rendered | v5.8.5
+function setStatus(text) {
+  вывод на экран отключён 
+ вывод в консоль | v5.9.0
   </div>
 
   <div class="row" id="build-down">
