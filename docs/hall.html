@@ -103,9 +103,15 @@ GRID FILTER SWITCH
   <button id="viewAllBtn" type="button">Mosaic</button>
   <button id="viewConsoleBtn" type="button">Console</button>
 
-  <div class="view-label">
-    View Mode
-  </div>
+  <button id="gridStatusSwitchBtn"
+        class="grid-status-switch all"
+        type="button">
+  All
+</button>
+
+<div class="view-label">
+  View Mode
+</div>
 
 </div>
 
@@ -241,6 +247,9 @@ const viewAllBtn =
 const viewConsoleBtn =
   document.getElementById('viewConsoleBtn')
 
+const gridStatusSwitchBtn =
+  document.getElementById('gridStatusSwitchBtn')     
+
 const dialog =
   document.getElementById('tableDialog')
 
@@ -313,17 +322,18 @@ let ordersList =
 let consoleLogs =
   []
 
- /*
+/*
 ========================================
-GRID FILTER STATE
-onlyFreeTables = true
-значит Grid показывает только свободные столы
+GRID STATUS FILTER
+одна кнопка-свитч для Grid:
+all / free / occupied / reserved / cleaning
 ========================================
 */
 
-let onlyFreeTables =
-  false
+let gridStatusFilter =
+  'all'
       
+       
 /*
 ========================================
 STATUS
@@ -977,22 +987,24 @@ function renderHallGrid() {
     card.appendChild(tree)
 
       
-        /* All/Free Filtr */
+        /* GRID Filtr */
        
-   tablesList
+  tablesList
   .filter(table => {
 
     if (table.hall_id !== hallId)
       return false
 
     if (
-      onlyFreeTables &&
-      (table.table_status || 'free') !== 'free'
+      gridStatusFilter !== 'all'
+      &&
+      (table.table_status || 'free') !== gridStatusFilter
     )
       return false
 
     return true
   })
+  .forEach(table => {
 
 
          
@@ -1079,61 +1091,6 @@ function renderHallGrid() {
   })
 }
 
-/*
-========================================
-GRID FILTER BUTTONS
-========================================
-*/
-
-filterAllBtn.addEventListener(
-  'click',
-  () => {
-
-    onlyFreeTables =
-      false
-
-    updateFilterUI()
-
-    renderHallGrid()
-
-    setStatus('Grid filter: ALL')
-  }
-)
-
-filterFreeBtn.addEventListener(
-  'click',
-  () => {
-
-    onlyFreeTables =
-      true
-
-    updateFilterUI()
-
-    renderHallGrid()
-
-    setStatus('Grid filter: FREE')
-  }
-)
-
-/*
-========================================
-FILTER UI STATE подсветка кнопок
-========================================
-*/
-
-function updateFilterUI() {
-
-  filterAllBtn.classList.toggle(
-    'active',
-    !onlyFreeTables
-  )
-
-  filterFreeBtn.classList.toggle(
-    'active',
-    onlyFreeTables
-  )
-
-}
       
 /*
 ========================================
@@ -2343,6 +2300,69 @@ viewConsoleBtn.addEventListener(
 
 /*
 ========================================
+GRID STATUS SWITCH
+одна кнопка переключает фильтр Grid
+========================================
+*/
+
+const gridStatusList =
+  [
+    'all',
+    'free',
+    'occupied',
+    'reserved',
+    'cleaning'
+  ]
+
+function updateGridStatusSwitch() {
+  if (!gridStatusSwitchBtn)
+    return
+
+  gridStatusSwitchBtn.className =
+    'grid-status-switch ' + gridStatusFilter
+
+  if (gridStatusFilter === 'all')
+    gridStatusSwitchBtn.textContent = 'All'
+
+  if (gridStatusFilter === 'free')
+    gridStatusSwitchBtn.textContent = 'Free'
+
+  if (gridStatusFilter === 'occupied')
+    gridStatusSwitchBtn.textContent = 'Occupied'
+
+  if (gridStatusFilter === 'reserved')
+    gridStatusSwitchBtn.textContent = 'Reserved'
+
+  if (gridStatusFilter === 'cleaning')
+    gridStatusSwitchBtn.textContent = 'Cleaning'
+}
+
+if (gridStatusSwitchBtn) {
+  gridStatusSwitchBtn.addEventListener(
+    'click',
+    () => {
+      const currentIndex =
+        gridStatusList.indexOf(gridStatusFilter)
+
+      const nextIndex =
+        (currentIndex + 1) % gridStatusList.length
+
+      gridStatusFilter =
+        gridStatusList[nextIndex]
+
+      updateGridStatusSwitch()
+
+      setHallViewMode('grid')
+
+      setStatus(
+        'Grid filter: ' + gridStatusFilter
+      )
+    }
+  )
+}
+      
+/*
+========================================
 BUTTONS
 ========================================
 */
@@ -2400,7 +2420,8 @@ document
       
 /*
 ========================================
-NEW ORDER BUTTON → сразу Grid + FREE
+NEW ORDER BUTTON
+сразу открывает Grid в режиме Free
 ========================================
 */
 
@@ -2411,16 +2432,15 @@ if (newOrderBtn) {
   newOrderBtn.addEventListener(
     'click',
     () => {
+      gridStatusFilter =
+        'free'
 
-      onlyFreeTables =
-        true
-
-      updateFilterUI()
+      updateGridStatusSwitch()
 
       setHallViewMode('grid')
 
       setStatus(
-        'New Order: grid FREE mode'
+        'New Order: Grid Free'
       )
     }
   )
@@ -2509,6 +2529,8 @@ async function init() {
       setCurrentHall(hallId)
     }
 
+updateGridStatusSwitch()
+        
     setHallViewMode(
       hallViewMode
     )
@@ -2529,7 +2551,6 @@ async function init() {
   }
 }
       
-updateFilterUI() 
       
 init()
 
@@ -2544,9 +2565,8 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-GRID FILTER
-NEW ORDER BUTTON →  Grid + FREE
-        fix header | v6.0.3
+GRID STATUS FILTER
+одна кнопка-свитч для Grid: | v6.0.4
   </div>
 
   <div class="row" id="build-down">
