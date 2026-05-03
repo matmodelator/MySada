@@ -80,24 +80,7 @@
 
   <div class="view-buttons">
 
-        <!--
-========================================
-GRID FILTER SWITCH
-========================================
--->
-
-<div class="grid-filter">
-
-  <button id="filterAllBtn" type="button">
-    All
-  </button>
-
-  <button id="filterFreeBtn" type="button">
-    Free
-  </button>
-
-</div>
-        
+            
   <button id="viewTabsBtn" type="button">Tabs</button>
   <button id="viewGridBtn" type="button">Grid</button>
   <button id="viewAllBtn" type="button">Mosaic</button>
@@ -276,12 +259,6 @@ const btnAddChair =
 
 const btnRemoveChair =
   document.getElementById('btnRemoveChair')
-
-const filterAllBtn =
-  document.getElementById('filterAllBtn')
-
-const filterFreeBtn =
-  document.getElementById('filterFreeBtn')
       
 /*
 ========================================
@@ -1004,10 +981,7 @@ function renderHallGrid() {
 
     return true
   })
-  .forEach(table => {
-
-
-         
+       
       .forEach(table => {
         const row =
           document.createElement('button')
@@ -2565,8 +2539,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-GRID STATUS FILTER
-одна кнопка-свитч для Grid: | v6.0.4
+excess FIX | v6.0.5
   </div>
 
   <div class="row" id="build-down">
