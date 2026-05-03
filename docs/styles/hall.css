@@ -1,7 +1,7 @@
 
 /*
 ========================================
-NEW ORDER BUTTON | v1.10.0
+GRID FILTR BUTTON | v1.10.1
 ========================================
 */
 
@@ -895,6 +895,33 @@ NEW ORDER BUTTON
 .new-order-main-btn:hover {
   background: #15803d;
 }
+
+/*
+========================================
+GRID FILTR BUTTON
+========================================
+*/
+
+.grid-filter {
+  display: flex;
+  gap: 6px;
+}
+
+.grid-filter button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #94a3b8;
+  background: #e2e8f0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.grid-filter button.active {
+  background: #22c55e;
+  color: white;
+  border-color: #15803d;
+}
+
 
 /*
 ========================================
