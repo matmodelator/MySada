@@ -1,7 +1,8 @@
 
 /*
 ========================================
-GRID FILTR SWITCHER/place | v1.10.3
+VIEW SWITCH
+одна строка | v1.10.4
 ========================================
 */
 
@@ -144,6 +145,7 @@ Select  | Hall
 /*
 ========================================
 VIEW SWITCH
+одна строка: кнопки слева, View Mode + switch справа
 ========================================
 */
 
@@ -158,13 +160,17 @@ VIEW SWITCH
 .view-buttons {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;      /* НЕ переносить */
   align-items: center;
+  white-space: nowrap;    /* текст НЕ переносить */
+  overflow-x: auto;       /* если совсем не влезло — горизонтальный скролл */
 }
 
 .view-label {
   margin-left: auto;
-  margin-right: 100px;
+  margin-right: 12px;
+  flex: 0 0 auto;         /* НЕ сжимать */
+  white-space: nowrap;    /* View Mode в одну строку */
   font-size: 14px;
   font-weight: 900;
   font-family: Arial, sans-serif;
@@ -172,6 +178,7 @@ VIEW SWITCH
 }
 
 .view-buttons button {
+  flex: 0 0 auto;         /* кнопки НЕ сжимать и НЕ ломать */
   border: 1px solid #cbd5e1;
   border-radius: 999px;
   padding: 8px 16px;
@@ -182,16 +189,6 @@ VIEW SWITCH
   transition: all 0.15s ease;
 }
 
-.view-buttons button:hover {
-  border-color: #2563eb;
-}
-
-.view-buttons button.active {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
-}
-
 /*
 ========================================
 GRID STATUS SWITCH
@@ -200,11 +197,13 @@ GRID STATUS SWITCH
 */
 
 .grid-status-switch.hidden {
-  display: none;
+  display: none !important;
 }
 
 .view-buttons .grid-status-switch {
+  flex: 0 0 auto;
   min-width: 105px;
+  white-space: nowrap;
 }
 
 .grid-status-switch.all {
