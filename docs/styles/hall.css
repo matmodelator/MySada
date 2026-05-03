@@ -1,7 +1,7 @@
 
 /*
 ========================================
-GRID FILTR BUTTON | v1.10.1
+GRID FILTR SWITCHER/colors | v1.10.2
 ========================================
 */
 
@@ -470,8 +470,8 @@ canvas + grid tree
 
 .table-free,
 .table-tree-row.table-free {
-  background: #7dd3fc;
-  border-color: #0284c7;
+ background: #22c55e;   /* green */
+  border-color: #15803d;
 }
 
 .table-occupied,
@@ -817,12 +817,12 @@ DIALOG BUTTONS
 }
 
 #btnOpenOrder {
-  background: #2563eb;
+  background: #fb7185; /*rose*/
   color: white;
 }
 
 #btnCloseOrder {
-  background: #16a34a;
+  background: #22c55e; /* green */
   color: white;
 }
 
@@ -893,33 +893,45 @@ NEW ORDER BUTTON
 }
 
 .new-order-main-btn:hover {
-  background: #15803d;
+  background: #fb7185; /*rose*/
 }
 
 /*
 ========================================
-GRID FILTR BUTTON
+GRID FILTR SWITCHER
 ========================================
 */
-
-.grid-filter {
-  display: flex;
-  gap: 6px;
-}
-
-.grid-filter button {
-  padding: 6px 12px;
-  border-radius: 8px;
+.grid-status-switch {
+  padding: 7px 14px;
+  border-radius: 999px;
   border: 1px solid #94a3b8;
-  background: #e2e8f0;
+  font-weight: 800;
   cursor: pointer;
-  font-weight: 600;
 }
 
-.grid-filter button.active {
+.grid-status-switch.all {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.grid-status-switch.free {
   background: #22c55e;
   color: white;
-  border-color: #15803d;
+}
+
+.grid-status-switch.occupied {
+  background: #ef4444;
+  color: white;
+}
+
+.grid-status-switch.reserved {
+  background: #facc15;
+  color: #111827;
+}
+
+.grid-status-switch.cleaning {
+  background: #a78bfa;
+  color: white;
 }
 
 
