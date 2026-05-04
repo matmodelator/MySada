@@ -326,14 +326,17 @@ async function loadOrders() {
   ordersList.innerHTML =
     ''
 
-  const { data, error } =
-    await supabase
-      .from('orders')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('hall_id', hallId)
-      .eq('table_id', tableId)
-      .order('opened_at', { ascending: false })
+ const { data, error } =
+  await supabase
+    .from('orders')
+    .select(`
+      *,
+      items (*)
+    `)
+    .eq('project_id', projectId)
+    .eq('hall_id', hallId)
+    .eq('table_id', tableId)
+    .order('opened_at', { ascending: false })
 
   if (error)
     throw error
@@ -571,6 +574,39 @@ function renderOrder(order) {
 
   card.appendChild(grid)
 
+  /* ========================================
+   ITEMS / POSITIONS
+======================================== */
+
+if (order.items && order.items.length) {
+
+  const itemsBox =
+    document.createElement('div')
+
+  itemsBox.className =
+    'order-items'
+
+  order.items.forEach(item => {
+
+    const row =
+      document.createElement('div')
+
+    row.className =
+      'order-item-row'
+
+    row.textContent =
+      (item.name || 'Item')
+      + ' × '
+      + (item.qty || 1)
+      + ' = '
+      + (item.price || 0)
+
+    itemsBox.appendChild(row)
+  })
+
+  card.appendChild(itemsBox)
+}    
+
   ordersList.appendChild(card)
 }
 
@@ -714,7 +750,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    List Button | v6.2.0
+    Add Items | v6.3.0
   </div>
 
   <div class="row" id="build-down">
