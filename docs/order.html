@@ -12,20 +12,20 @@
       href="styles/console.css" />
 
 <link rel="stylesheet"
-      href="styles/order.css" 
-      
+      href="styles/order.css" />
+
 </head>
 
 <body>
 
 <header class="top-bar">
 
-   <button id="openOrderBtn"
+  <button id="openOrderBtn"
           class="open-order-main-btn"
           type="button">
     Open Order
   </button>
-   
+
   <div class="top-title">MySada Orders</div>
 
   <div class="top-buttons">
@@ -37,6 +37,7 @@
       Reload
     </button>
   </div>
+
 </header>
 
 <main class="container">
@@ -73,14 +74,11 @@
 
 </main>
 
-      
-   
-
 <script type="module">
 
 import { supabase }
-from "./scripts/config.js"      
-      
+from "./scripts/config.js"
+
 /*
 ========================================
 DOM
@@ -105,14 +103,18 @@ const statusBox =
 const ordersList =
   document.getElementById('ordersList')
 
-const buildDown =
+let buildDown =
   document.getElementById('build-down')
+
+const openOrderBtn =
+  document.getElementById('openOrderBtn')
 
 const backBtn =
   document.getElementById('backBtn')
 
 const reloadBtn =
   document.getElementById('reloadBtn')
+
 
 /*
 ========================================
@@ -141,6 +143,7 @@ let hallName =
 let tableName =
   'Table'
 
+
 /*
 ========================================
 STATUS
@@ -148,6 +151,14 @@ STATUS
 */
 
 function updateBuildLine(text) {
+  if (!buildDown) {
+    buildDown =
+      document.getElementById('build-down')
+  }
+
+  if (!buildDown)
+    return
+
   const now =
     new Date()
 
@@ -177,6 +188,7 @@ function setStatus(text) {
 
   updateBuildLine(text)
 }
+
 
 /*
 ========================================
@@ -208,6 +220,7 @@ function loadParams() {
     throw new Error('table_id is missing')
 }
 
+
 /*
 ========================================
 LOAD USER
@@ -232,6 +245,7 @@ async function loadUser() {
   userBox.textContent =
     currentUser.email || currentUser.id
 }
+
 
 /*
 ========================================
@@ -298,6 +312,7 @@ async function loadNames() {
     tableName + ' / ' + tableId
 }
 
+
 /*
 ========================================
 LOAD ORDERS
@@ -339,10 +354,132 @@ async function loadOrders() {
   )
 }
 
+
+/*
+========================================
+OPEN ORDER
+создаёт новый заказ
+и переводит стол в occupied
+========================================
+*/
+
+async function openOrder() {
+  try {
+    setStatus('Opening order...')
+
+    const { data: orderData, error: orderError } =
+      await supabase
+        .from('orders')
+        .insert({
+          project_id: projectId,
+          hall_id: hallId,
+          table_id: tableId,
+          guest_count: 0,
+          order_status: 'open'
+        })
+        .select()
+        .single()
+
+    if (orderError)
+      throw orderError
+
+    const { error: tableError } =
+      await supabase
+        .from('tables')
+        .update({
+          table_status: 'occupied'
+        })
+        .eq('table_id', tableId)
+
+    if (tableError)
+      throw tableError
+
+    await loadOrders()
+
+    setStatus(
+      'Order opened: '
+      + (orderData.order_id || orderData.id)
+    )
+  }
+  catch (err) {
+    console.error(err)
+
+    setStatus(
+      'Open order error: ' + err.message
+    )
+  }
+}
+
+
+/*
+========================================
+CLOSE ORDER
+закрывает order
+если open orders больше нет — table free
+========================================
+*/
+
+async function closeOrder(order) {
+  try {
+    setStatus('Closing order...')
+
+    const { error: closeError } =
+      await supabase
+        .from('orders')
+        .update({
+          order_status: 'closed',
+          closed_at: new Date().toISOString()
+        })
+        .eq(
+          'order_id',
+          order.order_id || order.id
+        )
+
+    if (closeError)
+      throw closeError
+
+    const { data: openOrders, error: openError } =
+      await supabase
+        .from('orders')
+        .select('order_id')
+        .eq('table_id', order.table_id)
+        .eq('order_status', 'open')
+
+    if (openError)
+      throw openError
+
+    if (!openOrders || !openOrders.length) {
+      const { error: tableError } =
+        await supabase
+          .from('tables')
+          .update({
+            table_status: 'free'
+          })
+          .eq('table_id', order.table_id)
+
+      if (tableError)
+        throw tableError
+    }
+
+    await loadOrders()
+
+    setStatus('Order closed')
+  }
+  catch (err) {
+    console.error(err)
+
+    setStatus(
+      'Close order error: ' + err.message
+    )
+  }
+}
+
+
 /*
 ========================================
 RENDER ORDER
-карточка одного заказа
+open   -> Close Order
+closed -> List Order
 ========================================
 */
 
@@ -350,194 +487,60 @@ function renderOrder(order) {
   const card =
     document.createElement('article')
 
-/* OPEN ORDER BUTTON
-создаёт новый заказ
-и переводит стол в occupied */
-
-
-const openOrderBtn =
-  document.getElementById('openOrderBtn')
-
-if (openOrderBtn) {
-  openOrderBtn.addEventListener(
-    'click',
-    async () => {
-      try {
-
-        /*
-        ----------------------------------------
-        1. Создаём новый заказ
-        ----------------------------------------
-        */
-
-        const { data: orderData, error: orderError } =
-          await supabase
-            .from('orders')
-            .insert({
-              project_id: projectId,
-              hall_id: hallId,
-              table_id: tableId,
-              guest_count: 0,
-              order_status: 'open'
-            })
-            .select()
-            .single()
-
-        if (orderError)
-          throw orderError
-
-
-        /*
-        ----------------------------------------
-        2. Переводим стол в occupied
-        если он уже occupied — ничего плохого,
-        база просто запишет то же значение
-        ----------------------------------------
-        */
-
-        const { error: tableError } =
-          await supabase
-            .from('tables')
-            .update({
-              table_status: 'occupied'
-            })
-            .eq('table_id', tableId)
-
-        if (tableError)
-          throw tableError
-
-
-        /*
-        ----------------------------------------
-        3. Обновляем список заказов на странице
-        ----------------------------------------
-        */
-
-        await loadOrders()
-
-        setStatus(
-          'Order opened: '
-          + (orderData.order_id || orderData.id)
-        )
-
-      }
-      catch (err) {
-        console.error(err)
-
-        setStatus(
-          'Open order error: ' + err.message
-        )
-      }
-    }
-  )
-}
-      
-  /* CLOSE ORDER BUTTON */
-
-  const closeBtn =
-    document.createElement('button')
-
-  closeBtn.className =
-    'order-close-btn'
-
-  closeBtn.textContent =
-    'Close Order'
-
-  closeBtn.addEventListener(
-  'click',
-  async (e) => {
-    e.stopPropagation()
-
-    try {
-
-      /*
-      ========================================
-      1. Закрываем текущий order
-      ========================================
-      */
-
-      const { error: closeError } =
-        await supabase
-          .from('orders')
-          .update({
-            order_status: 'closed',
-            closed_at: new Date().toISOString()
-          })
-          .eq(
-            'order_id',
-            order.order_id || order.id
-          )
-
-      if (closeError)
-        throw closeError
-
-
-      /*
-      ========================================
-      2. Проверяем, остались ли open orders
-      для этого же стола
-      ========================================
-      */
-
-      const { data: openOrders, error: openError } =
-        await supabase
-          .from('orders')
-          .select('order_id')
-          .eq('table_id', order.table_id)
-          .eq('order_status', 'open')
-
-      if (openError)
-        throw openError
-
-
-      /*
-      ========================================
-      3. Если открытых заказов больше нет —
-      освобождаем стол
-      ========================================
-      */
-
-      if (!openOrders || !openOrders.length) {
-        const { error: tableError } =
-          await supabase
-            .from('tables')
-            .update({
-              table_status: 'free'
-            })
-            .eq('table_id', order.table_id)
-
-        if (tableError)
-          throw tableError
-      }
-
-
-      /*
-      ========================================
-      4. Обновляем список заказов на странице
-      ========================================
-      */
-
-      await loadOrders()
-
-      setStatus('Order closed')
-
-    }
-    catch (err) {
-      console.error(err)
-
-      setStatus(
-        'Close order error: ' + err.message
-      )
-    }
-  }
-)
-  /* КОНЕЦ вставки */
-      
   const status =
     order.order_status || order.status || 'open'
 
   card.className =
     'order-card ' + status
+
+  /*
+  ----------------------------------------
+  Кнопка зависит от статуса заказа
+  ----------------------------------------
+  */
+
+  if (status === 'open') {
+    const closeBtn =
+      document.createElement('button')
+
+    closeBtn.className =
+      'order-close-btn'
+
+    closeBtn.textContent =
+      'Close Order'
+
+    closeBtn.addEventListener(
+      'click',
+      event => {
+        event.stopPropagation()
+
+        closeOrder(order)
+      }
+    )
+
+    card.appendChild(closeBtn)
+  }
+  else {
+    const listBtn =
+      document.createElement('button')
+
+    listBtn.className =
+      'order-list-btn'
+
+    listBtn.textContent =
+      'List Order'
+
+    listBtn.addEventListener(
+      'click',
+      event => {
+        event.stopPropagation()
+
+        card.classList.toggle('expanded')
+      }
+    )
+
+    card.appendChild(listBtn)
+  }
 
   const title =
     document.createElement('div')
@@ -570,6 +573,7 @@ if (openOrderBtn) {
 
   ordersList.appendChild(card)
 }
+
 
 /*
 ========================================
@@ -609,6 +613,7 @@ function addField(parent, label, value) {
   parent.appendChild(box)
 }
 
+
 /*
 ========================================
 FORMAT DATE
@@ -628,11 +633,17 @@ function formatDate(value) {
   return date.toLocaleString()
 }
 
+
 /*
 ========================================
 BUTTONS
 ========================================
 */
+
+openOrderBtn.addEventListener(
+  'click',
+  openOrder
+)
 
 backBtn.addEventListener(
   'click',
@@ -661,6 +672,7 @@ reloadBtn.addEventListener(
     }
   }
 )
+
 
 /*
 ========================================
@@ -693,9 +705,6 @@ init()
 
 </script>
 
-
-
-
 <!--
 ========================================
 КОНСОЛЬ
@@ -705,7 +714,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    Close/Open buttons / Status Table | v6.1.0
+    List Button | v6.2.0
   </div>
 
   <div class="row" id="build-down">
@@ -743,4 +752,4 @@ init()
 </script>
 
 </body>
-</html>  
+</html>
