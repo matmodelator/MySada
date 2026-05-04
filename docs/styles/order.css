@@ -1,7 +1,6 @@
 /*
 ========================================
-ORDER PAGE
-LIST ORDER BUTTON | v1.1.0
+ORDER ITEMS v1.2.0
 ========================================
 */
 
@@ -251,6 +250,27 @@ LIST ORDER BUTTON
 .order-list-btn:hover {
   background: #7dd3fc;   /* голубая */
   color: #0f172a;
+}
+
+/*
+========================================
+ORDER ITEMS
+========================================
+*/
+
+.order-items {
+  margin-top: 10px;
+  padding: 10px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.order-item-row {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 /*
