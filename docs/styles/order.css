@@ -1,6 +1,6 @@
 /*
 ========================================
-ORDER INPUT v1.3.0
+show/hide order switch v1.3.1
 ========================================
 */
 
@@ -315,6 +315,31 @@ LIST ORDER BUTTON
 .order-list-btn:hover {
   background: #7dd3fc;   /* голубая */
   color: #0f172a;
+}
+
+/*
+========================================
+show/hide order switch
+========================================
+*/
+
+.order-toggle-btn {
+  margin-left: 10px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+.order-toggle-btn:active {
+  transform: translateY(2px);
+}
+
+/* скрытие тела */
+.order-card.closed .order-body {
+  display: none;
 }
 
 /*
