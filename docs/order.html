@@ -66,44 +66,58 @@
 
   </section>
 
-<!-- ========================================
-ORDER FORM (INPUT)
-======================================== -->
+  <!-- ========================================
+  ORDER CARD / INPUT FORM
+  ======================================== -->
 
-<div class="order-card open-order">
+  <section class="order-card open-order">
 
-  <div class="order-head">
-    <strong>New Order</strong>
-    <div class="order-total" id="orderTotal">0</div>
-  </div>
+    <div class="order-head">
 
-  <div class="order-body">
+      <strong>New Order</strong>
 
-    <!-- заголовок -->
-    <div class="order-row order-row-title">
-      <span>Position</span>
-      <span>Qty</span>
-      <span>Price</span>
-      <span>Sum</span>
+      <div class="order-actions">
+        <div class="order-total" id="orderTotal">0</div>
+
+        <button class="order-toggle-btn"
+                type="button">
+          Hide
+        </button>
+      </div>
+
     </div>
 
-    <!-- строки -->
-    <div id="orderItems"></div>
+    <div class="order-body">
 
-    <!-- кнопка -->
-    <button id="addItemBtn" type="button">+ Add position</button>
+      <div class="order-row order-row-title">
+        <span>Position</span>
+        <span>Qty</span>
+        <span>Price</span>
+        <span>Sum</span>
+      </div>
 
-  </div>
+      <div id="orderItems"></div>
 
-</div>
-      
+      <button id="addItemBtn"
+              type="button">
+        + Add position
+      </button>
+
+    </div>
+
+  </section>
+
   <div id="status" class="status">
     Starting...
   </div>
 
-  <section id="ordersList" class="orders-list"></section>
+  <section id="ordersList"
+           class="orders-list">
+  </section>
 
 </main>
+
+</body>
 
 <script type="module">
 
@@ -740,35 +754,27 @@ reloadBtn.addEventListener(
   }
 )
 
-
 /*
 ========================================
-INIT
+SHOW/HIDE ORDER SWITCH
 ========================================
-*/
+*/      
 
-async function init() {
-  try {
-    console.log('ORDERS INIT START')
+document.addEventListener('click', function (e) {
 
-    loadParams()
+  const btn = e.target.closest('.order-toggle-btn')
+  if (!btn) return
 
-    await loadUser()
+  const card = btn.closest('.order-card')
+  if (!card) return
 
-    await loadNames()
+  card.classList.toggle('closed')
 
-    await loadOrders()
-  }
-  catch (err) {
-    console.error('ORDERS INIT ERROR:', err)
+  const isClosed = card.classList.contains('closed')
 
-    setStatus(
-      'Orders error: ' + err.message
-    )
-  }
-}
-
-init()
+  btn.textContent =
+    isClosed ? 'Show' : 'Hide'
+})
 
 /* ========================================
 ORDER INPUT LOGIC
@@ -827,6 +833,37 @@ function update() {
 /* стартовая строка */
 addRow()
       
+/*
+========================================
+INIT
+========================================
+*/
+
+async function init() {
+  try {
+    console.log('ORDERS INIT START')
+
+    loadParams()
+
+    await loadUser()
+
+    await loadNames()
+
+    await loadOrders()
+  }
+  catch (err) {
+    console.error('ORDERS INIT ERROR:', err)
+
+    setStatus(
+      'Orders error: ' + err.message
+    )
+  }
+}
+
+init()
+
+
+      
 </script>
 
 <!--
@@ -838,7 +875,7 @@ addRow()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    ORDER INPUT | v6.4.0
+   SHOW/HIDE ORDER SWITCH | v6.4.1
   </div>
 
   <div class="row" id="build-down">
