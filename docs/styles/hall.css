@@ -1,7 +1,7 @@
 
 /*
 ========================================
-кнопки стола с хувером fix | v1.10.7
+кнопки стола с хувером colour | v1.10.8
 ========================================
 */
 
@@ -894,13 +894,13 @@ DIALOG BUTTONS
 /*
 ========================================
 DIALOG BUTTON COLORS
-Open = green → hover rose
-Close = rose → hover green
+Open = blue → hover rose
+Close = blue → hover green
 ========================================
 */
 
 #btnOpenOrder {
-  background: #22c55e; /* green */
+  background:  #7dd3fc;   /* голубая */
   color: white;
 }
 
@@ -909,7 +909,7 @@ Close = rose → hover green
 }
 
 #btnCloseOrder {
-  background: #fb7185; /* rose */
+  background:  #7dd3fc;   /* голубая */
   color: white;
 }
 
