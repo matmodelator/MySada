@@ -1,7 +1,7 @@
 
 /*
 ========================================
-кнопка свитчера fix | v1.10.6
+кнопки стола с хувером fix | v1.10.7
 ========================================
 */
 
@@ -891,14 +891,30 @@ DIALOG BUTTONS
   transform: scale(0.96);
 }
 
+/*
+========================================
+DIALOG BUTTON COLORS
+Open = green → hover rose
+Close = rose → hover green
+========================================
+*/
+
 #btnOpenOrder {
-  background: #fb7185; /*rose*/
+  background: #22c55e; /* green */
   color: white;
 }
 
+#btnOpenOrder:hover {
+  background: #fb7185; /* rose */
+}
+
 #btnCloseOrder {
-  background: #22c55e; /* green */
+  background: #fb7185; /* rose */
   color: white;
+}
+
+#btnCloseOrder:hover {
+  background: #22c55e; /* green */
 }
 
 #btnReserveTable {
