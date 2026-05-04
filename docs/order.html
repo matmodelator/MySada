@@ -66,6 +66,37 @@
 
   </section>
 
+<!-- ========================================
+ORDER FORM (INPUT)
+======================================== -->
+
+<div class="order-card open-order">
+
+  <div class="order-head">
+    <strong>New Order</strong>
+    <div class="order-total" id="orderTotal">0</div>
+  </div>
+
+  <div class="order-body">
+
+    <!-- заголовок -->
+    <div class="order-row order-row-title">
+      <span>Position</span>
+      <span>Qty</span>
+      <span>Price</span>
+      <span>Sum</span>
+    </div>
+
+    <!-- строки -->
+    <div id="orderItems"></div>
+
+    <!-- кнопка -->
+    <button id="addItemBtn" type="button">+ Add position</button>
+
+  </div>
+
+</div>
+      
   <div id="status" class="status">
     Starting...
   </div>
@@ -739,6 +770,63 @@ async function init() {
 
 init()
 
+/* ========================================
+ORDER INPUT LOGIC
+======================================== */
+
+const itemsBox = document.getElementById('orderItems')
+const totalBox = document.getElementById('orderTotal')
+const addBtn = document.getElementById('addItemBtn')
+
+addBtn.addEventListener('click', addRow)
+
+/* добавить строку */
+function addRow() {
+
+  const row = document.createElement('div')
+  row.className = 'order-row'
+
+  row.innerHTML = `
+    <input placeholder="name" class="name">
+    <input type="number" placeholder="qty" class="qty">
+    <input type="number" placeholder="price" class="price">
+    <span class="sum">0</span>
+  `
+
+  itemsBox.appendChild(row)
+
+  const qty = row.querySelector('.qty')
+  const price = row.querySelector('.price')
+
+  qty.addEventListener('input', update)
+  price.addEventListener('input', update)
+}
+
+/* пересчет */
+function update() {
+
+  let total = 0
+
+  const rows = itemsBox.querySelectorAll('.order-row')
+
+  rows.forEach(row => {
+
+    const qty = +row.querySelector('.qty').value || 0
+    const price = +row.querySelector('.price').value || 0
+
+    const sum = qty * price
+
+    row.querySelector('.sum').textContent = sum
+
+    total += sum
+  })
+
+  totalBox.textContent = total
+}
+
+/* стартовая строка */
+addRow()
+      
 </script>
 
 <!--
@@ -750,7 +838,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-    Add Items | v6.3.0
+    ORDER INPUT | v6.4.0
   </div>
 
   <div class="row" id="build-down">
