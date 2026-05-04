@@ -1,6 +1,6 @@
 /*
 ========================================
-show/hide order switch v1.3.1
+show/hide switch fix v1.3.2
 ========================================
 */
 
@@ -317,25 +317,30 @@ LIST ORDER BUTTON
   color: #0f172a;
 }
 
-/*
-========================================
-show/hide order switch
-========================================
-*/
+
+/* ========================================
+SHOW / HIDE ORDER SWITCH
+======================================== */
+
+.order-card.closed .order-grid,
+.order-card.closed .order-items,
+.order-card.closed .order-body {
+  display: none;
+}
 
 .order-toggle-btn {
-  margin-left: 10px;
   padding: 6px 10px;
   border: none;
   border-radius: 8px;
   background: #2563eb;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
 }
 
 .order-toggle-btn:active {
-  transform: translateY(2px);
+  transform: translateY(2px) scale(0.97);
 }
+
 
 /* скрытие тела */
 .order-card.closed .order-body {
