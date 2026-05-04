@@ -1,7 +1,7 @@
 
 /*
 ========================================
-double filtr fix | v1.10.5
+кнопка свитчера fix | v1.10.6
 ========================================
 */
 
@@ -144,7 +144,8 @@ Select  | Hall
 /*
 ========================================
 VIEW SWITCH
-одна строка: кнопки слева, View Mode + switch справа
+кнопки слева
+View Mode + switch справа
 ========================================
 */
 
@@ -154,30 +155,47 @@ VIEW SWITCH
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  overflow: hidden;
 }
 
 .view-buttons {
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap;      /* НЕ переносить */
+  flex-wrap: nowrap;
   align-items: center;
-  white-space: nowrap;    /* текст НЕ переносить */
-  overflow-x: auto;       /* если совсем не влезло — горизонтальный скролл */
+
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.view-mode-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .view-label {
-  
-  margin-right: 100px;
-  flex: 0 0 auto;         /* НЕ сжимать */
-  white-space: nowrap;    /* View Mode в одну строку */
   font-size: 14px;
   font-weight: 900;
   font-family: Arial, sans-serif;
   color: #334155;
+
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
-.view-buttons button {
-  flex: 0 0 auto;         /* кнопки НЕ сжимать и НЕ ломать */
+.view-buttons button,
+.grid-status-switch {
   border: 1px solid #cbd5e1;
   border-radius: 999px;
   padding: 8px 16px;
@@ -186,12 +204,26 @@ VIEW SWITCH
   font-weight: 800;
   cursor: pointer;
   transition: all 0.15s ease;
+
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.view-buttons button:hover,
+.grid-status-switch:hover {
+  border-color: #2563eb;
+}
+
+.view-buttons button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
 }
 
 /*
 ========================================
 GRID STATUS SWITCH
-показывается только в режиме Grid
+форма и цвета свитча
 ========================================
 */
 
@@ -199,10 +231,9 @@ GRID STATUS SWITCH
   display: none !important;
 }
 
-.view-buttons .grid-status-switch {
-  flex: 0 0 auto;
-  min-width: 105px;
-  white-space: nowrap;
+.grid-status-switch {
+  min-width: 108px;
+  text-align: center;
 }
 
 .grid-status-switch.all {
