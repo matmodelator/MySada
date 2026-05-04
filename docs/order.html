@@ -77,12 +77,16 @@
       <strong>New Order</strong>
 
       <div class="order-actions">
-        <div class="order-total" id="orderTotal">0</div>
+
+        <div class="order-total" id="orderTotal">
+          0
+        </div>
 
         <button class="order-toggle-btn"
                 type="button">
           Hide
         </button>
+
       </div>
 
     </div>
@@ -117,7 +121,23 @@
 
 </main>
 
-</body>
+<!--
+========================================
+КОНСОЛЬ
+========================================
+-->
+
+<div id="service-console">
+
+  <div class="row" id="build-top">
+    SHOW/HIDE ORDER SWITCH | v6.4.2
+  </div>
+
+  <div class="row" id="build-down">
+    deploy: --
+  </div>
+
+</div>
 
 <script type="module">
 
@@ -159,6 +179,15 @@ const backBtn =
 
 const reloadBtn =
   document.getElementById('reloadBtn')
+
+const itemsBox =
+  document.getElementById('orderItems')
+
+const totalBox =
+  document.getElementById('orderTotal')
+
+const addBtn =
+  document.getElementById('addItemBtn')
 
 
 /*
@@ -371,17 +400,17 @@ async function loadOrders() {
   ordersList.innerHTML =
     ''
 
- const { data, error } =
-  await supabase
-    .from('orders')
-    .select(`
-      *,
-      items (*)
-    `)
-    .eq('project_id', projectId)
-    .eq('hall_id', hallId)
-    .eq('table_id', tableId)
-    .order('opened_at', { ascending: false })
+  const { data, error } =
+    await supabase
+      .from('orders')
+      .select(`
+        *,
+        items (*)
+      `)
+      .eq('project_id', projectId)
+      .eq('hall_id', hallId)
+      .eq('table_id', tableId)
+      .order('opened_at', { ascending: false })
 
   if (error)
     throw error
@@ -526,8 +555,8 @@ async function closeOrder(order) {
 /*
 ========================================
 RENDER ORDER
-open   -> Close Order
-closed -> List Order
+open   -> expanded + Close Order
+closed -> collapsed + Show / Hide
 ========================================
 */
 
@@ -541,11 +570,39 @@ function renderOrder(order) {
   card.className =
     'order-card ' + status
 
-  /*
-  ----------------------------------------
-  Кнопка зависит от статуса заказа
-  ----------------------------------------
-  */
+  if (status !== 'open') {
+    card.classList.add('closed')
+  }
+
+  const head =
+    document.createElement('div')
+
+  head.className =
+    'order-head'
+
+  const title =
+    document.createElement('strong')
+
+  title.textContent =
+    'Order '
+    + (order.order_id || order.id || '')
+
+  const actions =
+    document.createElement('div')
+
+  actions.className =
+    'order-actions'
+
+  const total =
+    document.createElement('div')
+
+  total.className =
+    'order-total'
+
+  total.textContent =
+    order.total ?? '-'
+
+  actions.appendChild(total)
 
   if (status === 'open') {
     const closeBtn =
@@ -553,6 +610,9 @@ function renderOrder(order) {
 
     closeBtn.className =
       'order-close-btn'
+
+    closeBtn.type =
+      'button'
 
     closeBtn.textContent =
       'Close Order'
@@ -566,41 +626,35 @@ function renderOrder(order) {
       }
     )
 
-    card.appendChild(closeBtn)
-  }
-  else {
-    const listBtn =
-      document.createElement('button')
-
-    listBtn.className =
-      'order-list-btn'
-
-    listBtn.textContent =
-      'List Order'
-
-    listBtn.addEventListener(
-      'click',
-      event => {
-        event.stopPropagation()
-
-        card.classList.toggle('expanded')
-      }
-    )
-
-    card.appendChild(listBtn)
+    actions.appendChild(closeBtn)
   }
 
-  const title =
+  const toggleBtn =
+    document.createElement('button')
+
+  toggleBtn.className =
+    'order-toggle-btn'
+
+  toggleBtn.type =
+    'button'
+
+  toggleBtn.textContent =
+    status === 'open'
+      ? 'Hide'
+      : 'Show'
+
+  actions.appendChild(toggleBtn)
+
+  head.appendChild(title)
+  head.appendChild(actions)
+
+  card.appendChild(head)
+
+  const body =
     document.createElement('div')
 
-  title.className =
-    'order-title'
-
-  title.textContent =
-    'Order '
-    + (order.order_id || order.id || '')
-
-  card.appendChild(title)
+  body.className =
+    'order-body'
 
   const grid =
     document.createElement('div')
@@ -617,40 +671,41 @@ function renderOrder(order) {
   addField(grid, 'Note', order.note || '-')
   addField(grid, 'Created', formatDate(order.created_at))
 
-  card.appendChild(grid)
+  body.appendChild(grid)
 
-  /* ========================================
-   ITEMS / POSITIONS
-======================================== */
-
-if (order.items && order.items.length) {
-
-  const itemsBox =
-    document.createElement('div')
-
-  itemsBox.className =
-    'order-items'
-
-  order.items.forEach(item => {
-
-    const row =
+  if (order.items && order.items.length) {
+    const itemsBox =
       document.createElement('div')
 
-    row.className =
-      'order-item-row'
+    itemsBox.className =
+      'order-items'
 
-    row.textContent =
-      (item.name || 'Item')
-      + ' × '
-      + (item.qty || 1)
-      + ' = '
-      + (item.price || 0)
+    order.items.forEach(item => {
+      const row =
+        document.createElement('div')
 
-    itemsBox.appendChild(row)
-  })
+      row.className =
+        'order-item-row'
 
-  card.appendChild(itemsBox)
-}    
+      row.textContent =
+        (item.name || item.title || 'Item')
+        + ' / qty: '
+        + (item.qty || item.quantity || 1)
+        + ' / price: '
+        + (item.price || 0)
+        + ' / sum: '
+        + (
+          Number(item.qty || item.quantity || 1)
+          * Number(item.price || 0)
+        )
+
+      itemsBox.appendChild(row)
+    })
+
+    body.appendChild(itemsBox)
+  }
+
+  card.appendChild(body)
 
   ordersList.appendChild(card)
 }
@@ -717,6 +772,101 @@ function formatDate(value) {
 
 /*
 ========================================
+SHOW / HIDE ORDER SWITCH
+работает и для формы, и для заказов из базы
+========================================
+*/
+
+document.addEventListener('click', function (e) {
+  const btn =
+    e.target.closest('.order-toggle-btn')
+
+  if (!btn)
+    return
+
+  const card =
+    btn.closest('.order-card')
+
+  if (!card)
+    return
+
+  const isClosed =
+    card.classList.toggle('closed')
+
+  btn.textContent =
+    isClosed ? 'Show' : 'Hide'
+})
+
+
+/*
+========================================
+ORDER INPUT LOGIC
+========================================
+*/
+
+addBtn.addEventListener(
+  'click',
+  addRow
+)
+
+function addRow() {
+  const row =
+    document.createElement('div')
+
+  row.className =
+    'order-row'
+
+  row.innerHTML =
+    `
+      <input placeholder="name" class="name">
+      <input type="number" placeholder="qty" class="qty">
+      <input type="number" placeholder="price" class="price">
+      <span class="sum">0</span>
+    `
+
+  itemsBox.appendChild(row)
+
+  const qty =
+    row.querySelector('.qty')
+
+  const price =
+    row.querySelector('.price')
+
+  qty.addEventListener('input', update)
+  price.addEventListener('input', update)
+}
+
+function update() {
+  let total =
+    0
+
+  const rows =
+    itemsBox.querySelectorAll('.order-row')
+
+  rows.forEach(row => {
+    const qty =
+      Number(row.querySelector('.qty').value) || 0
+
+    const price =
+      Number(row.querySelector('.price').value) || 0
+
+    const sum =
+      qty * price
+
+    row.querySelector('.sum').textContent =
+      sum
+
+    total +=
+      sum
+  })
+
+  totalBox.textContent =
+    total
+}
+
+
+/*
+========================================
 BUTTONS
 ========================================
 */
@@ -754,85 +904,7 @@ reloadBtn.addEventListener(
   }
 )
 
-/*
-========================================
-SHOW/HIDE ORDER SWITCH
-========================================
-*/      
 
-document.addEventListener('click', function (e) {
-
-  const btn = e.target.closest('.order-toggle-btn')
-  if (!btn) return
-
-  const card = btn.closest('.order-card')
-  if (!card) return
-
-  card.classList.toggle('closed')
-
-  const isClosed = card.classList.contains('closed')
-
-  btn.textContent =
-    isClosed ? 'Show' : 'Hide'
-})
-
-/* ========================================
-ORDER INPUT LOGIC
-======================================== */
-
-const itemsBox = document.getElementById('orderItems')
-const totalBox = document.getElementById('orderTotal')
-const addBtn = document.getElementById('addItemBtn')
-
-addBtn.addEventListener('click', addRow)
-
-/* добавить строку */
-function addRow() {
-
-  const row = document.createElement('div')
-  row.className = 'order-row'
-
-  row.innerHTML = `
-    <input placeholder="name" class="name">
-    <input type="number" placeholder="qty" class="qty">
-    <input type="number" placeholder="price" class="price">
-    <span class="sum">0</span>
-  `
-
-  itemsBox.appendChild(row)
-
-  const qty = row.querySelector('.qty')
-  const price = row.querySelector('.price')
-
-  qty.addEventListener('input', update)
-  price.addEventListener('input', update)
-}
-
-/* пересчет */
-function update() {
-
-  let total = 0
-
-  const rows = itemsBox.querySelectorAll('.order-row')
-
-  rows.forEach(row => {
-
-    const qty = +row.querySelector('.qty').value || 0
-    const price = +row.querySelector('.price').value || 0
-
-    const sum = qty * price
-
-    row.querySelector('.sum').textContent = sum
-
-    total += sum
-  })
-
-  totalBox.textContent = total
-}
-
-/* стартовая строка */
-addRow()
-      
 /*
 ========================================
 INIT
@@ -849,6 +921,8 @@ async function init() {
 
     await loadNames()
 
+    addRow()
+
     await loadOrders()
   }
   catch (err) {
@@ -862,9 +936,9 @@ async function init() {
 
 init()
 
-
-      
 </script>
+
+
 
 <!--
 ========================================
@@ -875,7 +949,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   SHOW/HIDE ORDER SWITCH | v6.4.1
+   SHOW/HIDE ORDER SWITCH fix| v6.4.2
   </div>
 
   <div class="row" id="build-down">
