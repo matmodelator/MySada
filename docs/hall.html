@@ -1011,14 +1011,14 @@ function renderHallGrid() {
           event => {
             event.stopPropagation()
 
-            window.location.href =
-              'order.html'
-              + '?project_id='
-              + table.project_id
-              + '&hall_id='
-              + table.hall_id
-              + '&table_id='
-              + table.table_id
+           window.location.href =
+  'table.html'
+  + '?project_id='
+  + encodeURIComponent(table.project_id)
+  + '&hall_id='
+  + encodeURIComponent(table.hall_id)
+  + '&table_id='
+  + encodeURIComponent(table.table_id)
           }
         )
 
@@ -1649,13 +1649,13 @@ el.appendChild(label)
       event.stopPropagation()
 
       window.location.href =
-        'order.html'
-        + '?project_id='
-        + item.project_id
-        + '&hall_id='
-        + item.hall_id
-        + '&table_id='
-        + item.table_id
+  'table.html'
+  + '?project_id='
+  + encodeURIComponent(item.project_id)
+  + '&hall_id='
+  + encodeURIComponent(item.hall_id)
+  + '&table_id='
+  + encodeURIComponent(item.table_id)
     }
   )
 
@@ -2553,7 +2553,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-gridStatusSwitchBtn | v6.0.6
+переход по левой кнопке - в Table | v7.0.0
   </div>
 
   <div class="row" id="build-down">
