@@ -445,11 +445,15 @@ async function loadOrders() {
 ========================================
 OPEN NEW ORDER
 создаёт заказ и открывает order.html
+защита от двойного клика
 ========================================
 */
 
 async function openOrder() {
   try {
+    openOrderBtn.disabled =
+      true
+
     setStatus('Opening new order...')
 
     const { data: orderNumber, error: numberError } =
@@ -459,6 +463,9 @@ async function openOrder() {
           p_hall_id: hallId
         }
       )
+
+    console.log('NEW ORDER NUMBER:', orderNumber)
+    console.log('NEW ORDER NUMBER ERROR:', numberError)
 
     if (numberError)
       throw numberError
@@ -476,6 +483,9 @@ async function openOrder() {
         })
         .select()
         .single()
+
+    console.log('NEW ORDER DATA:', orderData)
+    console.log('NEW ORDER ERROR:', orderError)
 
     if (orderError)
       throw orderError
@@ -495,6 +505,9 @@ async function openOrder() {
   }
   catch (err) {
     console.error(err)
+
+    openOrderBtn.disabled =
+      false
 
     if (err.code === '23505') {
       alert(
@@ -969,7 +982,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    new order insert number/ table.css  | v1.1.0
+    защита от двойного клика  | v1.1.1
 
   </div>
 
