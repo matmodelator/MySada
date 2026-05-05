@@ -1,0 +1,1264 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+
+<title>MySada Table</title>
+
+  <!-- СТИЛЬ КОНСОЛИ -->
+<link rel="stylesheet"
+      href="styles/console.css" />
+
+<style>
+/* ========================================
+TABLE PAGE
+======================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef1f6;
+  color: #243447;
+  min-height: 100vh;
+}
+
+.top-bar {
+  background: #2563eb;
+  color: #fff;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.top-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.top-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: #ffffff;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+button:active {
+  transform: translateY(2px) scale(0.97);
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.25);
+}
+
+.open-order-btn {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.info-panel {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.info-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.info-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+
+.info-value {
+  font-size: 15px;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 18px 0 10px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.orders-list {
+  display: grid;
+  gap: 12px;
+}
+
+.order-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border-left: 6px solid #64748b;
+}
+
+.order-card.open {
+  border-left-color: #22c55e;
+}
+
+.order-card.closed {
+  border-left-color: #64748b;
+}
+
+.order-head {
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.order-main {
+  display: grid;
+  gap: 4px;
+}
+
+.order-number {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.order-meta {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.order-total {
+  font-size: 20px;
+  font-weight: 800;
+  min-width: 70px;
+  text-align: right;
+}
+
+.order-body {
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 14px 14px;
+}
+
+.order-card.collapsed .order-body {
+  display: none;
+}
+
+.order-items {
+  display: grid;
+  gap: 6px;
+}
+
+.order-item-row {
+  display: grid;
+  grid-template-columns: 1fr 70px 90px 90px;
+  gap: 8px;
+  font-size: 14px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.order-item-row.title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.order-item-row span:nth-child(2),
+.order-item-row span:nth-child(3),
+.order-item-row span:nth-child(4) {
+  text-align: right;
+}
+
+.go-btn {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.close-btn {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.toggle-btn {
+  background: #e2e8f0;
+}
+
+.empty {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  color: #64748b;
+}
+
+.status {
+  margin-top: 18px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  font-size: 13px;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .info-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .order-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .order-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+<header class="top-bar">
+
+  <button id="openOrderBtn"
+          class="open-order-btn"
+          type="button">
+    Open Order
+  </button>
+
+  <div class="top-title">
+    MySada Table
+  </div>
+
+  <div class="top-buttons">
+
+    <button id="backBtn"
+            type="button">
+      Back to Hall
+    </button>
+
+    <button id="reloadBtn"
+            type="button">
+      Reload
+    </button>
+
+  </div>
+
+</header>
+
+<main class="container">
+
+  <section class="info-panel">
+
+    <div class="info-card">
+      <div class="info-label">Project</div>
+      <div id="projectBox" class="info-value">loading...</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-label">Hall</div>
+      <div id="hallBox" class="info-value">loading...</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-label">Table</div>
+      <div id="tableBox" class="info-value">loading...</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-label">Table status</div>
+      <div id="tableStatusBox" class="info-value">loading...</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-label">User</div>
+      <div id="userBox" class="info-value">loading...</div>
+    </div>
+
+  </section>
+
+  <section class="orders-section">
+
+    <div class="section-head">
+      <div class="section-title">
+        Today table orders
+      </div>
+    </div>
+
+    <div id="ordersList"
+         class="orders-list">
+    </div>
+
+  </section>
+
+  <div id="status"
+       class="status">
+    Starting...
+  </div>
+
+</main>
+
+<div id="service-console">
+
+  <div class="row" id="build-top">
+    TABLE PAGE | v1.0.0
+  </div>
+
+  <div class="row" id="build-down">
+    deploy: --
+  </div>
+
+</div>
+
+<script type="module">
+
+import { supabase }
+from "./scripts/config.js"
+
+/*
+========================================
+DOM
+========================================
+*/
+
+const projectBox =
+  document.getElementById('projectBox')
+
+const hallBox =
+  document.getElementById('hallBox')
+
+const tableBox =
+  document.getElementById('tableBox')
+
+const tableStatusBox =
+  document.getElementById('tableStatusBox')
+
+const userBox =
+  document.getElementById('userBox')
+
+const ordersList =
+  document.getElementById('ordersList')
+
+const statusBox =
+  document.getElementById('status')
+
+const openOrderBtn =
+  document.getElementById('openOrderBtn')
+
+const backBtn =
+  document.getElementById('backBtn')
+
+const reloadBtn =
+  document.getElementById('reloadBtn')
+
+let buildDown =
+  document.getElementById('build-down')
+
+
+/*
+========================================
+STATE
+========================================
+*/
+
+let currentUser =
+  null
+
+let projectId =
+  null
+
+let hallId =
+  null
+
+let tableId =
+  null
+
+let projectName =
+  'Project'
+
+let hallName =
+  'Hall'
+
+let tableName =
+  'Table'
+
+let tableStatus =
+  'unknown'
+
+
+/*
+========================================
+STATUS
+========================================
+*/
+
+function updateBuildLine(text) {
+  if (!buildDown) {
+    buildDown =
+      document.getElementById('build-down')
+  }
+
+  if (!buildDown)
+    return
+
+  const now =
+    new Date()
+
+  const pad =
+    n => String(n).padStart(2, '0')
+
+  buildDown.textContent =
+    'deploy: '
+    + pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear()
+    + ' '
+    + pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes())
+    + ' | '
+    + text
+}
+
+function setStatus(text) {
+  statusBox.textContent =
+    text
+
+  console.log('[TABLE]', text)
+
+  updateBuildLine(text)
+}
+
+
+/*
+========================================
+PARAMS
+========================================
+*/
+
+function loadParams() {
+  const params =
+    new URLSearchParams(window.location.search)
+
+  projectId =
+    params.get('project_id')
+
+  hallId =
+    params.get('hall_id')
+
+  tableId =
+    params.get('table_id')
+
+  if (!projectId)
+    throw new Error('project_id is missing')
+
+  if (!hallId)
+    throw new Error('hall_id is missing')
+
+  if (!tableId)
+    throw new Error('table_id is missing')
+}
+
+
+/*
+========================================
+LOAD USER
+========================================
+*/
+
+async function loadUser() {
+  setStatus('Loading user...')
+
+  const { data, error } =
+    await supabase.auth.getUser()
+
+  if (error)
+    throw error
+
+  if (!data || !data.user)
+    throw new Error('User not logged in')
+
+  currentUser =
+    data.user
+
+  userBox.textContent =
+    currentUser.email || currentUser.id
+}
+
+
+/*
+========================================
+LOAD CONTEXT
+project / hall / table
+========================================
+*/
+
+async function loadContext() {
+  setStatus('Loading table context...')
+
+  const { data: project, error: projectError } =
+    await supabase
+      .from('projects')
+      .select('*')
+      .eq('project_id', projectId)
+      .maybeSingle()
+
+  if (projectError)
+    throw projectError
+
+  if (project) {
+    projectName =
+      project.name || project.project_name || projectId
+  }
+
+  const { data: hall, error: hallError } =
+    await supabase
+      .from('halls')
+      .select('*')
+      .eq('hall_id', hallId)
+      .maybeSingle()
+
+  if (hallError)
+    throw hallError
+
+  if (hall) {
+    hallName =
+      hall.name || hallId
+  }
+
+  const { data: table, error: tableError } =
+    await supabase
+      .from('tables')
+      .select('*')
+      .eq('table_id', tableId)
+      .maybeSingle()
+
+  if (tableError)
+    throw tableError
+
+  if (table) {
+    tableName =
+      table.name || tableId
+
+    tableStatus =
+      table.table_status || table.status || 'unknown'
+  }
+
+  projectBox.textContent =
+    projectName
+
+  hallBox.textContent =
+    hallName
+
+  tableBox.textContent =
+    tableName
+
+  tableStatusBox.textContent =
+    tableStatus
+}
+
+
+/*
+========================================
+TODAY RANGE
+сегодня по локальному времени браузера
+для фильтра created_at
+========================================
+*/
+
+function getTodayRange() {
+  const start =
+    new Date()
+
+  start.setHours(0, 0, 0, 0)
+
+  const end =
+    new Date(start)
+
+  end.setDate(
+    end.getDate() + 1
+  )
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString()
+  }
+}
+
+
+/*
+========================================
+LOAD TABLE ORDERS
+все заказы стола за текущий день:
+open + closed
+========================================
+*/
+
+async function loadOrders() {
+  setStatus('Loading table orders...')
+
+  ordersList.innerHTML =
+    ''
+
+  const range =
+    getTodayRange()
+
+  const { data, error } =
+    await supabase
+      .from('orders')
+      .select(`
+        *,
+        items (*)
+      `)
+      .eq('project_id', projectId)
+      .eq('hall_id', hallId)
+      .eq('table_id', tableId)
+      .gte('created_at', range.start)
+      .lt('created_at', range.end)
+      .order('order_number', { ascending: false })
+
+  if (error)
+    throw error
+
+  if (!data || !data.length) {
+    ordersList.innerHTML =
+      '<div class="empty">No orders for this table today</div>'
+
+    setStatus('No orders found')
+
+    return
+  }
+
+  data.forEach(renderOrder)
+
+  setStatus(
+    'Orders loaded: ' + data.length
+  )
+}
+
+
+/*
+========================================
+OPEN NEW ORDER
+создаёт заказ и открывает order.html
+========================================
+*/
+
+async function openOrder() {
+  try {
+    setStatus('Opening new order...')
+
+    const { data: orderData, error: orderError } =
+      await supabase
+        .from('orders')
+        .insert({
+          project_id: projectId,
+          hall_id: hallId,
+          table_id: tableId,
+          guest_count: 0,
+          order_status: 'open'
+        })
+        .select()
+        .single()
+
+    if (orderError)
+      throw orderError
+
+    const { error: tableError } =
+      await supabase
+        .from('tables')
+        .update({
+          table_status: 'occupied'
+        })
+        .eq('table_id', tableId)
+
+    if (tableError)
+      throw tableError
+
+    goToOrder(orderData)
+  }
+  catch (err) {
+    console.error(err)
+
+    if (err.code === '23505') {
+      alert(
+        'Order number conflict.\nPress Open Order again.'
+      )
+
+      setStatus(
+        'Order number conflict. Press Open Order again.'
+      )
+
+      return
+    }
+
+    setStatus(
+      'Open order error: ' + err.message
+    )
+  }
+}
+
+
+/*
+========================================
+CLOSE ORDER
+закрывает заказ
+если open orders больше нет — table free
+========================================
+*/
+
+async function closeOrder(order) {
+  try {
+    setStatus('Closing order...')
+
+    const orderId =
+      order.order_id || order.id
+
+    const { error: closeError } =
+      await supabase
+        .from('orders')
+        .update({
+          order_status: 'closed',
+          closed_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId)
+
+    if (closeError)
+      throw closeError
+
+    const { data: openOrders, error: openError } =
+      await supabase
+        .from('orders')
+        .select('order_id')
+        .eq('table_id', tableId)
+        .eq('order_status', 'open')
+
+    if (openError)
+      throw openError
+
+    if (!openOrders || !openOrders.length) {
+      const { error: tableError } =
+        await supabase
+          .from('tables')
+          .update({
+            table_status: 'free'
+          })
+          .eq('table_id', tableId)
+
+      if (tableError)
+        throw tableError
+    }
+
+    await loadContext()
+    await loadOrders()
+
+    setStatus('Order closed')
+  }
+  catch (err) {
+    console.error(err)
+
+    setStatus(
+      'Close order error: ' + err.message
+    )
+  }
+}
+
+
+/*
+========================================
+RENDER ORDER CARD
+карта заказа в списке стола
+========================================
+*/
+
+function renderOrder(order) {
+  const status =
+    order.order_status || order.status || 'open'
+
+  const card =
+    document.createElement('article')
+
+  card.className =
+    'order-card ' + status
+
+  if (status !== 'open') {
+    card.classList.add('collapsed')
+  }
+
+  const head =
+    document.createElement('div')
+
+  head.className =
+    'order-head'
+
+  const main =
+    document.createElement('div')
+
+  main.className =
+    'order-main'
+
+  const number =
+    document.createElement('div')
+
+  number.className =
+    'order-number'
+
+  number.textContent =
+    'Order #'
+    + (
+      order.order_number
+      || order.order_id
+      || order.id
+      || '-'
+    )
+
+  const meta =
+    document.createElement('div')
+
+  meta.className =
+    'order-meta'
+
+  meta.textContent =
+    status
+    + ' | opened: '
+    + formatDate(order.opened_at || order.created_at)
+
+  main.appendChild(number)
+  main.appendChild(meta)
+
+  const actions =
+    document.createElement('div')
+
+  actions.className =
+    'order-actions'
+
+  const total =
+    document.createElement('div')
+
+  total.className =
+    'order-total'
+
+  total.textContent =
+    order.total ?? '0'
+
+  const goBtn =
+    document.createElement('button')
+
+  goBtn.className =
+    'go-btn'
+
+  goBtn.type =
+    'button'
+
+  goBtn.textContent =
+    status === 'open'
+      ? 'Edit'
+      : 'Open'
+
+  goBtn.addEventListener(
+    'click',
+    () => goToOrder(order)
+  )
+
+  const toggleBtn =
+    document.createElement('button')
+
+  toggleBtn.className =
+    'toggle-btn'
+
+  toggleBtn.type =
+    'button'
+
+  toggleBtn.textContent =
+    status === 'open'
+      ? 'Hide'
+      : 'Show'
+
+  toggleBtn.addEventListener(
+    'click',
+    () => {
+      card.classList.toggle('collapsed')
+
+      toggleBtn.textContent =
+        card.classList.contains('collapsed')
+          ? 'Show'
+          : 'Hide'
+    }
+  )
+
+  actions.appendChild(total)
+  actions.appendChild(goBtn)
+
+  if (status === 'open') {
+    const closeBtn =
+      document.createElement('button')
+
+    closeBtn.className =
+      'close-btn'
+
+    closeBtn.type =
+      'button'
+
+    closeBtn.textContent =
+      'Close'
+
+    closeBtn.addEventListener(
+      'click',
+      () => closeOrder(order)
+    )
+
+    actions.appendChild(closeBtn)
+  }
+
+  actions.appendChild(toggleBtn)
+
+  head.appendChild(main)
+  head.appendChild(actions)
+
+  const body =
+    document.createElement('div')
+
+  body.className =
+    'order-body'
+
+  body.appendChild(
+    renderItems(order.items || [])
+  )
+
+  card.appendChild(head)
+  card.appendChild(body)
+
+  ordersList.appendChild(card)
+}
+
+
+/*
+========================================
+RENDER ITEMS
+позиции заказа
+========================================
+*/
+
+function renderItems(items) {
+  const box =
+    document.createElement('div')
+
+  box.className =
+    'order-items'
+
+  const title =
+    document.createElement('div')
+
+  title.className =
+    'order-item-row title'
+
+  title.innerHTML =
+    `
+      <span>Name</span>
+      <span>Qty</span>
+      <span>Price</span>
+      <span>Sum</span>
+    `
+
+  box.appendChild(title)
+
+  if (!items.length) {
+    const empty =
+      document.createElement('div')
+
+    empty.className =
+      'empty'
+
+    empty.textContent =
+      'No positions'
+
+    box.appendChild(empty)
+
+    return box
+  }
+
+  items.forEach(item => {
+    const qty =
+      Number(item.qty || item.quantity || 1)
+
+    const price =
+      Number(item.price || 0)
+
+    const sum =
+      qty * price
+
+    const row =
+      document.createElement('div')
+
+    row.className =
+      'order-item-row'
+
+    row.innerHTML =
+      `
+        <span>${escapeHtml(item.name || item.title || 'Item')}</span>
+        <span>${qty}</span>
+        <span>${price}</span>
+        <span>${sum}</span>
+      `
+
+    box.appendChild(row)
+  })
+
+  return box
+}
+
+
+/*
+========================================
+GO TO ORDER
+переход в редактор одного заказа
+========================================
+*/
+
+function goToOrder(order) {
+  const orderId =
+    order.order_id || order.id
+
+  window.location.href =
+    'order.html'
+    + '?project_id='
+    + encodeURIComponent(projectId)
+    + '&hall_id='
+    + encodeURIComponent(hallId)
+    + '&table_id='
+    + encodeURIComponent(tableId)
+    + '&order_id='
+    + encodeURIComponent(orderId)
+}
+
+
+/*
+========================================
+FORMAT DATE
+========================================
+*/
+
+function formatDate(value) {
+  if (!value)
+    return '-'
+
+  const date =
+    new Date(value)
+
+  if (Number.isNaN(date.getTime()))
+    return value
+
+  return date.toLocaleString()
+}
+
+
+/*
+========================================
+ESCAPE HTML
+========================================
+*/
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
+
+/*
+========================================
+BUTTONS
+========================================
+*/
+
+openOrderBtn.addEventListener(
+  'click',
+  openOrder
+)
+
+backBtn.addEventListener(
+  'click',
+  () => {
+    window.location.href =
+      'hall.html'
+      + '?project_id='
+      + encodeURIComponent(projectId)
+      + '&hall_id='
+      + encodeURIComponent(hallId)
+  }
+)
+
+reloadBtn.addEventListener(
+  'click',
+  async () => {
+    try {
+      await loadContext()
+      await loadOrders()
+    }
+    catch (err) {
+      console.error(err)
+
+      setStatus(
+        'Reload error: ' + err.message
+      )
+    }
+  }
+)
+
+
+/*
+========================================
+INIT
+========================================
+*/
+
+async function init() {
+  try {
+    loadParams()
+
+    await loadUser()
+
+    await loadContext()
+
+    await loadOrders()
+  }
+  catch (err) {
+    console.error('TABLE INIT ERROR:', err)
+
+    setStatus(
+      'Table error: ' + err.message
+    )
+  }
+}
+
+init()
+
+</script>
+
+
+
+<!-- ========================================
+     SERVICE CONSOLE
+     Верхняя строка редактируется вручную
+     Здесь задается:
+     - название страницы
+     - номер версии
+======================================== -->
+
+<div id="service-console">
+
+  <div class="row" id="build-top">
+
+    <!-- ВВОД ВРУЧНУЮ -->
+
+    create by GPT  | v1.0.0
+
+  </div>
+
+  <div class="row" id="build-down">
+
+    deploy: --
+
+  </div>
+
+</div>
+
+<!-- ========================================
+     SCRIPT
+     Автоматически выводит:
+     - дату
+     - время
+     Момент загрузки страницы
+======================================== -->
+
+<script>
+
+(function () {
+
+  /* Текущая дата и время */
+
+  const now = new Date();
+
+  /* Добавляет ведущий ноль */
+
+  const pad = n =>
+    String(n).padStart(2, '0');
+
+  /* Формат даты */
+
+  const date =
+      pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear();
+
+  /* Формат времени */
+
+  const time =
+      pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes());
+
+  /* Вывод в нижнюю строку */
+
+  document
+    .getElementById('build-down')
+    .textContent =
+      'deploy: '
+      + date
+      + ' '
+      + time;
+
+})();
+
+</script>
+
+
+</body>
+</html>  
