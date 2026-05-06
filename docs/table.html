@@ -860,16 +860,7 @@ function goToOrder(order) {
     + '&order_id='
     + encodeURIComponent(orderId)
 }
-
-// ПЕРЕХОД НА user.html
-const userBox = document.getElementById('userBox');
-
-if (userBox) {
-  userBox.addEventListener('click', () => {
-    window.location.href = 'user.html';
-  });
-}
-      
+    
 /*
 ========================================
 FORMAT DATE
@@ -929,6 +920,13 @@ backBtn.addEventListener(
   }
 )
 
+// USER CLICK → user.html
+if (userBox) {
+  userBox.addEventListener('click', () => {
+    window.location.href = 'user.html';
+  });
+}
+      
 reloadBtn.addEventListener(
   'click',
   async () => {
@@ -991,7 +989,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    ПЕРЕХОД НА user.html  | v1.2.1
+    USER CLICK → user.html  | v1.2.2
 
   </div>
 
