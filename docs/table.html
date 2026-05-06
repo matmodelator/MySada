@@ -287,8 +287,41 @@ async function loadUser() {
   currentUser =
     data.user
 
-  userBox.textContent =
-    currentUser.email || currentUser.id
+  // грузим данные из users
+const { data: userData, error: userError } =
+  await supabase
+    .from('users')
+    .select('user_number, name, role')
+    .eq('user_id', currentUser.id)
+    .single()
+
+if (userError) {
+  console.error(userError)
+  userBox.textContent = currentUser.id
+  return
+}
+
+// собираем только то, что есть
+const parts = []
+
+if (userData.name && userData.name.trim() !== '') {
+  parts.push(userData.name)
+}
+
+if (userData.user_number) {
+  parts.push('#' + userData.user_number)
+}
+
+if (userData.role && userData.role.trim() !== '') {
+  parts.push(userData.role)
+}
+
+// если что-то есть → показываем
+// если нет → fallback на id
+userBox.textContent =
+  parts.length
+    ? parts.join(' | ')
+    : currentUser.id
 }
 
 
@@ -989,7 +1022,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    USER CLICK → user.html  | v1.2.2
+    userBox.textContent  | v1.3.0
 
   </div>
 
