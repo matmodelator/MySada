@@ -316,8 +316,26 @@ async function loadUser() {
   currentUser =
     data.user
 
-  userBox.textContent =
-    currentUser.email || currentUser.id
+  // ЗАГРУЗКА user_number + name + role из users
+const { data: userData, error: userError } =
+  await supabase
+    .from('users')
+    .select('user_number, name, role')
+    .eq('user_id', currentUser.id)
+    .single()
+
+if (userError) {
+  console.error(userError)
+  userBox.textContent = 'User load error'
+  return
+}
+
+const userInfo =
+  '#' + (userData.user_number ?? '-')
+  + ' | ' + (userData.name || 'no name')
+  + ' | ' + (userData.role || 'no role')
+
+userBox.textContent = userInfo
 }
 
 
@@ -376,14 +394,20 @@ async function loadNames() {
       table.name || tableId
   }
 
-  projectBox.textContent =
-    projectName + ' / ' + projectId
+ projectName =
+  (project && project.name && project.name.trim() !== '')
+    ? project.name
+    : projectId
 
-  hallBox.textContent =
-    hallName + ' / ' + hallId
+hallName =
+  (hall && hall.name && hall.name.trim() !== '')
+    ? hall.name
+    : hallId
 
-  tableBox.textContent =
-    tableName + ' / ' + tableId
+tableName =
+  (table && table.name && table.name.trim() !== '')
+    ? table.name
+    : tableId
 }
 
 
@@ -391,18 +415,18 @@ async function loadNames() {
 ========================================
 LOAD ORDERS
 загружаем все заказы выбранного стола
++ user_number + name + role (через orders_full)
 ========================================
 */
 
 async function loadOrders() {
   setStatus('Loading orders...')
 
-  ordersList.innerHTML =
-    ''
+  ordersList.innerHTML = ''
 
   const { data, error } =
     await supabase
-      .from('orders')
+      .from('orders_full')
       .select(`
         *,
         items (*)
@@ -420,17 +444,21 @@ async function loadOrders() {
       '<div class="empty">No orders for this table</div>'
 
     setStatus('No orders found')
-
     return
   }
 
-  data.forEach(renderOrder)
+  // 🔥 ДОБАВЛЯЕМ user info в каждый заказ
+  data.forEach(order => {
+    order._userInfo =
+      '#' + (order.user_number ?? '-')
+      + ' | ' + (order.name || 'no name')
+      + ' | ' + (order.role || 'no role')
 
-  setStatus(
-    'Orders loaded: ' + data.length
-  )
+    renderOrder(order)
+  })
+
+  setStatus('Orders loaded: ' + data.length)
 }
-
 
 /*
 ========================================
@@ -448,12 +476,14 @@ async function openOrder() {
       await supabase
         .from('orders')
         .insert({
-          project_id: projectId,
-          hall_id: hallId,
-          table_id: tableId,
-          guest_count: 0,
-          order_status: 'open'
-        })
+  project_id: projectId,
+  hall_id: hallId,
+  table_id: tableId,
+  user_id: currentUser.id, // 🔥 КЛЮЧЕВОЕ
+  guest_count: 1,
+  order_status: 'open',
+  order_number: orderNumber
+})
         .select()
         .single()
 
@@ -555,8 +585,7 @@ async function closeOrder(order) {
 /*
 ========================================
 RENDER ORDER
-open   -> expanded + Close Order
-closed -> collapsed + Show / Hide
++ USER INFO (#number | name | role)
 ========================================
 */
 
@@ -621,7 +650,6 @@ function renderOrder(order) {
       'click',
       event => {
         event.stopPropagation()
-
         closeOrder(order)
       }
     )
@@ -661,6 +689,14 @@ function renderOrder(order) {
 
   grid.className =
     'order-grid'
+
+  // 🔥 USER INFO
+  const userInfo =
+    '#' + (order.user_number ?? '-')
+    + ' | ' + (order.name || 'no name')
+    + ' | ' + (order.role || 'no role')
+
+  addField(grid, 'User', userInfo)
 
   addField(grid, 'Status', status)
   addField(grid, 'Guests', order.guest_count ?? '-')
@@ -949,7 +985,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   SHOW/HIDE ORDER SWITCH fix| v6.4.2
+   insert order fix + name (number) without ID + USER (view) INFO (#number | name | role)| v7.0.0
   </div>
 
   <div class="row" id="build-down">
