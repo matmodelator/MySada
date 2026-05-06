@@ -74,7 +74,9 @@
 
     <div class="info-card">
       <div class="info-label">User</div>
-      <div id="userBox" class="info-value">loading...</div>
+      <button id="userBox" class="info-value info-button" type="button">
+  loading...
+</button>
     </div>
 
   </section>
@@ -859,7 +861,15 @@ function goToOrder(order) {
     + encodeURIComponent(orderId)
 }
 
+// ПЕРЕХОД НА user.html
+const userBox = document.getElementById('userBox');
 
+if (userBox) {
+  userBox.addEventListener('click', () => {
+    window.location.href = 'user.html';
+  });
+}
+      
 /*
 ========================================
 FORMAT DATE
@@ -935,8 +945,7 @@ reloadBtn.addEventListener(
     }
   }
 )
-
-
+    
 /*
 ========================================
 INIT
@@ -982,7 +991,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    защита от двойного клика  | v1.1.1
+    ПЕРЕХОД НА user.html  | v1.2.1
 
   </div>
 
