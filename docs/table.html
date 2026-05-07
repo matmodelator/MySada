@@ -22,11 +22,11 @@
 
 <header class="top-bar">
 
-  <button id="openOrderBtn"
-          class="open-order-btn"
-          type="button">
-    Open Order
-  </button>
+  <button id="createOrderBtn"
+        class="create-order-btn"
+        type="button">
+  Create Order
+</button>
 
   <div class="top-title">
     MySada Table
@@ -146,8 +146,8 @@ const ordersList =
 const statusBox =
   document.getElementById('status')
 
-const openOrderBtn =
-  document.getElementById('openOrderBtn')
+const createOrderBtn =
+  document.getElementById('createOrderBtn')
 
 const backBtn =
   document.getElementById('backBtn')
@@ -501,53 +501,37 @@ OPEN NEW ORDER
 async function openOrder() {
   try {
 
-// 🔥 ПРОВЕРКА ПЕРЕД INSERT
     if (!currentUser || !currentUser.id) {
       setStatus('User not loaded')
-      console.error('USER NULL:', currentUser)
       return
     }
 
-setStatus('INSERT USER: ' + (currentUser?.id || 'NULL'))
-        
-    openOrderBtn.disabled =
-      true
+    createOrderBtn.disabled = true
 
-    setStatus('Opening new order...')
+    setStatus('Creating order...')
 
     const { data: orderNumber, error: numberError } =
-      await supabase.rpc(
-        'generate_order_number',
-        {
-          p_hall_id: hallId
-        }
-      )
-
-    console.log('NEW ORDER NUMBER:', orderNumber)
-    console.log('NEW ORDER NUMBER ERROR:', numberError)
+      await supabase.rpc('generate_order_number', {
+        p_hall_id: hallId
+      })
 
     if (numberError)
       throw numberError
 
-   const { data: orderData, error: orderError } =
-  await supabase
-    .from('orders')
-    .insert({
-      project_id: projectId,
-      hall_id: hallId,
-      table_id: tableId,
-
-      user_id: currentUser.id, // 🔥 ВОТ ЭТОГО НЕ ХВАТАЛО
-
-      guest_count: 0,
-      order_status: 'open',
-      order_number: orderNumber
-    })
-    .select()
-    .single()
-
-    console.log('NEW ORDER DATA:', orderData)
-    console.log('NEW ORDER ERROR:', orderError)
+    const { data: orderData, error: orderError } =
+      await supabase
+        .from('orders')
+        .insert({
+          project_id: projectId,
+          hall_id: hallId,
+          table_id: tableId,
+          user_id: currentUser.id,
+          guest_count: 0,
+          order_status: 'open',
+          order_number: orderNumber
+        })
+        .select()
+        .single()
 
     if (orderError)
       throw orderError
@@ -563,34 +547,24 @@ setStatus('INSERT USER: ' + (currentUser?.id || 'NULL'))
     if (tableError)
       throw tableError
 
-setStatus('ORDER CREATED: ' + (orderData?.order_id || 'ERROR'))
-        
-    goToOrder(orderData)
-  }
-  catch (err) {
+    // 🔥 ВАЖНО: НЕ ПЕРЕХОДИМ
+    setStatus('ORDER CREATED: ' + orderData.order_id)
+
+    // 🔥 ОБНОВЛЯЕМ СПИСОК
+    await loadOrders()
+
+    createOrderBtn.disabled = false
+
+  } catch (err) {
+
     console.error(err)
 
-    openOrderBtn.disabled =
-      false
+    createOrderBtn.disabled = false
 
-    if (err.code === '23505') {
-      alert(
-        'Order number conflict.\nPress Open Order again.'
-      )
-
-      setStatus(
-        'Order number conflict. Press Open Order again.'
-      )
-
-      return
-    }
-
-    setStatus(
-      'Open order error: ' + err.message
-    )
+    setStatus('Create order error: ' + err.message)
   }
 }
-
+      
 /*
 ========================================
 CLOSE ORDER
@@ -1051,7 +1025,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    user_id & console log  | v1.3.1
+    createOrderBtn not go to order  | v1.3.2
 
   </div>
 
