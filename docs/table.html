@@ -978,7 +978,38 @@ reloadBtn.addEventListener(
     }
   }
 )
-    
+
+/*
+========================================
+REALTIME SUBSCRIBE
+========================================
+*/
+
+function subscribeRealtime() {
+
+  supabase
+    .channel('orders-channel')
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'orders',
+        filter: `table_id=eq.${tableId}`
+      },
+      payload => {
+
+        setStatus('REALTIME: order change')
+
+        // 🔥 обновляем список
+        loadOrders()
+      }
+    )
+
+    .subscribe()
+}
+      
 /*
 ========================================
 INIT
@@ -994,6 +1025,8 @@ async function init() {
     await loadContext()
 
     await loadOrders()
+
+        subscribeRealtime()
   }
   catch (err) {
     console.error('TABLE INIT ERROR:', err)
@@ -1024,7 +1057,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    createOrder fix  | v1.3.3
+    REALTIME SUBSCRIBE  | v1.4.0
 
   </div>
 
