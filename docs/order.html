@@ -6,13 +6,10 @@
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0" />
 
-<title>MySada Orders</title>
+<title>MySada Order</title>
 
-<link rel="stylesheet"
-      href="styles/console.css" />
-
-<link rel="stylesheet"
-      href="styles/order.css" />
+<link rel="stylesheet" href="styles/console.css" />
+<link rel="stylesheet" href="styles/order.css" />
 
 </head>
 
@@ -20,13 +17,9 @@
 
 <header class="top-bar">
 
-  <button id="openOrderBtn"
-          class="open-order-main-btn"
-          type="button">
-    Open Order
-  </button>
-
-  <div class="top-title">MySada Orders</div>
+  <div class="top-title">
+    MySada Order
+  </div>
 
   <div class="top-buttons">
     <button id="backBtn" type="button">
@@ -41,6 +34,10 @@
 </header>
 
 <main class="container">
+
+  <!-- ========================================
+       INFO PANEL
+  ======================================== -->
 
   <section class="info-panel">
 
@@ -67,25 +64,22 @@
   </section>
 
   <!-- ========================================
-  ORDER CARD / INPUT FORM
+       ORDER FORM (ОДИН ЗАКАЗ)
   ======================================== -->
 
-  <section class="order-card open-order">
+  <section class="order-card">
 
     <div class="order-head">
 
-      <strong>New Order</strong>
+      <strong id="orderTitle">
+        Order
+      </strong>
 
       <div class="order-actions">
 
         <div class="order-total" id="orderTotal">
           0
         </div>
-
-        <button class="order-toggle-btn"
-                type="button">
-          Hide
-        </button>
 
       </div>
 
@@ -102,8 +96,7 @@
 
       <div id="orderItems"></div>
 
-      <button id="addItemBtn"
-              type="button">
+      <button id="addItemBtn" type="button">
         + Add position
       </button>
 
@@ -115,34 +108,23 @@
     Starting...
   </div>
 
-  <section id="ordersList"
-           class="orders-list">
-  </section>
-
 </main>
 
-<!--
-========================================
-КОНСОЛЬ
-========================================
--->
-
-<div id="service-console">
-
-  <div class="row" id="build-top">
-    SHOW/HIDE ORDER SWITCH | v6.4.2
-  </div>
-
-  <div class="row" id="build-down">
-    deploy: --
-  </div>
-
-</div>
+<!-- ========================================
+     SCRIPT
+======================================== -->
 
 <script type="module">
 
-import { supabase }
-from "./scripts/config.js"
+/*
+========================================
+DEBUG
+включить / выключить ID
+========================================
+*/
+const DEBUG_IDS = true;
+
+import { supabase } from "./scripts/config.js"
 
 /*
 ========================================
@@ -150,45 +132,19 @@ DOM
 ========================================
 */
 
-const projectBox =
-  document.getElementById('projectBox')
+const projectBox = document.getElementById('projectBox')
+const hallBox = document.getElementById('hallBox')
+const tableBox = document.getElementById('tableBox')
+const userBox = document.getElementById('userBox')
+const statusBox = document.getElementById('status')
 
-const hallBox =
-  document.getElementById('hallBox')
+const itemsBox = document.getElementById('orderItems')
+const totalBox = document.getElementById('orderTotal')
+const addBtn = document.getElementById('addItemBtn')
+const orderTitle = document.getElementById('orderTitle')
 
-const tableBox =
-  document.getElementById('tableBox')
-
-const userBox =
-  document.getElementById('userBox')
-
-const statusBox =
-  document.getElementById('status')
-
-const ordersList =
-  document.getElementById('ordersList')
-
-let buildDown =
-  document.getElementById('build-down')
-
-const openOrderBtn =
-  document.getElementById('openOrderBtn')
-
-const backBtn =
-  document.getElementById('backBtn')
-
-const reloadBtn =
-  document.getElementById('reloadBtn')
-
-const itemsBox =
-  document.getElementById('orderItems')
-
-const totalBox =
-  document.getElementById('orderTotal')
-
-const addBtn =
-  document.getElementById('addItemBtn')
-
+const backBtn = document.getElementById('backBtn')
+const reloadBtn = document.getElementById('reloadBtn')
 
 /*
 ========================================
@@ -196,27 +152,8 @@ STATE
 ========================================
 */
 
-let currentUser =
-  null
-
-let projectId =
-  null
-
-let hallId =
-  null
-
-let tableId =
-  null
-
-let projectName =
-  'Project'
-
-let hallName =
-  'Hall'
-
-let tableName =
-  'Table'
-
+let currentUser = null
+let orderId = null
 
 /*
 ========================================
@@ -224,76 +161,25 @@ STATUS
 ========================================
 */
 
-function updateBuildLine(text) {
-  if (!buildDown) {
-    buildDown =
-      document.getElementById('build-down')
-  }
-
-  if (!buildDown)
-    return
-
-  const now =
-    new Date()
-
-  const pad =
-    n => String(n).padStart(2, '0')
-
-  buildDown.textContent =
-    'deploy: '
-    + pad(now.getDate())
-    + '.'
-    + pad(now.getMonth() + 1)
-    + '.'
-    + now.getFullYear()
-    + ' '
-    + pad(now.getHours())
-    + ':'
-    + pad(now.getMinutes())
-    + ' | '
-    + text
-}
-
 function setStatus(text) {
-  statusBox.textContent =
-    text
-
-  console.log('[ORDERS]', text)
-
-  updateBuildLine(text)
+  statusBox.textContent = text
+  console.log('[ORDER]', text)
 }
-
 
 /*
 ========================================
 PARAMS
-берём project_id / hall_id / table_id из URL
 ========================================
 */
 
 function loadParams() {
-  const params =
-    new URLSearchParams(window.location.search)
+  const params = new URLSearchParams(window.location.search)
 
-  projectId =
-    params.get('project_id')
+  orderId = params.get('order_id')
 
-  hallId =
-    params.get('hall_id')
-
-  tableId =
-    params.get('table_id')
-
-  if (!projectId)
-    throw new Error('project_id is missing')
-
-  if (!hallId)
-    throw new Error('hall_id is missing')
-
-  if (!tableId)
-    throw new Error('table_id is missing')
+  if (!orderId)
+    throw new Error('order_id is missing')
 }
-
 
 /*
 ========================================
@@ -302,608 +188,149 @@ LOAD USER
 */
 
 async function loadUser() {
-  setStatus('Loading user...')
 
-  const { data, error } =
+  const { data } =
     await supabase.auth.getUser()
 
-  if (error)
-    throw error
+  currentUser = data.user
 
-  if (!data || !data.user)
-    throw new Error('User not logged in')
-
-  currentUser =
-    data.user
-
-  // ЗАГРУЗКА user_number + name + role из users
-const { data: userData, error: userError } =
-  await supabase
-    .from('users')
-    .select('user_number, name, role')
-    .eq('user_id', currentUser.id)
-    .single()
-
-if (userError) {
-  console.error(userError)
-  userBox.textContent = 'User load error'
-  return
+  userBox.textContent =
+    currentUser.email || currentUser.id
 }
-
-const userInfo =
-  '#' + (userData.user_number ?? '-')
-  + ' | ' + (userData.name || 'no name')
-  + ' | ' + (userData.role || 'no role')
-
-userBox.textContent = userInfo
-}
-
 
 /*
 ========================================
-LOAD NAMES
-загружаем имена проекта / зала / стола
+LOAD ORDER
 ========================================
 */
 
-async function loadNames() {
-  setStatus('Loading names...')
+async function loadOrder() {
 
-  const { data: project, error: projectError } =
-    await supabase
-      .from('projects')
-      .select('*')
-      .eq('project_id', projectId)
-      .maybeSingle()
-
-  if (projectError)
-    throw projectError
-
-  if (project) {
-    projectName =
-      project.name || project.project_name || projectId
-  }
-
-  const { data: hall, error: hallError } =
-    await supabase
-      .from('halls')
-      .select('*')
-      .eq('hall_id', hallId)
-      .maybeSingle()
-
-  if (hallError)
-    throw hallError
-
-  if (hall) {
-    hallName =
-      hall.name || hallId
-  }
-
-  const { data: table, error: tableError } =
-    await supabase
-      .from('tables')
-      .select('*')
-      .eq('table_id', tableId)
-      .maybeSingle()
-
-  if (tableError)
-    throw tableError
-
-  if (table) {
-    tableName =
-      table.name || tableId
-  }
-
- projectName =
-  (project && project.name && project.name.trim() !== '')
-    ? project.name
-    : projectId
-
-hallName =
-  (hall && hall.name && hall.name.trim() !== '')
-    ? hall.name
-    : hallId
-
-tableName =
-  (table && table.name && table.name.trim() !== '')
-    ? table.name
-    : tableId
-
-projectBox.textContent = projectName
-hallBox.textContent = hallName
-tableBox.textContent = tableName      
-}
-
-
-/*
-========================================
-LOAD ORDERS
-загружаем все заказы выбранного стола
-+ user_number + name + role (через orders_full)
-========================================
-*/
-
-async function loadOrders() {
-  setStatus('Loading orders...')
-
-  ordersList.innerHTML = ''
+  setStatus('Loading order...')
 
   const { data, error } =
     await supabase
       .from('orders_full')
-      .select(`
-        *,
-        items (*)
-      `)
-      .eq('project_id', projectId)
-      .eq('hall_id', hallId)
-      .eq('table_id', tableId)
-      .order('opened_at', { ascending: false })
+      .select(`*, items (*)`)
+      .eq('order_id', orderId)
+      .single()
 
-  if (error)
-    throw error
+  if (error) throw error
 
-  if (!data || !data.length) {
-    ordersList.innerHTML =
-      '<div class="empty">No orders for this table</div>'
-
-    setStatus('No orders found')
-    return
-  }
-
-  // 🔥 ДОБАВЛЯЕМ user info в каждый заказ
-  data.forEach(order => {
-    order._userInfo =
-      '#' + (order.user_number ?? '-')
-      + ' | ' + (order.name || 'no name')
-      + ' | ' + (order.role || 'no role')
-
-    renderOrder(order)
-  })
-
-  setStatus('Orders loaded: ' + data.length)
+  renderOrder(data)
 }
 
 /*
 ========================================
-OPEN ORDER
-создаёт новый заказ
-и переводит стол в occupied
-========================================
-*/
-
-async function openOrder() {
-  try {
-    setStatus('Opening order...')
-
-    const { data: orderData, error: orderError } =
-      await supabase
-        .from('orders')
-        .insert({
-  project_id: projectId,
-  hall_id: hallId,
-  table_id: tableId,
-  user_id: currentUser.id, // 🔥 КЛЮЧЕВОЕ
-  guest_count: 1,
-  order_status: 'open',
-  order_number: orderNumber
-})
-        .select()
-        .single()
-
-    if (orderError)
-      throw orderError
-
-    const { error: tableError } =
-      await supabase
-        .from('tables')
-        .update({
-          table_status: 'occupied'
-        })
-        .eq('table_id', tableId)
-
-    if (tableError)
-      throw tableError
-
-    await loadOrders()
-
-    setStatus(
-      'Order opened: '
-      + (orderData.order_id || orderData.id)
-    )
-  }
-  catch (err) {
-    console.error(err)
-
-    setStatus(
-      'Open order error: ' + err.message
-    )
-  }
-}
-
-
-/*
-========================================
-CLOSE ORDER
-закрывает order
-если open orders больше нет — table free
-========================================
-*/
-
-async function closeOrder(order) {
-  try {
-    setStatus('Closing order...')
-
-    const { error: closeError } =
-      await supabase
-        .from('orders')
-        .update({
-          order_status: 'closed',
-          closed_at: new Date().toISOString()
-        })
-        .eq(
-          'order_id',
-          order.order_id || order.id
-        )
-
-    if (closeError)
-      throw closeError
-
-    const { data: openOrders, error: openError } =
-      await supabase
-        .from('orders')
-        .select('order_id')
-        .eq('table_id', order.table_id)
-        .eq('order_status', 'open')
-
-    if (openError)
-      throw openError
-
-    if (!openOrders || !openOrders.length) {
-      const { error: tableError } =
-        await supabase
-          .from('tables')
-          .update({
-            table_status: 'free'
-          })
-          .eq('table_id', order.table_id)
-
-      if (tableError)
-        throw tableError
-    }
-
-    await loadOrders()
-
-    setStatus('Order closed')
-  }
-  catch (err) {
-    console.error(err)
-
-    setStatus(
-      'Close order error: ' + err.message
-    )
-  }
-}
-
-
-/*
-========================================
-RENDER ORDER
-+ USER INFO (#number | name | role)
+RENDER ORDER → FORM
 ========================================
 */
 
 function renderOrder(order) {
-  const card =
-    document.createElement('article')
 
-  const status =
-    order.order_status || order.status || 'open'
+  // 🔧 TITLE
+  let title = 'Order #' + (order.order_number ?? '-')
 
-  card.className =
-    'order-card ' + status
-
-  if (status !== 'open') {
-    card.classList.add('closed')
+  if (DEBUG_IDS) {
+    title += ' [' + order.order_id + ']'
   }
 
-  const head =
-    document.createElement('div')
+  orderTitle.textContent = title
 
-  head.className =
-    'order-head'
+  // TOTAL
+  totalBox.textContent = order.total ?? 0
 
-  const title =
-    document.createElement('strong')
+  // CLEAR
+  itemsBox.innerHTML = ''
 
-  title.textContent =
-    'Order '
-    + (order.order_id || order.id || '')
-
-  const actions =
-    document.createElement('div')
-
-  actions.className =
-    'order-actions'
-
-  const total =
-    document.createElement('div')
-
-  total.className =
-    'order-total'
-
-  total.textContent =
-    order.total ?? '-'
-
-  actions.appendChild(total)
-
-  if (status === 'open') {
-    const closeBtn =
-      document.createElement('button')
-
-    closeBtn.className =
-      'order-close-btn'
-
-    closeBtn.type =
-      'button'
-
-    closeBtn.textContent =
-      'Close Order'
-
-    closeBtn.addEventListener(
-      'click',
-      event => {
-        event.stopPropagation()
-        closeOrder(order)
-      }
-    )
-
-    actions.appendChild(closeBtn)
-  }
-
-  const toggleBtn =
-    document.createElement('button')
-
-  toggleBtn.className =
-    'order-toggle-btn'
-
-  toggleBtn.type =
-    'button'
-
-  toggleBtn.textContent =
-    status === 'open'
-      ? 'Hide'
-      : 'Show'
-
-  actions.appendChild(toggleBtn)
-
-  head.appendChild(title)
-  head.appendChild(actions)
-
-  card.appendChild(head)
-
-  const body =
-    document.createElement('div')
-
-  body.className =
-    'order-body'
-
-  const grid =
-    document.createElement('div')
-
-  grid.className =
-    'order-grid'
-
-  // 🔥 USER INFO
-  const userInfo =
-    '#' + (order.user_number ?? '-')
-    + ' | ' + (order.name || 'no name')
-    + ' | ' + (order.role || 'no role')
-
-  addField(grid, 'User', userInfo)
-
-  addField(grid, 'Status', status)
-  addField(grid, 'Guests', order.guest_count ?? '-')
-  addField(grid, 'Total', order.total ?? '-')
-  addField(grid, 'Opened', formatDate(order.opened_at))
-  addField(grid, 'Closed', formatDate(order.closed_at))
-  addField(grid, 'Shift', order.shift_id || '-')
-  addField(grid, 'Note', order.note || '-')
-  addField(grid, 'Created', formatDate(order.created_at))
-
-  body.appendChild(grid)
-
+  // ITEMS
   if (order.items && order.items.length) {
-    const itemsBox =
-      document.createElement('div')
-
-    itemsBox.className =
-      'order-items'
 
     order.items.forEach(item => {
-      const row =
-        document.createElement('div')
 
-      row.className =
-        'order-item-row'
-
-      row.textContent =
-        (item.name || item.title || 'Item')
-        + ' / qty: '
-        + (item.qty || item.quantity || 1)
-        + ' / price: '
-        + (item.price || 0)
-        + ' / sum: '
-        + (
-          Number(item.qty || item.quantity || 1)
-          * Number(item.price || 0)
-        )
+      const row = createRow(
+        item.name,
+        item.qty,
+        item.price
+      )
 
       itemsBox.appendChild(row)
     })
-
-    body.appendChild(itemsBox)
   }
 
-  card.appendChild(body)
-
-  ordersList.appendChild(card)
+  // если пусто
+  if (!itemsBox.children.length) {
+    addRow()
+  }
 }
 
-
 /*
 ========================================
-ADD FIELD
-поле внутри карточки заказа
+CREATE ROW
 ========================================
 */
 
-function addField(parent, label, value) {
-  const box =
-    document.createElement('div')
+function createRow(name = '', qty = 1, price = 0) {
 
-  box.className =
-    'order-field'
+  const row = document.createElement('div')
+  row.className = 'order-row'
 
-  const labelEl =
-    document.createElement('div')
+  row.innerHTML = `
+    <input value="${name}" class="name">
+    <input type="number" value="${qty}" class="qty">
+    <input type="number" value="${price}" class="price">
+    <span class="sum">${qty * price}</span>
+  `
 
-  labelEl.className =
-    'order-label'
+  const qtyEl = row.querySelector('.qty')
+  const priceEl = row.querySelector('.price')
 
-  labelEl.textContent =
-    label
+  qtyEl.addEventListener('input', update)
+  priceEl.addEventListener('input', update)
 
-  const valueEl =
-    document.createElement('div')
-
-  valueEl.className =
-    'order-value'
-
-  valueEl.textContent =
-    value
-
-  box.appendChild(labelEl)
-  box.appendChild(valueEl)
-
-  parent.appendChild(box)
+  return row
 }
 
-
 /*
 ========================================
-FORMAT DATE
+ADD ROW
 ========================================
 */
-
-function formatDate(value) {
-  if (!value)
-    return '-'
-
-  const date =
-    new Date(value)
-
-  if (Number.isNaN(date.getTime()))
-    return value
-
-  return date.toLocaleString()
-}
-
-
-/*
-========================================
-SHOW / HIDE ORDER SWITCH
-работает и для формы, и для заказов из базы
-========================================
-*/
-
-document.addEventListener('click', function (e) {
-  const btn =
-    e.target.closest('.order-toggle-btn')
-
-  if (!btn)
-    return
-
-  const card =
-    btn.closest('.order-card')
-
-  if (!card)
-    return
-
-  const isClosed =
-    card.classList.toggle('closed')
-
-  btn.textContent =
-    isClosed ? 'Show' : 'Hide'
-})
-
-
-/*
-========================================
-ORDER INPUT LOGIC
-========================================
-*/
-
-addBtn.addEventListener(
-  'click',
-  addRow
-)
 
 function addRow() {
-  const row =
-    document.createElement('div')
-
-  row.className =
-    'order-row'
-
-  row.innerHTML =
-    `
-      <input placeholder="name" class="name">
-      <input type="number" placeholder="qty" class="qty">
-      <input type="number" placeholder="price" class="price">
-      <span class="sum">0</span>
-    `
-
-  itemsBox.appendChild(row)
-
-  const qty =
-    row.querySelector('.qty')
-
-  const price =
-    row.querySelector('.price')
-
-  qty.addEventListener('input', update)
-  price.addEventListener('input', update)
+  itemsBox.appendChild(createRow())
 }
 
+/*
+========================================
+UPDATE TOTAL
+========================================
+*/
+
 function update() {
-  let total =
-    0
+
+  let total = 0
 
   const rows =
     itemsBox.querySelectorAll('.order-row')
 
   rows.forEach(row => {
+
     const qty =
       Number(row.querySelector('.qty').value) || 0
 
     const price =
       Number(row.querySelector('.price').value) || 0
 
-    const sum =
-      qty * price
+    const sum = qty * price
 
-    row.querySelector('.sum').textContent =
-      sum
+    row.querySelector('.sum').textContent = sum
 
-    total +=
-      sum
+    total += sum
   })
 
-  totalBox.textContent =
-    total
+  totalBox.textContent = total
 }
-
 
 /*
 ========================================
@@ -911,39 +338,13 @@ BUTTONS
 ========================================
 */
 
-openOrderBtn.addEventListener(
-  'click',
-  openOrder
-)
+addBtn.addEventListener('click', addRow)
 
-backBtn.addEventListener(
-  'click',
-  () => {
-    window.location.href =
-      'hall.html'
-      + '?project_id='
-      + projectId
-      + '&hall_id='
-      + hallId
-  }
-)
+backBtn.addEventListener('click', () => {
+  window.history.back()
+})
 
-reloadBtn.addEventListener(
-  'click',
-  async () => {
-    try {
-      await loadOrders()
-    }
-    catch (err) {
-      console.error(err)
-
-      setStatus(
-        'Reload error: ' + err.message
-      )
-    }
-  }
-)
-
+reloadBtn.addEventListener('click', loadOrder)
 
 /*
 ========================================
@@ -952,25 +353,19 @@ INIT
 */
 
 async function init() {
+
   try {
-    console.log('ORDERS INIT START')
 
     loadParams()
 
     await loadUser()
 
-    await loadNames()
+    await loadOrder()
 
-    addRow()
+  } catch (err) {
 
-    await loadOrders()
-  }
-  catch (err) {
-    console.error('ORDERS INIT ERROR:', err)
-
-    setStatus(
-      'Orders error: ' + err.message
-    )
+    console.error(err)
+    setStatus(err.message)
   }
 }
 
@@ -980,6 +375,7 @@ init()
 
 
 
+
 <!--
 ========================================
 КОНСОЛЬ
@@ -989,7 +385,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   insert names (number)| v7.0.1
+   DEBUG (убрана верхняя консоль) ОДНА ФОРМА!| v8.0.0
   </div>
 
   <div class="row" id="build-down">
