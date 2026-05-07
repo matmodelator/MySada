@@ -492,13 +492,12 @@ async function loadOrders() {
 
 /*
 ========================================
-OPEN NEW ORDER
-создаёт заказ и открывает order.html
-защита от двойного клика
+CREATE NEW ORDER
+создаёт заказ, но НЕ открывает order.html
 ========================================
 */
 
-async function openOrder() {
+async function createOrder() {
   try {
 
     if (!currentUser || !currentUser.id) {
@@ -939,9 +938,9 @@ BUTTONS
 ========================================
 */
 
-openOrderBtn.addEventListener(
+createOrderBtn.addEventListener(
   'click',
-  openOrder
+  createOrder
 )
 
 backBtn.addEventListener(
@@ -1025,7 +1024,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    createOrderBtn not go to order  | v1.3.2
+    createOrder fix  | v1.3.3
 
   </div>
 
