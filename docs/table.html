@@ -226,13 +226,27 @@ function updateBuildLine(text) {
     + text
 }
 
+/*
+========================================
+STATUS / LOG SYSTEM
+========================================
+*/
+
 function setStatus(text) {
-  statusBox.textContent =
-    text
+
+  const now = new Date()
+  const time =
+    now.toLocaleTimeString()
+
+  const line =
+    '[' + time + '] ' + text
+
+  // 🔥 добавляем строку (а не перезаписываем)
+  statusBox.innerHTML += line + '<br>'
 
   console.log('[TABLE]', text)
 
-  updateBuildLine(text)
+  updateBuildLine('ready')
 }
 
 
@@ -486,6 +500,16 @@ OPEN NEW ORDER
 
 async function openOrder() {
   try {
+
+// 🔥 ПРОВЕРКА ПЕРЕД INSERT
+    if (!currentUser || !currentUser.id) {
+      setStatus('User not loaded')
+      console.error('USER NULL:', currentUser)
+      return
+    }
+
+setStatus('INSERT USER: ' + (currentUser?.id || 'NULL'))
+        
     openOrderBtn.disabled =
       true
 
@@ -505,19 +529,22 @@ async function openOrder() {
     if (numberError)
       throw numberError
 
-    const { data: orderData, error: orderError } =
-      await supabase
-        .from('orders')
-        .insert({
-          project_id: projectId,
-          hall_id: hallId,
-          table_id: tableId,
-          guest_count: 0,
-          order_status: 'open',
-          order_number: orderNumber
-        })
-        .select()
-        .single()
+   const { data: orderData, error: orderError } =
+  await supabase
+    .from('orders')
+    .insert({
+      project_id: projectId,
+      hall_id: hallId,
+      table_id: tableId,
+
+      user_id: currentUser.id, // 🔥 ВОТ ЭТОГО НЕ ХВАТАЛО
+
+      guest_count: 0,
+      order_status: 'open',
+      order_number: orderNumber
+    })
+    .select()
+    .single()
 
     console.log('NEW ORDER DATA:', orderData)
     console.log('NEW ORDER ERROR:', orderError)
@@ -536,6 +563,8 @@ async function openOrder() {
     if (tableError)
       throw tableError
 
+setStatus('ORDER CREATED: ' + (orderData?.order_id || 'ERROR'))
+        
     goToOrder(orderData)
   }
   catch (err) {
@@ -1022,7 +1051,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    userBox.textContent  | v1.3.0
+    user_id & console log  | v1.3.1
 
   </div>
 
