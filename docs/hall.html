@@ -2482,6 +2482,47 @@ function subscribeTablesRealtime() {
 
 /*
 ========================================
+REALTIME ORDERS
+========================================
+*/
+
+function subscribeOrdersRealtime() {
+  setStatus('Realtime subscribe orders...')
+
+  supabase
+    .channel('orders-' + currentProjectId)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT', // 🔥 только создание
+        schema: 'public',
+        table: 'orders',
+        filter: 'project_id=eq.' + currentProjectId
+      },
+      payload => {
+
+        console.log('REALTIME ORDER:', payload)
+
+        addConsoleLog(
+          'realtime orders',
+          {
+            message:
+              'NEW ORDER: '
+              + (payload.new?.order_id || '')
+          }
+        )
+
+        // если надо обновить UI
+        // loadOrders()
+      }
+    )
+    .subscribe(status => {
+      console.log('ORDERS REALTIME STATUS:', status)
+    })
+}
+      
+/*
+========================================
 INIT
 ========================================
 */
@@ -2497,6 +2538,7 @@ async function init() {
     await loadProjectData()
 
     subscribeTablesRealtime()
+    subscribeOrdersRealtime()    
 
     const hallId =
       loadHallList()
@@ -2553,7 +2595,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-переход по левой кнопке - в Table | v7.0.0
+subscribeOrdersRealtime() | v7.1.0
   </div>
 
   <div class="row" id="build-down">
