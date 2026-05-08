@@ -2442,49 +2442,43 @@ REALTIME TABLES
 */
 
 function subscribeTablesRealtime() {
-
   setStatus('Realtime subscribe tables...')
 
   supabase
     .channel('tables-' + currentProjectId)
-
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
-        table: 'tables'
-        // ❗ фильтр временно убран для отладки
-        // filter: 'project_id=eq.' + currentProjectId
+        table: 'tables',
+        filter: 'project_id=eq.' + currentProjectId
       },
       payload => {
-
         console.log('REALTIME TABLE:', payload)
 
         if (!payload.new)
           return
 
         addConsoleLog(
-          'realtime tables',
+          'realtime updates',
           {
             table: payload.new.name || payload.new.table_id,
             message:
-              payload.eventType
-              + ' | status: '
+              'table_status: '
               + (payload.new.table_status || 'free')
           }
         )
 
-        updateTable(payload.new)
+        updateTable(
+          payload.new
+        )
       }
     )
-
     .subscribe(status => {
-      console.log('TABLES REALTIME STATUS:', status)
-      setStatus('TABLES REALTIME: ' + status)
+      console.log('REALTIME STATUS:', status)
     })
 }
-
 
 /*
 ========================================
@@ -2493,20 +2487,17 @@ REALTIME ORDERS
 */
 
 function subscribeOrdersRealtime() {
-
   setStatus('Realtime subscribe orders...')
 
   supabase
     .channel('orders-' + currentProjectId)
-
     .on(
       'postgres_changes',
       {
-        event: '*', // 🔥 ВАЖНО: слушаем ВСЁ
+        event: 'INSERT', // 🔥 только создание
         schema: 'public',
-        table: 'orders'
-        // ❗ фильтр временно убран для отладки
-        // filter: 'project_id=eq.' + currentProjectId
+        table: 'orders',
+        filter: 'project_id=eq.' + currentProjectId
       },
       payload => {
 
@@ -2516,25 +2507,20 @@ function subscribeOrdersRealtime() {
           'realtime orders',
           {
             message:
-              payload.eventType
-              + ' | order: '
-              + (payload.new?.order_id || payload.old?.order_id)
+              'NEW ORDER: '
+              + (payload.new?.order_id || '')
           }
         )
 
-        // 🔥 обновляем UI
-        loadTables?.()
-        loadOrders?.()
+        // если надо обновить UI
+        // loadOrders()
       }
     )
-
     .subscribe(status => {
       console.log('ORDERS REALTIME STATUS:', status)
-      setStatus('ORDERS REALTIME: ' + status)
     })
 }
-
-
+      
 /*
 ========================================
 INIT
@@ -2542,9 +2528,7 @@ INIT
 */
 
 async function init() {
-
   try {
-
     console.log('HALL INIT START')
 
     await loadUser()
@@ -2553,11 +2537,8 @@ async function init() {
 
     await loadProjectData()
 
-    // 🔥 СНАЧАЛА ПРОВЕРИМ ID
-    console.log('PROJECT ID:', currentProjectId)
-
     subscribeTablesRealtime()
-    subscribeOrdersRealtime()
+    subscribeOrdersRealtime()    
 
     const hallId =
       loadHallList()
@@ -2566,7 +2547,8 @@ async function init() {
       sessionStorage.getItem('mysada_current_hall_id')
 
     if (
-      savedHallId &&
+      savedHallId
+      &&
       hallsList.some(
         hall => (hall.hall_id || hall.id) === savedHallId
       )
@@ -2577,24 +2559,29 @@ async function init() {
       setCurrentHall(hallId)
     }
 
-    updateGridStatusSwitch()
-
-    setHallViewMode(hallViewMode)
-
+updateGridStatusSwitch()
+        
+    setHallViewMode(
+      hallViewMode
+    )
   }
   catch (err) {
-
     console.error('HALL INIT ERROR:', err)
 
     addConsoleLog(
       'errors',
-      { message: err.message }
+      {
+        message: err.message
+      }
     )
 
-    setStatus('Hall error: ' + err.message)
+    setStatus(
+      'Hall error: ' + err.message
+    )
   }
 }
-
+      
+      
 init()
 
 </script>
@@ -2608,7 +2595,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-subscribe Realtime fix | v7.1.1
+subscribeOrdersRealtime() | v7.1.0
   </div>
 
   <div class="row" id="build-down">
