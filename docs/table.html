@@ -500,6 +500,8 @@ CREATE NEW ORDER
 async function createOrder() {
   try {
 
+    console.log('CREATE ORDER CLICK') // 🔥 добавлено
+
     if (!currentUser || !currentUser.id) {
       setStatus('User not loaded')
       return
@@ -513,6 +515,9 @@ async function createOrder() {
       await supabase.rpc('generate_order_number', {
         p_hall_id: hallId
       })
+
+    console.log('ORDER NUMBER:', orderNumber) // 🔥 добавлено
+    console.log('NUMBER ERROR:', numberError) // 🔥 добавлено
 
     if (numberError)
       throw numberError
@@ -532,6 +537,9 @@ async function createOrder() {
         .select()
         .single()
 
+    console.log('INSERT RESULT:', orderData) // 🔥 добавлено
+    console.log('INSERT ERROR:', orderError) // 🔥 добавлено
+
     if (orderError)
       throw orderError
 
@@ -540,33 +548,30 @@ async function createOrder() {
         .from('tables')
         .update({
           table_status: 'occupied',
-              user_id: currentUser.id
+          user_id: currentUser.id
         })
         .eq('table_id', tableId)
+
+    console.log('TABLE UPDATE ERROR:', tableError) // 🔥 добавлено
 
     if (tableError)
       throw tableError
 
-    // 🔥 создание нового Заказа. ВАЖНО: НЕ ПЕРЕХОДИМ на order
-  
-        const now = new Date()
+    const now = new Date()
 
-const time =
-  now.toLocaleTimeString()
+    const time =
+      now.toLocaleTimeString()
 
-setStatus(
-  '[' + time + '] ORDER CREATED: '
-  + (orderData.order_number || orderData.order_id)
-)
-
-    /* 🔥 ОБНОВЛЯЕМ СПИСОК
-    await loadOrders() */
+    setStatus(
+      '[' + time + '] ORDER CREATED: '
+      + (orderData.order_number || orderData.order_id)
+    )
 
     createOrderBtn.disabled = false
 
   } catch (err) {
 
-    console.error(err)
+    console.error('CREATE ORDER ERROR:', err) // 🔥 усилил лог
 
     createOrderBtn.disabled = false
 
@@ -1068,7 +1073,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-  setStatus & await loadOrders -1 & user_id| v1.4.1
+  add logs| v1.4.2
 
   </div>
 
