@@ -425,7 +425,7 @@ function addConsoleLog(action, details = {}) {
 ========================================
 LOAD LOGS → БЕЗ ЛЮБЫХ ФИЛЬТРОВ
 ========================================
-*/
+
 
 async function loadLogs() {
 
@@ -456,7 +456,7 @@ async function loadLogs() {
 ========================================
 LOAD LOGS → TEST
 ========================================
-*/
+
       
 async function testLog() {
 
@@ -477,7 +477,7 @@ async function testLog() {
     table: data.table_id,
     message: data.message
   })
-}
+} */
       
 /*
 ========================================
@@ -2649,11 +2649,12 @@ function subscribeOrdersRealtime() {
 
 /*
 ========================================
-REALTIME LOGS → БЕЗ ФИЛЬТРОВ
+REALTIME LOGS = КАК ORDERS
 ========================================
 */
 
 function subscribeLogsRealtime() {
+  setStatus('Realtime subscribe logs...')
 
   supabase
     .channel('logs-' + currentProjectId)
@@ -2664,26 +2665,33 @@ function subscribeLogsRealtime() {
         event: '*',
         schema: 'public',
         table: 'logs',
-        filter: 'project_id=eq.' + currentProjectId // 🔥 ВАЖНО
+        filter: 'project_id=eq.' + currentProjectId
       },
       payload => {
 
-        console.log('REALTIME LOG:', payload)
+        console.log('LOGS REALTIME:', payload)
 
         if (!payload.new) return
 
         const log = payload.new
 
-        addConsoleLog(log.action, {
-          hall: log.hall_id,
-          table: log.table_id,
-          message: log.message
-        })
+        // ТУПО КАК ORDERS
+        if (payload.eventType === 'INSERT') {
+
+          addConsoleLog(
+            log.action || 'logs',
+            {
+              hall: log.hall_id,
+              table: log.table_id,
+              message: log.message
+            }
+          )
+        }
       }
     )
 
     .subscribe(status => {
-      console.log('LOGS REALTIME STATUS:', status)
+      console.log('LOGS STATUS:', status)
     })
 }
       
@@ -2787,7 +2795,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-LOAD LOGS как  Orders | v8.0.9
+LOAD LOGS полная аналогия  Orders | v8.0.10
   </div>
 
   <div class="row" id="build-down">
