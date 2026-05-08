@@ -64,7 +64,7 @@
   </section>
 
   <!-- ========================================
-       ORDER FORM (ОДИН ЗАКАЗ)
+       ORDER FORM
   ======================================== -->
 
   <section class="order-card">
@@ -74,14 +74,6 @@
       <strong id="orderTitle">
         Order
       </strong>
-
-      <div class="order-actions">
-
-        <div class="order-total" id="orderTotal">
-          0
-        </div>
-
-      </div>
 
     </div>
 
@@ -100,6 +92,27 @@
         + Add position
       </button>
 
+      <!-- ========================================
+           SUMMARY BLOCK
+      ======================================== -->
+
+      <div id="orderSummary" style="margin-top:15px;">
+
+        <div>
+          Subtotal: <span id="subTotal">0</span>
+        </div>
+
+        <div>
+          <span id="serviceLabel">Service</span>:
+          <span id="serviceTotal">0</span>
+        </div>
+
+        <div style="font-weight:bold; font-size:16px; margin-top:6px;">
+          TOTAL: <span id="finalTotal">0</span>
+        </div>
+
+      </div>
+
     </div>
 
   </section>
@@ -110,19 +123,22 @@
 
 </main>
 
-<!-- ========================================
-     SCRIPT
-======================================== -->
-
 <script type="module">
 
 /*
 ========================================
 DEBUG
-включить / выключить ID
 ========================================
 */
-const DEBUG_IDS = true;
+const DEBUG_IDS = true
+
+/*
+========================================
+SERVICE PARAM (ГЛАВНОЕ)
+меняется в одном месте
+========================================
+*/
+const SERVICE_PERCENT = 10
 
 import { supabase } from "./scripts/config.js"
 
@@ -139,9 +155,13 @@ const userBox = document.getElementById('userBox')
 const statusBox = document.getElementById('status')
 
 const itemsBox = document.getElementById('orderItems')
-const totalBox = document.getElementById('orderTotal')
 const addBtn = document.getElementById('addItemBtn')
 const orderTitle = document.getElementById('orderTitle')
+
+const subTotalBox = document.getElementById('subTotal')
+const serviceBox = document.getElementById('serviceTotal')
+const finalBox = document.getElementById('finalTotal')
+const serviceLabel = document.getElementById('serviceLabel')
 
 const backBtn = document.getElementById('backBtn')
 const reloadBtn = document.getElementById('reloadBtn')
@@ -154,6 +174,15 @@ STATE
 
 let currentUser = null
 let orderId = null
+
+/*
+========================================
+INIT SERVICE LABEL
+динамический %
+========================================
+*/
+serviceLabel.textContent =
+  'Service ' + SERVICE_PERCENT + '%'
 
 /*
 ========================================
@@ -189,24 +218,13 @@ LOAD USER
 
 async function loadUser() {
 
-  const { data, error } =
+  const { data } =
     await supabase.auth.getUser()
-
-  if (error) {
-    console.error(error)
-    setStatus('User error')
-    return
-  }
-
-  if (!data || !data.user) {
-    setStatus('User not logged in')
-    return
-  }
 
   currentUser = data.user
 
   userBox.textContent =
-    currentUser.email || currentUser.id
+    currentUser?.email || currentUser?.id
 }
 
 /*
@@ -217,12 +235,10 @@ LOAD ORDER
 
 async function loadOrder() {
 
-  setStatus('Loading order...')
-
   const { data, error } =
     await supabase
       .from('orders')
-      .select(`*, items (*)`)
+      .select('*')
       .eq('order_id', orderId)
       .single()
 
@@ -233,13 +249,12 @@ async function loadOrder() {
 
 /*
 ========================================
-RENDER ORDER → FORM
+RENDER ORDER
 ========================================
 */
 
 function renderOrder(order) {
 
-  // 🔧 TITLE
   let title = 'Order #' + (order.order_number ?? '-')
 
   if (DEBUG_IDS) {
@@ -248,31 +263,9 @@ function renderOrder(order) {
 
   orderTitle.textContent = title
 
-  // TOTAL
-  totalBox.textContent = order.total ?? 0
-
-  // CLEAR
   itemsBox.innerHTML = ''
 
-  // ITEMS
-  if (order.items && order.items.length) {
-
-    order.items.forEach(item => {
-
-      const row = createRow(
-        item.name,
-        item.qty,
-        item.price
-      )
-
-      itemsBox.appendChild(row)
-    })
-  }
-
-  // если пусто
-  if (!itemsBox.children.length) {
-    addRow()
-  }
+  addRow()
 }
 
 /*
@@ -293,11 +286,8 @@ function createRow(name = '', qty = 1, price = 0) {
     <span class="sum">${qty * price}</span>
   `
 
-  const qtyEl = row.querySelector('.qty')
-  const priceEl = row.querySelector('.price')
-
-  qtyEl.addEventListener('input', update)
-  priceEl.addEventListener('input', update)
+  row.querySelector('.qty').addEventListener('input', update)
+  row.querySelector('.price').addEventListener('input', update)
 
   return row
 }
@@ -314,13 +304,13 @@ function addRow() {
 
 /*
 ========================================
-UPDATE TOTAL
+UPDATE TOTAL (ГЛАВНАЯ ЛОГИКА)
 ========================================
 */
 
 function update() {
 
-  let total = 0
+  let subtotal = 0
 
   const rows =
     itemsBox.querySelectorAll('.order-row')
@@ -337,10 +327,18 @@ function update() {
 
     row.querySelector('.sum').textContent = sum
 
-    total += sum
+    subtotal += sum
   })
 
-  totalBox.textContent = total
+  const service =
+    subtotal * SERVICE_PERCENT / 100
+
+  const total =
+    subtotal + service
+
+  subTotalBox.textContent = subtotal.toFixed(2)
+  serviceBox.textContent = service.toFixed(2)
+  finalBox.textContent = total.toFixed(2)
 }
 
 /*
@@ -364,22 +362,10 @@ INIT
 */
 
 async function init() {
-
-  try {
-
-    loadParams()
-
-    await loadUser()
-
-if (!currentUser) return
-        
-    await loadOrder()
-
-  } catch (err) {
-
-    console.error(err)
-    setStatus(err.message)
-  }
+  loadParams()
+  await loadUser()
+  if (!currentUser) return
+  await loadOrder()
 }
 
 init()
@@ -398,7 +384,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   loading err fix| v8.0.1
+   loading items test & fix form order| v8.0.2
   </div>
 
   <div class="row" id="build-down">
