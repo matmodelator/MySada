@@ -71,9 +71,18 @@
 
     <div class="order-head">
 
-      <strong id="orderTitle">
-        Order
-      </strong>
+      <!-- 🔥 ШАПКА: номер + время -->
+      <div style="display:flex; justify-content:space-between; width:100%;">
+
+        <strong id="orderTitle">
+          Order
+        </strong>
+
+        <span id="orderTime" style="font-size:12px; opacity:0.7;">
+          --
+        </span>
+
+      </div>
 
     </div>
 
@@ -134,8 +143,7 @@ const DEBUG_IDS = true
 
 /*
 ========================================
-SERVICE PARAM (ГЛАВНОЕ)
-меняется в одном месте
+SERVICE PARAM
 ========================================
 */
 const SERVICE_PERCENT = 10
@@ -157,6 +165,7 @@ const statusBox = document.getElementById('status')
 const itemsBox = document.getElementById('orderItems')
 const addBtn = document.getElementById('addItemBtn')
 const orderTitle = document.getElementById('orderTitle')
+const orderTime = document.getElementById('orderTime')
 
 const subTotalBox = document.getElementById('subTotal')
 const serviceBox = document.getElementById('serviceTotal')
@@ -177,8 +186,7 @@ let orderId = null
 
 /*
 ========================================
-INIT SERVICE LABEL
-динамический %
+SERVICE LABEL
 ========================================
 */
 serviceLabel.textContent =
@@ -229,6 +237,45 @@ async function loadUser() {
 
 /*
 ========================================
+LOAD CONTEXT (project/hall/table)
+========================================
+*/
+
+async function loadContext(order) {
+
+  const { data: project } =
+    await supabase
+      .from('projects')
+      .select('name')
+      .eq('project_id', order.project_id)
+      .maybeSingle()
+
+  projectBox.textContent =
+    project?.name || order.project_id
+
+  const { data: hall } =
+    await supabase
+      .from('halls')
+      .select('name')
+      .eq('hall_id', order.hall_id)
+      .maybeSingle()
+
+  hallBox.textContent =
+    hall?.name || order.hall_id
+
+  const { data: table } =
+    await supabase
+      .from('tables')
+      .select('name')
+      .eq('table_id', order.table_id)
+      .maybeSingle()
+
+  tableBox.textContent =
+    table?.name || order.table_id
+}
+
+/*
+========================================
 LOAD ORDER
 ========================================
 */
@@ -243,6 +290,8 @@ async function loadOrder() {
       .single()
 
   if (error) throw error
+
+  await loadContext(data)
 
   renderOrder(data)
 }
@@ -263,8 +312,13 @@ function renderOrder(order) {
 
   orderTitle.textContent = title
 
-  itemsBox.innerHTML = ''
+  /* 🔥 ВРЕМЯ */
+  if (order.opened_at) {
+    const d = new Date(order.opened_at)
+    orderTime.textContent = d.toLocaleString()
+  }
 
+  itemsBox.innerHTML = ''
   addRow()
 }
 
@@ -292,19 +346,13 @@ function createRow(name = '', qty = 1, price = 0) {
   return row
 }
 
-/*
-========================================
-ADD ROW
-========================================
-*/
-
 function addRow() {
   itemsBox.appendChild(createRow())
 }
 
 /*
 ========================================
-UPDATE TOTAL (ГЛАВНАЯ ЛОГИКА)
+TOTAL
 ========================================
 */
 
@@ -312,16 +360,10 @@ function update() {
 
   let subtotal = 0
 
-  const rows =
-    itemsBox.querySelectorAll('.order-row')
+  itemsBox.querySelectorAll('.order-row').forEach(row => {
 
-  rows.forEach(row => {
-
-    const qty =
-      Number(row.querySelector('.qty').value) || 0
-
-    const price =
-      Number(row.querySelector('.price').value) || 0
+    const qty = Number(row.querySelector('.qty').value) || 0
+    const price = Number(row.querySelector('.price').value) || 0
 
     const sum = qty * price
 
@@ -330,11 +372,8 @@ function update() {
     subtotal += sum
   })
 
-  const service =
-    subtotal * SERVICE_PERCENT / 100
-
-  const total =
-    subtotal + service
+  const service = subtotal * SERVICE_PERCENT / 100
+  const total = subtotal + service
 
   subTotalBox.textContent = subtotal.toFixed(2)
   serviceBox.textContent = service.toFixed(2)
@@ -348,11 +387,7 @@ BUTTONS
 */
 
 addBtn.addEventListener('click', addRow)
-
-backBtn.addEventListener('click', () => {
-  window.history.back()
-})
-
+backBtn.addEventListener('click', () => window.history.back())
 reloadBtn.addEventListener('click', loadOrder)
 
 /*
@@ -384,7 +419,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   loading items test & fix form order| v8.0.2
+   loading status| v8.0.3
   </div>
 
   <div class="row" id="build-down">
