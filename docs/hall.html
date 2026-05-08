@@ -423,6 +423,45 @@ function addConsoleLog(action, details = {}) {
 
 /*
 ========================================
+LOAD LOGS — СЕГОДНЯ
+========================================
+*/
+
+async function loadLogs() {
+
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+
+  const end = new Date(start)
+  end.setDate(end.getDate() + 1)
+
+  const { data, error } =
+    await supabase
+      .from('logs')
+      .select('*')
+      .gte('created_at', start.toISOString())
+      .lt('created_at', end.toISOString())
+      .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('LOAD LOGS ERROR:', error)
+    return
+  }
+
+  data.reverse().forEach(log => {
+    addConsoleLog(
+      log.action || 'logs',
+      {
+        hall: log.hall_id,
+        table: log.table_id,
+        message: log.message
+      }
+    )
+  })
+}
+      
+/*
+========================================
 LOAD LOGS → БЕЗ ЛЮБЫХ ФИЛЬТРОВ
 ========================================
 
@@ -2795,7 +2834,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-LOAD LOGS полная аналогия  Orders | v8.0.10
+LOAD LOGS — СЕГОДНЯ | v8.0.11
   </div>
 
   <div class="row" id="build-down">
