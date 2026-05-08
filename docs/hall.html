@@ -2573,21 +2573,14 @@ async function init() {
     await loadProjectData()
 
         // 🔥 LOG
-    setInterval(async () => {
+   setInterval(async () => {
 
-      console.log('POLL TICK')
+  console.log('POLL SYNC')
 
-      const { data, error } =
-        await supabase
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1)
+  await loadTables()
+  await loadOrders?.()
 
-      console.log('POLL DATA:', data)
-      console.log('POLL ERROR:', error)
-
-    }, 5000)
+}, 5000)
     // 🔥 КОНЕЦ ВСТАВКИ
 
 
@@ -2649,7 +2642,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-INIT LOG | v8.0.1
+INIT LOG fix | v8.0.2
   </div>
 
   <div class="row" id="build-down">
