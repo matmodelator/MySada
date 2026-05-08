@@ -1,5 +1,5 @@
 // ======================
-// Поиски истины с реалтайм | 1.1.0
+// Поиски истины с реалтайм чистка | 1.1.1
 // ======================
 
 
@@ -48,11 +48,3 @@ export const supabase =
 // проверка что клиент реально поднялся
 console.log('SUPABASE INIT OK')
 
-// проверка websocket соединения
-supabase.realtime.onOpen(() => {
-  console.log('🟢 WS OPEN')
-})
-
-supabase.realtime.onClose(() => {
-  console.log('🔴 WS CLOSED')
-})
