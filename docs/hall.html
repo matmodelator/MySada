@@ -2434,6 +2434,41 @@ if (newOrderBtn) {
   )
 }
       
+/*
+========================================
+POLLING
+гарантированное обновление данных
+========================================
+*/
+
+let pollingTimer = null
+
+function startPolling() {
+
+  // чтобы не запустить два раза
+  if (pollingTimer)
+    return
+
+  setStatus('Polling started')
+
+  pollingTimer = setInterval(async () => {
+
+    try {
+
+      await loadTables()
+      await loadOrders?.()
+
+      setStatus('Polling sync')
+
+    } catch (err) {
+
+      console.error(err)
+      setStatus('Polling error')
+
+    }
+
+  }, 6000) // 🔥 каждые 6 секунд
+}
       
 /*
 ========================================
