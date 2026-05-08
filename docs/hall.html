@@ -2517,6 +2517,7 @@ function startPolling() {
 
       await loadTables()
       await loadOrders?.()
+      await loadLogs()    
 
       setStatus('Polling sync')
 
@@ -2655,16 +2656,21 @@ REALTIME LOGS → БЕЗ ФИЛЬТРОВ
 function subscribeLogsRealtime() {
 
   supabase
-    .channel('logs')
+    .channel('logs-' + currentProjectId)
 
     .on(
       'postgres_changes',
       {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
-        table: 'logs'
+        table: 'logs',
+        filter: 'project_id=eq.' + currentProjectId // 🔥 ВАЖНО
       },
       payload => {
+
+        console.log('REALTIME LOG:', payload)
+
+        if (!payload.new) return
 
         const log = payload.new
 
@@ -2677,7 +2683,7 @@ function subscribeLogsRealtime() {
     )
 
     .subscribe(status => {
-      console.log('LOGS REALTIME:', status)
+      console.log('LOGS REALTIME STATUS:', status)
     })
 }
       
@@ -2781,7 +2787,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-LOAD LOGS → TEST) | v8.0.8
+LOAD LOGS как  Orders | v8.0.9
   </div>
 
   <div class="row" id="build-down">
