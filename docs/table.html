@@ -567,6 +567,13 @@ async function createOrder() {
       + (orderData.order_number || orderData.order_id)
     )
 
+// 🔥 лог с юзером (он подтянется сам)
+addConsoleLog('orders', {
+  hall: hallName,
+  table: tableName,
+  message: 'ORDER CREATED: ' + (orderData.order_number || orderData.order_id)
+})
+        
     createOrderBtn.disabled = false
 
   } catch (err) {
@@ -1073,7 +1080,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-  add logs| v1.4.2
+  addConsoleLog| v1.4.3
 
   </div>
 
