@@ -451,6 +451,33 @@ async function loadLogs() {
     })
   })
 }
+
+/*
+========================================
+LOAD LOGS → TEST
+========================================
+*/
+      
+async function testLog() {
+
+  const { data, error } =
+    await supabase
+      .from('logs')
+      .select('*')
+      .limit(1)
+      .single()
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  addConsoleLog(data.action, {
+    hall: data.hall_id,
+    table: data.table_id,
+    message: data.message
+  })
+}
       
 /*
 ========================================
@@ -2754,7 +2781,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-LOAD LOGS HISTORY to CONSOLE (NO FILTER) | v8.0.7
+LOAD LOGS → TEST) | v8.0.8
   </div>
 
   <div class="row" id="build-down">
