@@ -423,6 +423,38 @@ function addConsoleLog(action, details = {}) {
 
 /*
 ========================================
+LOAD LOGS HISTORY to CONSOLE
+========================================
+*/
+
+async function loadLogs() {
+
+  const { data, error } =
+    await supabase
+      .from('logs')
+      .select('*')
+      .eq('project_id', currentProjectId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  consoleLogs = []
+
+  data.reverse().forEach(log => {
+    addConsoleLog(log.action, {
+      hall: log.hall_id,
+      table: log.table_id,
+      message: log.message
+    })
+  })
+}
+      
+/*
+========================================
 LOAD USER
 берём текущего Supabase Auth пользователя
 и роль из public.users
@@ -2587,6 +2619,42 @@ function subscribeOrdersRealtime() {
       console.log('ORDERS REALTIME STATUS:', status)
     })
 }
+
+/*
+========================================
+REALTIME LOGS (orders / tables / user)
+========================================
+*/
+
+function subscribeLogsRealtime() {
+
+  supabase
+    .channel('logs-channel')
+
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'logs',
+        filter: 'project_id=eq.' + currentProjectId
+      },
+      payload => {
+
+        const log = payload.new
+
+        addConsoleLog(log.action, {
+          hall: log.hall_id,
+          table: log.table_id,
+          message: log.message
+        })
+      }
+    )
+
+    .subscribe(status => {
+      console.log('LOGS REALTIME STATUS:', status)
+    })
+}
       
 /*
 ========================================
@@ -2611,13 +2679,15 @@ async function init() {
 
   await loadTables()
   await loadOrders?.()
+  await loadLogs()       
 
 }, 5000)
     // 🔥 КОНЕЦ ВСТАВКИ
 
 
     subscribeTablesRealtime()
-    subscribeOrdersRealtime()    
+    subscribeOrdersRealtime()  
+    subscribeLogsRealtime()    
 
     const hallId =
       loadHallList()
@@ -2686,7 +2756,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-CONSOLE LOG обновляется всегда | v8.0.5
+REALTIME LOGS | v8.0.6
   </div>
 
   <div class="row" id="build-down">
