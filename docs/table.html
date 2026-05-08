@@ -539,18 +539,28 @@ async function createOrder() {
       await supabase
         .from('tables')
         .update({
-          table_status: 'occupied'
+          table_status: 'occupied',
+              user_id: currentUser.id
         })
         .eq('table_id', tableId)
 
     if (tableError)
       throw tableError
 
-    // 🔥 ВАЖНО: НЕ ПЕРЕХОДИМ
-    setStatus('ORDER CREATED: ' + orderData.order_id)
+    // 🔥 создание нового Заказа. ВАЖНО: НЕ ПЕРЕХОДИМ на order
+  
+        const now = new Date()
 
-    // 🔥 ОБНОВЛЯЕМ СПИСОК
-    await loadOrders()
+const time =
+  now.toLocaleTimeString()
+
+setStatus(
+  '[' + time + '] ORDER CREATED: '
+  + (orderData.order_number || orderData.order_id)
+)
+
+    /* 🔥 ОБНОВЛЯЕМ СПИСОК
+    await loadOrders() */
 
     createOrderBtn.disabled = false
 
@@ -606,7 +616,8 @@ async function closeOrder(order) {
         await supabase
           .from('tables')
           .update({
-            table_status: 'free'
+            table_status: 'free',
+                user_id: currentUser.id
           })
           .eq('table_id', tableId)
 
@@ -1057,7 +1068,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-    REALTIME SUBSCRIBE  | v1.4.0
+  setStatus & await loadOrders -1 & user_id| v1.4.1
 
   </div>
 
