@@ -2517,7 +2517,7 @@ function subscribeTablesRealtime() {
 
 /*
 ========================================
-REALTIME ORDERS
+REALTIME ORDERS (CREATE + CLOSE)
 ========================================
 */
 
@@ -2526,10 +2526,11 @@ function subscribeOrdersRealtime() {
 
   supabase
     .channel('orders-' + currentProjectId)
+
     .on(
       'postgres_changes',
       {
-        event: 'INSERT', // 🔥 только создание
+        event: '*',                // 🔥 ловим ВСЕ события
         schema: 'public',
         table: 'orders',
         filter: 'project_id=eq.' + currentProjectId
@@ -2538,19 +2539,48 @@ function subscribeOrdersRealtime() {
 
         console.log('REALTIME ORDER:', payload)
 
-        addConsoleLog(
-          'realtime orders',
-          {
-            message:
-              'NEW ORDER: '
-              + (payload.new?.order_id || '')
-          }
-        )
+        if (!payload.new) return
 
-        // если надо обновить UI
-        // loadOrders()
+        const order = payload.new
+
+        // ========================================
+        // СОЗДАНИЕ ОРДЕРА
+        // ========================================
+
+        if (payload.eventType === 'INSERT') {
+
+          addConsoleLog(
+            'orders',
+            {
+              message:
+                'ORDER CREATED: '
+                + (order.order_number || order.order_id)
+            }
+          )
+        }
+
+        // ========================================
+        // ЗАКРЫТИЕ ОРДЕРА
+        // ========================================
+
+        if (
+          payload.eventType === 'UPDATE' &&
+          order.order_status === 'closed'
+        ) {
+
+          addConsoleLog(
+            'orders',
+            {
+              message:
+                'ORDER CLOSED: '
+                + (order.order_number || order.order_id)
+            }
+          )
+        }
+
       }
     )
+
     .subscribe(status => {
       console.log('ORDERS REALTIME STATUS:', status)
     })
@@ -2642,7 +2672,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-INIT LOG fix | v8.0.2
+REALTIME ORDERS (CREATE + CLOSE) | v8.0.3
   </div>
 
   <div class="row" id="build-down">
