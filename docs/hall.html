@@ -2572,6 +2572,25 @@ async function init() {
 
     await loadProjectData()
 
+        // 🔥 LOG
+    setInterval(async () => {
+
+      console.log('POLL TICK')
+
+      const { data, error } =
+        await supabase
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+      console.log('POLL DATA:', data)
+      console.log('POLL ERROR:', error)
+
+    }, 5000)
+    // 🔥 КОНЕЦ ВСТАВКИ
+
+
     subscribeTablesRealtime()
     subscribeOrdersRealtime()    
 
@@ -2630,7 +2649,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-POLLING 10 sec | v8.0.0
+INIT LOG | v8.0.1
   </div>
 
   <div class="row" id="build-down">
