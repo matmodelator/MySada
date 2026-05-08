@@ -414,9 +414,11 @@ function addConsoleLog(action, details = {}) {
       consoleLogs.slice(0, 300)
   }
 
-  if (hallViewMode === 'console') {
-    renderConsole()
-  }
+  // 🔥 ВСЕГДА ОБНОВЛЯЕМ КОНСОЛЬ
+  renderConsole()
+
+  // 🔥 И ПАРАЛЛЕЛЬНО В DEVTOOLS
+  console.log('LOG:', item)
 }
 
 /*
@@ -2684,7 +2686,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-REALTIME TEST | v8.0.4
+CONSOLE LOG обновляется всегда | v8.0.5
   </div>
 
   <div class="row" id="build-down">
