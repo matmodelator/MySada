@@ -423,7 +423,7 @@ function addConsoleLog(action, details = {}) {
 
 /*
 ========================================
-LOAD LOGS HISTORY to CONSOLE
+LOAD LOGS → БЕЗ ЛЮБЫХ ФИЛЬТРОВ
 ========================================
 */
 
@@ -433,12 +433,11 @@ async function loadLogs() {
     await supabase
       .from('logs')
       .select('*')
-      .eq('project_id', currentProjectId)
       .order('created_at', { ascending: false })
       .limit(50)
 
   if (error) {
-    console.error(error)
+    console.error('LOAD LOGS ERROR:', error)
     return
   }
 
@@ -2622,22 +2621,21 @@ function subscribeOrdersRealtime() {
 
 /*
 ========================================
-REALTIME LOGS (orders / tables / user)
+REALTIME LOGS → БЕЗ ФИЛЬТРОВ
 ========================================
 */
 
 function subscribeLogsRealtime() {
 
   supabase
-    .channel('logs-channel')
+    .channel('logs')
 
     .on(
       'postgres_changes',
       {
         event: 'INSERT',
         schema: 'public',
-        table: 'logs',
-        filter: 'project_id=eq.' + currentProjectId
+        table: 'logs'
       },
       payload => {
 
@@ -2652,7 +2650,7 @@ function subscribeLogsRealtime() {
     )
 
     .subscribe(status => {
-      console.log('LOGS REALTIME STATUS:', status)
+      console.log('LOGS REALTIME:', status)
     })
 }
       
@@ -2756,7 +2754,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-REALTIME LOGS | v8.0.6
+LOAD LOGS HISTORY to CONSOLE (NO FILTER) | v8.0.7
   </div>
 
   <div class="row" id="build-down">
