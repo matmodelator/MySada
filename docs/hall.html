@@ -387,17 +387,12 @@ function canUseConsole() {
 /*
 ========================================
 CONSOLE LOG
-журнал действий + запись в Supabase logs
+только локальная консоль + запись в Supabase logs
+без payload
 ========================================
 */
 
 async function addConsoleLog(action, details = {}) {
-
-  /*
-  ----------------------------------------
-  LOCAL CONSOLE
-  ----------------------------------------
-  */
 
   const item = {
     time: new Date().toLocaleString(),
@@ -406,8 +401,8 @@ async function addConsoleLog(action, details = {}) {
 
     user:
       currentUser
-      ? currentUser.email + ' / ' + currentUser.role
-      : '-',
+        ? currentUser.email + ' / ' + currentUser.role
+        : '-',
 
     hall:
       details.hall || currentHallName || '-',
@@ -428,55 +423,34 @@ async function addConsoleLog(action, details = {}) {
 
   renderConsole()
 
-  console.log('LOG:', item)
-
-  /*
-  ----------------------------------------
-  SUPABASE LOGS
-  ----------------------------------------
-  */
-
   const { error } =
     await supabase
       .from('logs')
       .insert({
         project_id:
-          currentProjectId,
+          details.project_id || currentProjectId || null,
 
         hall_id:
-          currentHallId,
+          details.hall_id || currentHallId || null,
 
         table_id:
-          activeTable
-            ? activeTable.table_id
-            : null,
+          details.table_id || (
+            activeTable ? activeTable.table_id : null
+          ),
 
         user_id:
-          currentUser
-            ? currentUser.user_id
-            : null,
+          currentUser ? currentUser.user_id : null,
 
         action:
           action,
 
         message:
-          details.message || '',
-
-        payload:
-          details
+          details.message || ''
       })
 
   if (error) {
-
-    console.error(
-      'LOG INSERT ERROR:',
-      error
-    )
-
-    setStatus(
-      'Log insert error: '
-      + error.message
-    )
+    console.error('LOG INSERT ERROR:', error)
+    setStatus('Log insert error: ' + error.message)
   }
 }
       
@@ -1531,6 +1505,172 @@ tablesList
 
 /*
 ========================================
+PUSH CONSOLE LOG
+только экран
+без insert в Supabase
+========================================
+*/
+
+function pushConsoleLog(item = {}) {
+
+  consoleLogs.unshift({
+
+    time:
+      item.time
+        ? new Date(item.time).toLocaleString()
+        : new Date().toLocaleString(),
+
+    action:
+      item.action || 'logs',
+
+    user:
+      item.user || '-',
+
+    hall:
+      item.hall || '-',
+
+    table:
+      item.table || '-',
+
+    details:
+      item.details || ''
+  })
+
+  /*
+  ----------------------------------------
+  LIMIT
+  ----------------------------------------
+  */
+
+  if (consoleLogs.length > 300) {
+
+    consoleLogs =
+      consoleLogs.slice(0, 300)
+  }
+
+  renderConsole()
+}
+      
+/*
+========================================
+ADD CONSOLE LOG
+экран + insert в logs
+========================================
+*/
+
+async function addConsoleLog(action, details = {}) {
+
+  /*
+  ----------------------------------------
+  SCREEN
+  ----------------------------------------
+  */
+
+  pushConsoleLog({
+
+    action:
+      action,
+
+    user:
+      currentUser
+        ? (
+            currentUser.email
+            || currentUser.user_id
+            || currentUser.id
+          )
+        : '-',
+
+    hall:
+      details.hall
+      || currentHallName
+      || '-',
+
+    table:
+      details.table
+      || '-',
+
+    details:
+      details.message || ''
+  })
+
+  /*
+  ----------------------------------------
+  DATABASE
+  ----------------------------------------
+  */
+
+  const row = {
+
+    project_id:
+      details.project_id
+      || currentProjectId
+      || null,
+
+    hall_id:
+      details.hall_id
+      || currentHallId
+      || null,
+
+    table_id:
+      details.table_id
+      || null,
+
+    order_id:
+      details.order_id
+      || null,
+
+    user_id:
+      currentUser
+        ? (
+            currentUser.user_id
+            || currentUser.id
+          )
+        : null,
+
+    action:
+      action,
+
+    message:
+      details.message || ''
+  }
+
+  console.log(
+    'LOG INSERT ROW:',
+    row
+  )
+
+  const { data, error } =
+    await supabase
+      .from('logs')
+      .insert(row)
+      .select()
+      .single()
+
+  if (error) {
+
+    console.error(
+      'LOG INSERT ERROR:',
+      error
+    )
+
+    setStatus(
+      'LOG INSERT ERROR: '
+      + error.message
+    )
+
+    return null
+  }
+
+  console.log(
+    'LOG INSERT OK:',
+    data
+  )
+
+  return data
+}
+      
+/*
+========================================
 RENDER CONSOLE
 логи действий
 ========================================
@@ -1601,67 +1741,6 @@ function renderTable(item) {
   )
 }
 
-/*
-========================================
-RENDER CHAIRS
-только Tabs
-========================================
-
-
-function renderChairs(parent, table, width, height) {
-  const seats =
-    getTableSeats(table)
-
-  const shape =
-    table.shape || 'square'
-
-  let positions =
-    []
-
-  if (shape === 'round') {
-    positions = [
-      { x: width / 2, y: -10 },
-      { x: width / 2, y: height + 10 }
-    ]
-  }
-  else if (shape === 'rect') {
-    positions = [
-      { x: width * 0.33, y: -10 },
-      { x: width * 0.66, y: -10 },
-      { x: width * 0.33, y: height + 10 },
-      { x: width * 0.66, y: height + 10 },
-      { x: -10, y: height / 2 },
-      { x: width + 10, y: height / 2 }
-    ]
-  }
-  else {
-    positions = [
-      { x: width / 2, y: -10 },
-      { x: width / 2, y: height + 10 },
-      { x: -10, y: height / 2 },
-      { x: width + 10, y: height / 2 }
-    ]
-  }
-
-  for (let i = 0; i < seats; i++) {
-    const chair =
-      document.createElement('div')
-
-    const pos =
-      positions[i % positions.length]
-
-    chair.className =
-      'chair-dot'
-
-    chair.style.left =
-      pos.x + 'px'
-
-    chair.style.top =
-      pos.y + 'px'
-
-    parent.appendChild(chair)
-  }
-} */
 
 /*
 ========================================
@@ -2856,7 +2935,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-CONSOLE LOG + запись в Supabase logs | v8.0.12
+CONSOLE LOG Add & Push | v8.0.13
   </div>
 
   <div class="row" id="build-down">
