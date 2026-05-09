@@ -1,6 +1,7 @@
 /*
 ========================================
-show/hide switch fix v1.3.2
+TOP BAR LEFT SIDE v2.0.0
+единые эффекты всех кнопок
 ========================================
 */
 
@@ -19,87 +20,162 @@ body {
 /*
 ========================================
 TOP BAR
-Open Order слева
-Title по центру
-Back / Reload справа
+Left actions / Title / Right buttons
 ========================================
 */
 
 .top-bar {
-  position: relative;
-
   background: #2563eb;
   color: white;
   padding: 14px 18px;
 
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+
+/*
+========================================
+LEFT ACTIONS
+========================================
+*/
+
+.left-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-}
-
-.top-title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.top-buttons {
-  display: flex;
+  justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.top-buttons button {
-  border: none;
-  border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 14px;
+/*
+========================================
+TITLE
+========================================
+*/
+
+.top-title {
+  text-align: center;
+  font-size: 22px;
   font-weight: 700;
-  background: white;
-  color: #2563eb;
-  cursor: pointer;
 }
 
-/* ========================================
-TOP BAR BUTTONS — EFFECT
-======================================== */
+/*
+========================================
+RIGHT BUTTONS
+========================================
+*/
 
-.top-bar button {
+.top-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/*
+========================================
+ALL BUTTONS
+единый стиль и эффекты
+========================================
+*/
+
+button {
+  border: none;
+  cursor: pointer;
+
   transition:
     transform 0.08s ease,
     box-shadow 0.08s ease,
+    filter 0.12s ease,
     background 0.15s ease;
 }
 
-/* наведение */
-.top-bar button:hover {
-  filter: brightness(1.1);
-}
-
-/* НАЖАТИЕ (главное) */
-.top-bar button:active {
-  transform: translateY(2px) scale(0.97);
-  box-shadow: inset 0 3px 6px rgba(0,0,0,0.25);
-}
-
-/* фокус (чтобы не было синего говна) */
-.top-bar button:focus {
+button:focus {
   outline: none;
 }
 
-/* если хочешь — легкая рамка при фокусе */
-.top-bar button:focus-visible {
+button:focus-visible {
   outline: 2px solid #93c5fd;
   outline-offset: 2px;
 }
 
 /*
 ========================================
+HOVER
+========================================
+*/
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+/*
+========================================
+PRESS EFFECT
+========================================
+*/
+
+button:active {
+  transform: translateY(2px) scale(0.97);
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.25);
+}
+
+/*
+========================================
+TOP BAR BUTTONS
+========================================
+*/
+
+.top-bar button {
+  border-radius: 999px;
+  padding: 9px 15px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/*
+========================================
+RIGHT SIDE BUTTONS
+========================================
+*/
+
+.top-buttons button {
+  background: white;
+  color: #2563eb;
+}
+
+/*
+========================================
+ORDER ACTION BUTTONS
+========================================
+*/
+
+.change-table-btn {
+  background: #f59e0b;
+  color: white;
+}
+
+.split-bill-btn {
+  background: #7c3aed;
+  color: white;
+}
+
+.print-bill-btn {
+  background: #0284c7;
+  color: white;
+}
+
+.close-order-btn {
+  background: #dc2626;
+  color: white;
+}
+
+/*
+========================================
 OPEN ORDER MAIN BUTTON
-слева в header
 green -> rose hover
 ========================================
 */
@@ -117,7 +193,6 @@ green -> rose hover
 
   font-size: 16px;
   font-weight: 900;
-  cursor: pointer;
 }
 
 .open-order-main-btn:hover {
@@ -139,7 +214,6 @@ MAIN CONTAINER
 /*
 ========================================
 INFO PANEL
-Project / Hall / Table / User
 ========================================
 */
 
@@ -202,7 +276,6 @@ ORDERS LIST
 /*
 ========================================
 ORDER CARD
-карточка заказа
 ========================================
 */
 
@@ -224,7 +297,11 @@ ORDER CARD
   border-color: #16a34a;
 }
 
-/* ORDER INPUT */
+/*
+========================================
+ORDER INPUT
+========================================
+*/
 
 .order-row {
   display: grid;
@@ -246,21 +323,24 @@ ORDER CARD
   justify-content: flex-end;
 }
 
+/*
+========================================
+ADD ITEM BUTTON
+========================================
+*/
+
 #addItemBtn {
   margin-top: 10px;
   padding: 8px 12px;
-  border: none;
+  border-radius: 8px;
+
   background: #2563eb;
   color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
 /*
 ========================================
 CLOSE ORDER BUTTON
-внутри карточки справа сверху
-rose -> green hover
 ========================================
 */
 
@@ -271,7 +351,6 @@ rose -> green hover
 
   padding: 6px 12px;
 
-  border: none;
   border-radius: 999px;
 
   background: #fb7185;
@@ -279,8 +358,6 @@ rose -> green hover
 
   font-size: 12px;
   font-weight: 900;
-
-  cursor: pointer;
 }
 
 .order-close-btn:hover {
@@ -300,27 +377,25 @@ LIST ORDER BUTTON
 
   padding: 6px 12px;
 
-  border: none;
   border-radius: 999px;
 
-  background: #e5e7eb;   /* светло-серая */
+  background: #e5e7eb;
   color: #111827;
 
   font-size: 12px;
   font-weight: 900;
-
-  cursor: pointer;
 }
 
 .order-list-btn:hover {
-  background: #7dd3fc;   /* голубая */
+  background: #7dd3fc;
   color: #0f172a;
 }
 
-
-/* ========================================
+/*
+========================================
 SHOW / HIDE ORDER SWITCH
-======================================== */
+========================================
+*/
 
 .order-card.closed .order-grid,
 .order-card.closed .order-items,
@@ -330,21 +405,9 @@ SHOW / HIDE ORDER SWITCH
 
 .order-toggle-btn {
   padding: 6px 10px;
-  border: none;
   border-radius: 8px;
   background: #2563eb;
   color: #ffffff;
-  cursor: pointer;
-}
-
-.order-toggle-btn:active {
-  transform: translateY(2px) scale(0.97);
-}
-
-
-/* скрытие тела */
-.order-card.closed .order-body {
-  display: none;
 }
 
 /*
@@ -434,24 +497,28 @@ MOBILE
 */
 
 @media (max-width: 800px) {
+
   .info-panel,
   .order-grid {
     grid-template-columns: 1fr;
   }
 
   .top-title {
-    position: static;
-    transform: none;
-    margin: 0 auto;
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .top-bar {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .left-actions,
+  .top-buttons {
+    justify-content: center;
   }
 
   .open-order-main-btn {
     position: static;
-  }
-
-  .top-bar {
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
   }
 }
