@@ -17,11 +17,40 @@
 
 <header class="top-bar">
 
+  <div class="left-actions">
+
+    <button id="changeTableBtn"
+            class="change-table-btn"
+            type="button">
+      Change Table
+    </button>
+
+    <button id="splitBillBtn"
+            class="split-bill-btn"
+            type="button">
+      Split Bill
+    </button>
+
+    <button id="printBillBtn"
+            class="print-bill-btn"
+            type="button">
+      Print Bill
+    </button>
+
+    <button id="closeOrderBtn"
+            class="close-order-btn"
+            type="button">
+      Close Order
+    </button>
+
+  </div>
+
   <div class="top-title">
     MySada Order
   </div>
 
   <div class="top-buttons">
+
     <button id="backBtn" type="button">
       Back to Hall
     </button>
@@ -29,15 +58,12 @@
     <button id="reloadBtn" type="button">
       Reload
     </button>
+
   </div>
 
 </header>
 
 <main class="container">
-
-  <!-- ========================================
-       INFO PANEL
-  ======================================== -->
 
   <section class="info-panel">
 
@@ -63,15 +89,10 @@
 
   </section>
 
-  <!-- ========================================
-       ORDER FORM
-  ======================================== -->
-
   <section class="order-card">
 
     <div class="order-head">
 
-      <!-- ШАПКА: номер заказа + время открытия -->
       <div style="display:flex; justify-content:space-between; width:100%;">
 
         <strong id="orderTitle">
@@ -101,10 +122,6 @@
         + Add position
       </button>
 
-      <!-- ========================================
-           SUMMARY BLOCK
-      ======================================== -->
-
       <div id="orderSummary" style="margin-top:15px;">
 
         <div>
@@ -132,15 +149,10 @@
 
 </main>
 
-<!-- ========================================
-     SERVICE CONSOLE
-     ОДИН блок консоли на странице
-======================================== -->
-
 <div id="service-console">
 
   <div class="row" id="build-top">
-    order log insert | v8.0.4
+    order actions / logs | v8.2.0
   </div>
 
   <div class="row" id="build-down">
@@ -151,29 +163,11 @@
 
 <script type="module">
 
-/*
-========================================
-DEBUG
-========================================
-*/
-
 const DEBUG_IDS =
   true
 
-/*
-========================================
-SERVICE PARAM
-========================================
-*/
-
 const SERVICE_PERCENT =
   10
-
-/*
-========================================
-SUPABASE
-========================================
-*/
 
 import { supabase }
 from "./scripts/config.js"
@@ -223,6 +217,18 @@ const finalBox =
 const serviceLabel =
   document.getElementById('serviceLabel')
 
+const changeTableBtn =
+  document.getElementById('changeTableBtn')
+
+const splitBillBtn =
+  document.getElementById('splitBillBtn')
+
+const printBillBtn =
+  document.getElementById('printBillBtn')
+
+const closeOrderBtn =
+  document.getElementById('closeOrderBtn')
+
 const backBtn =
   document.getElementById('backBtn')
 
@@ -244,11 +250,8 @@ let currentUser =
 let orderId =
   null
 
-/*
-========================================
-SERVICE LABEL
-========================================
-*/
+let currentOrder =
+  null
 
 serviceLabel.textContent =
   'Service ' + SERVICE_PERCENT + '%'
@@ -256,7 +259,6 @@ serviceLabel.textContent =
 /*
 ========================================
 BUILD LINE
-обновляет нижнюю строку сервисной консоли
 ========================================
 */
 
@@ -293,8 +295,6 @@ function updateBuildLine(text) {
 /*
 ========================================
 STATUS
-пишет строку в экранный статус
-НЕ пишет в Supabase
 ========================================
 */
 
@@ -322,24 +322,39 @@ function setStatus(text) {
 /*
 ========================================
 LOGS
-пишет событие в таблицу public.logs
+реальные поля logs:
+project_id, hall_id, table_id, order_id, user_id, action, message
 ========================================
 */
 
-async function addConsoleLog(type, payload = {}) {
+async function addConsoleLog(action, details = {}) {
 
   const { error } =
     await supabase
       .from('logs')
       .insert({
-        project_id: payload.project_id || null,
-        hall_id: payload.hall_id || null,
-        table_id: payload.table_id || null,
-        order_id: payload.order_id || null,
-        user_id: currentUser ? currentUser.id : null,
-        log_type: type,
-        message: payload.message || '',
-        payload: payload
+        project_id:
+          details.project_id || null,
+
+        hall_id:
+          details.hall_id || null,
+
+        table_id:
+          details.table_id || null,
+
+        order_id:
+          details.order_id || null,
+
+        user_id:
+          currentUser
+            ? currentUser.id
+            : null,
+
+        action:
+          action,
+
+        message:
+          details.message || ''
       })
 
   if (error) {
@@ -349,7 +364,8 @@ async function addConsoleLog(type, payload = {}) {
     )
 
     setStatus(
-      'Log insert error: ' + error.message
+      'Log insert error: '
+      + error.message
     )
   }
 }
@@ -357,7 +373,6 @@ async function addConsoleLog(type, payload = {}) {
 /*
 ========================================
 PARAMS
-берём order_id из URL
 ========================================
 */
 
@@ -375,7 +390,6 @@ function loadParams() {
 /*
 ========================================
 LOAD USER
-загружает текущего auth user
 ========================================
 */
 
@@ -402,7 +416,6 @@ async function loadUser() {
 /*
 ========================================
 LOAD CONTEXT
-подтягивает project / hall / table по order
 ========================================
 */
 
@@ -453,7 +466,6 @@ async function loadContext(order) {
 /*
 ========================================
 LOAD ORDER
-загружает заказ и пишет факт открытия страницы в logs
 ========================================
 */
 
@@ -471,23 +483,21 @@ async function loadOrder() {
   if (error)
     throw error
 
-  /*
-  ========================================
-  LOG EVENT
-  здесь фиксируется открытие order.html
-  ========================================
-  */
+  currentOrder =
+    data
 
-  await addConsoleLog('order_page', {
-    order_id: data.order_id,
-    project_id: data.project_id,
-    hall_id: data.hall_id,
-    table_id: data.table_id,
-    order_number: data.order_number,
-    message:
-      'ORDER PAGE OPENED: '
-      + (data.order_number || data.order_id)
-  })
+  await addConsoleLog(
+    'order page opened',
+    {
+      project_id: data.project_id,
+      hall_id: data.hall_id,
+      table_id: data.table_id,
+      order_id: data.order_id,
+      message:
+        'ORDER PAGE OPENED: '
+        + (data.order_number || data.order_id)
+    }
+  )
 
   await loadContext(data)
 
@@ -502,7 +512,6 @@ async function loadOrder() {
 /*
 ========================================
 RENDER ORDER
-рисует номер заказа и пустую строку позиции
 ========================================
 */
 
@@ -536,9 +545,6 @@ function renderOrder(order) {
 /*
 ========================================
 CREATE ROW
-создает строку позиции заказа
-пока строка только визуальная
-в базу items здесь НЕ пишет
 ========================================
 */
 
@@ -575,13 +581,6 @@ function createRow(name = '', qty = 1, price = 0) {
   return row
 }
 
-/*
-========================================
-ADD ROW
-добавляет новую строку позиции
-========================================
-*/
-
 function addRow() {
   itemsBox.appendChild(
     createRow()
@@ -593,8 +592,6 @@ function addRow() {
 /*
 ========================================
 TOTAL
-считает subtotal / service / total
-только на экране
 ========================================
 */
 
@@ -641,8 +638,286 @@ function update() {
 
 /*
 ========================================
+CLOSE ORDER
+========================================
+*/
+
+async function closeOrder() {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    setStatus('Closing order...')
+
+    const { error: closeError } =
+      await supabase
+        .from('orders')
+        .update({
+          order_status: 'closed',
+          closed_at: new Date().toISOString()
+        })
+        .eq('order_id', currentOrder.order_id)
+
+    if (closeError)
+      throw closeError
+
+    const { data: openOrders, error: openError } =
+      await supabase
+        .from('orders')
+        .select('order_id')
+        .eq('table_id', currentOrder.table_id)
+        .eq('order_status', 'open')
+
+    if (openError)
+      throw openError
+
+    if (!openOrders || !openOrders.length) {
+      const { error: tableError } =
+        await supabase
+          .from('tables')
+          .update({
+            table_status: 'free'
+          })
+          .eq('table_id', currentOrder.table_id)
+
+      if (tableError)
+        throw tableError
+    }
+
+    await addConsoleLog(
+      'close order',
+      {
+        project_id: currentOrder.project_id,
+        hall_id: currentOrder.hall_id,
+        table_id: currentOrder.table_id,
+        order_id: currentOrder.order_id,
+        message:
+          'ORDER CLOSED: '
+          + (currentOrder.order_number || currentOrder.order_id)
+      }
+    )
+
+    setStatus('Order closed')
+
+    closeOrderBtn.disabled =
+      true
+
+    await loadOrder()
+
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Close order error: '
+      + err.message
+    )
+  }
+}
+
+/*
+========================================
+CHANGE TABLE
+========================================
+*/
+
+async function changeTable() {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    const newTableId =
+      prompt('New table_id')
+
+    if (!newTableId)
+      return
+
+    if (newTableId === currentOrder.table_id) {
+      setStatus('Same table selected')
+      return
+    }
+
+    setStatus('Changing table...')
+
+    const oldTableId =
+      currentOrder.table_id
+
+    const { data: newTable, error: newTableError } =
+      await supabase
+        .from('tables')
+        .update({
+          table_status: 'occupied'
+        })
+        .eq('table_id', newTableId)
+        .select()
+        .single()
+
+    if (newTableError)
+      throw newTableError
+
+    const { error: orderError } =
+      await supabase
+        .from('orders')
+        .update({
+          table_id: newTableId,
+          hall_id: newTable.hall_id
+        })
+        .eq('order_id', currentOrder.order_id)
+
+    if (orderError)
+      throw orderError
+
+    const { data: oldOpenOrders, error: oldOpenError } =
+      await supabase
+        .from('orders')
+        .select('order_id')
+        .eq('table_id', oldTableId)
+        .eq('order_status', 'open')
+
+    if (oldOpenError)
+      throw oldOpenError
+
+    if (!oldOpenOrders || !oldOpenOrders.length) {
+      const { error: oldTableError } =
+        await supabase
+          .from('tables')
+          .update({
+            table_status: 'free'
+          })
+          .eq('table_id', oldTableId)
+
+      if (oldTableError)
+        throw oldTableError
+    }
+
+    await addConsoleLog(
+      'change table',
+      {
+        project_id: currentOrder.project_id,
+        hall_id: newTable.hall_id,
+        table_id: newTableId,
+        order_id: currentOrder.order_id,
+        message:
+          'TABLE CHANGED: '
+          + oldTableId
+          + ' → '
+          + newTableId
+      }
+    )
+
+    currentOrder.table_id =
+      newTableId
+
+    currentOrder.hall_id =
+      newTable.hall_id
+
+    await loadOrder()
+
+    setStatus('Table changed')
+
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Change table error: '
+      + err.message
+    )
+  }
+}
+
+/*
+========================================
+SPLIT BILL
+заглушка: пока только лог
+========================================
+*/
+
+async function splitBill() {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    setStatus('Split Bill clicked')
+
+    await addConsoleLog(
+      'split bill',
+      {
+        project_id: currentOrder.project_id,
+        hall_id: currentOrder.hall_id,
+        table_id: currentOrder.table_id,
+        order_id: currentOrder.order_id,
+        message:
+          'SPLIT BILL: '
+          + (currentOrder.order_number || currentOrder.order_id)
+      }
+    )
+
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Split bill error: '
+      + err.message
+    )
+  }
+}
+
+/*
+========================================
+PRINT BILL
+========================================
+*/
+
+async function printBill() {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    setStatus('Printing bill...')
+
+    window.print()
+
+    await addConsoleLog(
+      'print bill',
+      {
+        project_id: currentOrder.project_id,
+        hall_id: currentOrder.hall_id,
+        table_id: currentOrder.table_id,
+        order_id: currentOrder.order_id,
+        message:
+          'PRINT BILL: '
+          + (currentOrder.order_number || currentOrder.order_id)
+      }
+    )
+
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Print bill error: '
+      + err.message
+    )
+  }
+}
+
+/*
+========================================
 ESCAPE HTML
-защита от вставки HTML в input value
 ========================================
 */
 
@@ -664,6 +939,26 @@ BUTTONS
 addBtn.addEventListener(
   'click',
   addRow
+)
+
+changeTableBtn.addEventListener(
+  'click',
+  changeTable
+)
+
+splitBillBtn.addEventListener(
+  'click',
+  splitBill
+)
+
+printBillBtn.addEventListener(
+  'click',
+  printBill
+)
+
+closeOrderBtn.addEventListener(
+  'click',
+  closeOrder
 )
 
 backBtn.addEventListener(
@@ -725,7 +1020,6 @@ init()
 
 
 
-
 <!--
 ========================================
 КОНСОЛЬ
@@ -735,7 +1029,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   logs / status| v8.1.0
+   new buttons / new rows status log| v9.0.0
   </div>
 
   <div class="row" id="build-down">
