@@ -457,13 +457,11 @@ async function addConsoleLog(action, details = {}) {
 /*
 ========================================
 LOAD ALL LOGS
-БЕЗ ФИЛЬТРОВ
+ТУПО ВСЕ ИЗ logs
 ========================================
 */
 
 async function loadLogs() {
-
-  console.log('LOAD LOGS START')
 
   const { data, error } =
     await supabase
@@ -472,45 +470,37 @@ async function loadLogs() {
       .order('created_at', { ascending: false })
 
   console.log('LOAD LOGS DATA:', data)
-  console.log('LOAD LOGS ERROR:', error)
 
   if (error) {
     console.error('LOAD LOGS ERROR:', error)
     return
   }
 
-  consoleLogs = []
+  consoleLogs = data.map(log => ({
 
-  data.forEach(log => {
+    time:
+      log.created_at
+        ? new Date(log.created_at).toLocaleString()
+        : '-',
 
-    addConsoleLog(
+    action:
       log.action || 'logs',
-      {
-        time:
-          log.created_at,
 
-        user:
-          log.user_id || '-',
+    user:
+      log.user_id || '-',
 
-        hall:
-          log.hall_id || '-',
+    hall:
+      log.hall_id || '-',
 
-        table:
-          log.table_id || '-',
+    table:
+      log.table_id || '-',
 
-        message:
-          log.message || ''
-      }
-    )
+    details:
+      log.message || ''
 
-  })
+  }))
 
   renderConsole()
-
-  console.log(
-    'LOAD LOGS FINISH:',
-    consoleLogs.length
-  )
 }
          
 /*
