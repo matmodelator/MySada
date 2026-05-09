@@ -323,16 +323,19 @@ function setStatus(text) {
 ========================================
 LOGS
 реальные поля logs:
-project_id, hall_id, table_id, order_id, user_id, action, message
+log_id, project_id, hall_id, table_id, order_id, user_id, action, message
 ========================================
 */
 
 async function addConsoleLog(action, details = {}) {
 
-  const { error } =
+  const { data, error } =
     await supabase
       .from('logs')
       .insert({
+        log_id:
+          crypto.randomUUID(),
+
         project_id:
           details.project_id || null,
 
@@ -356,6 +359,11 @@ async function addConsoleLog(action, details = {}) {
         message:
           details.message || ''
       })
+      .select()
+      .single()
+
+  console.log('LOG INSERT DATA:', data)
+  console.log('LOG INSERT ERROR:', error)
 
   if (error) {
     console.error(
@@ -368,6 +376,8 @@ async function addConsoleLog(action, details = {}) {
       + error.message
     )
   }
+
+  return data
 }
 
 /*
@@ -875,7 +885,161 @@ async function splitBill() {
 
 /*
 ========================================
+BUILD BILL HTML
+печатаемый HTML счета
+========================================
+*/
+
+function buildBillHtml(billData) {
+
+  const itemsHtml =
+    billData.items
+      .map(item => `
+        <tr>
+          <td>${escapeHtml(item.name)}</td>
+          <td>${item.qty}</td>
+          <td>${item.price.toFixed(2)}</td>
+          <td>${item.sum.toFixed(2)}</td>
+        </tr>
+      `)
+      .join('')
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+Bill ${billData.order_number || billData.order_id}
+</title>
+
+<style>
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 24px;
+  color: #111827;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+.meta {
+  margin-bottom: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th,
+td {
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background: #f3f4f6;
+}
+
+.total-block {
+  margin-top: 24px;
+  text-align: right;
+}
+
+.total-line {
+  margin-bottom: 6px;
+}
+
+.total-final {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>MySada Bill</h1>
+
+<div class="meta">
+Order:
+${billData.order_number || billData.order_id}
+</div>
+
+<div class="meta">
+Project:
+${escapeHtml(projectBox.textContent)}
+</div>
+
+<div class="meta">
+Hall:
+${escapeHtml(hallBox.textContent)}
+</div>
+
+<div class="meta">
+Table:
+${escapeHtml(tableBox.textContent)}
+</div>
+
+<div class="meta">
+Date:
+${new Date().toLocaleString()}
+</div>
+
+<table>
+
+<thead>
+<tr>
+  <th>Position</th>
+  <th>Qty</th>
+  <th>Price</th>
+  <th>Sum</th>
+</tr>
+</thead>
+
+<tbody>
+${itemsHtml}
+</tbody>
+
+</table>
+
+<div class="total-block">
+
+  <div class="total-line">
+    Subtotal:
+    ${billData.subtotal.toFixed(2)}
+  </div>
+
+  <div class="total-line">
+    Service ${billData.service_percent}%:
+    ${billData.service_total.toFixed(2)}
+  </div>
+
+  <div class="total-final">
+    TOTAL:
+    ${billData.total.toFixed(2)}
+  </div>
+
+</div>
+
+</body>
+</html>
+`
+}
+
+/*
+========================================
 PRINT BILL
+JSON + HTML FILE
 ========================================
 */
 
@@ -886,21 +1050,141 @@ async function printBill() {
     if (!currentOrder)
       return
 
-    setStatus('Printing bill...')
+    setStatus(
+      'Preparing bill data...'
+    )
 
-    window.print()
+    /*
+    ----------------------------------------
+    BUILD DATA
+    ----------------------------------------
+    */
+
+    const billData =
+      buildBillData()
+
+    /*
+    ----------------------------------------
+    SAVE JSON
+    ----------------------------------------
+    */
+
+    const jsonText =
+      JSON.stringify(
+        billData,
+        null,
+        2
+      )
+
+    const jsonBlob =
+      new Blob(
+        [jsonText],
+        {
+          type:
+            'application/json;charset=utf-8'
+        }
+      )
+
+    const jsonUrl =
+      URL.createObjectURL(jsonBlob)
+
+    const jsonLink =
+      document.createElement('a')
+
+    jsonLink.href =
+      jsonUrl
+
+    jsonLink.download =
+      'bill-'
+      + (
+        currentOrder.order_number
+        || currentOrder.order_id
+      )
+      + '.json'
+
+    document.body.appendChild(jsonLink)
+
+    jsonLink.click()
+
+    jsonLink.remove()
+
+    URL.revokeObjectURL(jsonUrl)
+
+    /*
+    ----------------------------------------
+    SAVE HTML
+    ----------------------------------------
+    */
+
+    const htmlText =
+      buildBillHtml(billData)
+
+    const htmlBlob =
+      new Blob(
+        [htmlText],
+        {
+          type:
+            'text/html;charset=utf-8'
+        }
+      )
+
+    const htmlUrl =
+      URL.createObjectURL(htmlBlob)
+
+    const htmlLink =
+      document.createElement('a')
+
+    htmlLink.href =
+      htmlUrl
+
+    htmlLink.download =
+      'bill-'
+      + (
+        currentOrder.order_number
+        || currentOrder.order_id
+      )
+      + '.html'
+
+    document.body.appendChild(htmlLink)
+
+    htmlLink.click()
+
+    htmlLink.remove()
+
+    URL.revokeObjectURL(htmlUrl)
+
+    /*
+    ----------------------------------------
+    LOG
+    ----------------------------------------
+    */
 
     await addConsoleLog(
       'print bill',
       {
-        project_id: currentOrder.project_id,
-        hall_id: currentOrder.hall_id,
-        table_id: currentOrder.table_id,
-        order_id: currentOrder.order_id,
+        project_id:
+          currentOrder.project_id,
+
+        hall_id:
+          currentOrder.hall_id,
+
+        table_id:
+          currentOrder.table_id,
+
+        order_id:
+          currentOrder.order_id,
+
         message:
-          'PRINT BILL: '
-          + (currentOrder.order_number || currentOrder.order_id)
+          'BILL FILES CREATED: '
+          + (
+            currentOrder.order_number
+            || currentOrder.order_id
+          )
       }
+    )
+
+    setStatus(
+      'Bill JSON + HTML saved'
     )
 
   }
@@ -914,7 +1198,6 @@ async function printBill() {
     )
   }
 }
-
 /*
 ========================================
 ESCAPE HTML
@@ -1029,7 +1312,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   new buttons / new rows status log| v9.0.0
+   print / fiz log| v9.1.0
   </div>
 
   <div class="row" id="build-down">
