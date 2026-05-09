@@ -387,22 +387,34 @@ function canUseConsole() {
 /*
 ========================================
 CONSOLE LOG
-журнал действий
+журнал действий + запись в Supabase logs
 ========================================
 */
 
-function addConsoleLog(action, details = {}) {
+async function addConsoleLog(action, details = {}) {
+
+  /*
+  ----------------------------------------
+  LOCAL CONSOLE
+  ----------------------------------------
+  */
+
   const item = {
     time: new Date().toLocaleString(),
+
     action,
+
     user:
       currentUser
       ? currentUser.email + ' / ' + currentUser.role
       : '-',
+
     hall:
       details.hall || currentHallName || '-',
+
     table:
       details.table || '-',
+
     details:
       details.message || ''
   }
@@ -414,13 +426,60 @@ function addConsoleLog(action, details = {}) {
       consoleLogs.slice(0, 300)
   }
 
-  // 🔥 ВСЕГДА ОБНОВЛЯЕМ КОНСОЛЬ
   renderConsole()
 
-  // 🔥 И ПАРАЛЛЕЛЬНО В DEVTOOLS
   console.log('LOG:', item)
-}
 
+  /*
+  ----------------------------------------
+  SUPABASE LOGS
+  ----------------------------------------
+  */
+
+  const { error } =
+    await supabase
+      .from('logs')
+      .insert({
+        project_id:
+          currentProjectId,
+
+        hall_id:
+          currentHallId,
+
+        table_id:
+          activeTable
+            ? activeTable.table_id
+            : null,
+
+        user_id:
+          currentUser
+            ? currentUser.user_id
+            : null,
+
+        action:
+          action,
+
+        message:
+          details.message || '',
+
+        payload:
+          details
+      })
+
+  if (error) {
+
+    console.error(
+      'LOG INSERT ERROR:',
+      error
+    )
+
+    setStatus(
+      'Log insert error: '
+      + error.message
+    )
+  }
+}
+      
 /*
 ========================================
 LOAD LOGS — СЕГОДНЯ
@@ -448,76 +507,39 @@ async function loadLogs() {
     return
   }
 
-  data.reverse().forEach(log => {
-    addConsoleLog(
-      log.action || 'logs',
-      {
-        hall: log.hall_id,
-        table: log.table_id,
-        message: log.message
-      }
-    )
-  })
-}
-      
-/*
-========================================
-LOAD LOGS → БЕЗ ЛЮБЫХ ФИЛЬТРОВ
-========================================
-
-
-async function loadLogs() {
-
-  const { data, error } =
-    await supabase
-      .from('logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50)
-
-  if (error) {
-    console.error('LOAD LOGS ERROR:', error)
-    return
-  }
-
   consoleLogs = []
 
   data.reverse().forEach(log => {
-    addConsoleLog(log.action, {
-      hall: log.hall_id,
-      table: log.table_id,
-      message: log.message
+
+    consoleLogs.unshift({
+
+      time:
+        log.created_at
+          ? new Date(log.created_at).toLocaleString()
+          : '-',
+
+      action:
+        log.action || 'logs',
+
+      user:
+        log.user_id || '-',
+
+      hall:
+        log.hall_id || '-',
+
+      table:
+        log.table_id || '-',
+
+      details:
+        log.message || ''
+
     })
+
   })
+
+  renderConsole()
 }
-
-/*
-========================================
-LOAD LOGS → TEST
-========================================
-
-      
-async function testLog() {
-
-  const { data, error } =
-    await supabase
-      .from('logs')
-      .select('*')
-      .limit(1)
-      .single()
-
-  if (error) {
-    console.error(error)
-    return
-  }
-
-  addConsoleLog(data.action, {
-    hall: data.hall_id,
-    table: data.table_id,
-    message: data.message
-  })
-} */
-      
+         
 /*
 ========================================
 LOAD USER
@@ -2834,7 +2856,7 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-LOAD LOGS — СЕГОДНЯ | v8.0.11
+CONSOLE LOG + запись в Supabase logs | v8.0.12
   </div>
 
   <div class="row" id="build-down">
