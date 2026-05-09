@@ -456,25 +456,23 @@ async function addConsoleLog(action, details = {}) {
       
 /*
 ========================================
-LOAD LOGS — СЕГОДНЯ
+LOAD ALL LOGS
+БЕЗ ФИЛЬТРОВ
 ========================================
 */
 
 async function loadLogs() {
 
-  const start = new Date()
-  start.setHours(0, 0, 0, 0)
-
-  const end = new Date(start)
-  end.setDate(end.getDate() + 1)
+  console.log('LOAD LOGS START')
 
   const { data, error } =
     await supabase
       .from('logs')
       .select('*')
-      .gte('created_at', start.toISOString())
-      .lt('created_at', end.toISOString())
       .order('created_at', { ascending: false })
+
+  console.log('LOAD LOGS DATA:', data)
+  console.log('LOAD LOGS ERROR:', error)
 
   if (error) {
     console.error('LOAD LOGS ERROR:', error)
@@ -483,35 +481,36 @@ async function loadLogs() {
 
   consoleLogs = []
 
-  data.reverse().forEach(log => {
+  data.forEach(log => {
 
-    consoleLogs.unshift({
+    addConsoleLog(
+      log.action || 'logs',
+      {
+        time:
+          log.created_at,
 
-      time:
-        log.created_at
-          ? new Date(log.created_at).toLocaleString()
-          : '-',
+        user:
+          log.user_id || '-',
 
-      action:
-        log.action || 'logs',
+        hall:
+          log.hall_id || '-',
 
-      user:
-        log.user_id || '-',
+        table:
+          log.table_id || '-',
 
-      hall:
-        log.hall_id || '-',
-
-      table:
-        log.table_id || '-',
-
-      details:
-        log.message || ''
-
-    })
+        message:
+          log.message || ''
+      }
+    )
 
   })
 
   renderConsole()
+
+  console.log(
+    'LOAD LOGS FINISH:',
+    consoleLogs.length
+  )
 }
          
 /*
@@ -2881,7 +2880,8 @@ REALTIME TEST
 <div id="service-console">
 
   <div class="row" id="build-top">
-CONSOLE LOG NEW Add & Push | v8.0.13
+LOAD ALL LOGS
+БЕЗ ФИЛЬТРОВ | v8.0.14
   </div>
 
   <div class="row" id="build-down">
