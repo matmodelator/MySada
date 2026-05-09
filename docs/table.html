@@ -489,7 +489,33 @@ async function loadOrders() {
   )
 }
 
+/*
+========================================
+CREATE NEW LOG
+создаёт запись в таблицу logs
+========================================
+*/
+     
+async function addConsoleLog(type, payload = {}) {
+  const { error } =
+    await supabase
+      .from('logs')
+      .insert({
+        project_id: projectId,
+        hall_id: hallId,
+        table_id: tableId,
+        user_id: currentUser ? currentUser.id : null,
+        log_type: type,
+        message: payload.message || '',
+        payload: payload
+      })
 
+  if (error) {
+    console.error('LOG INSERT ERROR:', error)
+    setStatus('Log insert error: ' + error.message)
+  }
+}
+      
 /*
 ========================================
 CREATE NEW ORDER
@@ -567,12 +593,16 @@ async function createOrder() {
       + (orderData.order_number || orderData.order_id)
     )
 
-// 🔥 лог с юзером (он подтянется сам)
-addConsoleLog('orders', {
+// 🔥 запись в logs
+await addConsoleLog('orders', {
   hall: hallName,
   table: tableName,
-  message: 'ORDER CREATED: ' + (orderData.order_number || orderData.order_id)
+  message:
+    'ORDER CREATED: '
+    + (orderData.order_number || orderData.order_id)
 })
+
+createOrderBtn.disabled = false
         
     createOrderBtn.disabled = false
 
@@ -1080,7 +1110,7 @@ init()
 
     <!-- ВВОД ВРУЧНУЮ -->
 
-  addConsoleLog| v1.4.3
+запись в logs| v1.4.4
 
   </div>
 
