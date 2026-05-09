@@ -149,17 +149,7 @@
 
 </main>
 
-<div id="service-console">
 
-  <div class="row" id="build-top">
-    order actions / logs | v8.2.0
-  </div>
-
-  <div class="row" id="build-down">
-    deploy: --
-  </div>
-
-</div>
 
 <script type="module">
 
@@ -321,7 +311,7 @@ function setStatus(text) {
 
 /*
 ========================================
-LOGS
+LOGS запись обязательна
 реальные поля logs:
 log_id, project_id, hall_id, table_id, order_id, user_id, action, message
 ========================================
@@ -329,57 +319,82 @@ log_id, project_id, hall_id, table_id, order_id, user_id, action, message
 
 async function addConsoleLog(action, details = {}) {
 
+  const row = {
+
+    project_id:
+      details.project_id || null,
+
+    hall_id:
+      details.hall_id || null,
+
+    table_id:
+      details.table_id || null,
+
+    order_id:
+      details.order_id || null,
+
+    user_id:
+      currentUser
+        ? currentUser.id
+        : null,
+
+    action:
+      action,
+
+    message:
+      details.message || ''
+  }
+
+  console.log(
+    'LOG INSERT ROW:',
+    row
+  )
+
   const { data, error } =
     await supabase
       .from('logs')
-      .insert({
-        log_id:
-          crypto.randomUUID(),
-
-        project_id:
-          details.project_id || null,
-
-        hall_id:
-          details.hall_id || null,
-
-        table_id:
-          details.table_id || null,
-
-        order_id:
-          details.order_id || null,
-
-        user_id:
-          currentUser
-            ? currentUser.id
-            : null,
-
-        action:
-          action,
-
-        message:
-          details.message || ''
-      })
+      .insert(row)
       .select()
       .single()
 
-  console.log('LOG INSERT DATA:', data)
-  console.log('LOG INSERT ERROR:', error)
+  /*
+  ----------------------------------------
+  LOG ERROR = STOP
+  ----------------------------------------
+  */
 
   if (error) {
+
     console.error(
       'LOG INSERT ERROR:',
       error
     )
 
     setStatus(
-      'Log insert error: '
+      'LOG INSERT ERROR: '
       + error.message
     )
+
+    /*
+    ВАЖНО:
+    ломаем выполнение
+    */
+
+    throw error
   }
+
+  console.log(
+    'LOG INSERT OK:',
+    data
+  )
+
+  setStatus(
+    'LOG SAVED'
+  )
 
   return data
 }
-
+      
 /*
 ========================================
 PARAMS
@@ -1312,7 +1327,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   print / fiz log| v9.1.0
+   LOGS запись обязательна| v9.1.1
   </div>
 
   <div class="row" id="build-down">
