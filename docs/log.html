@@ -1,0 +1,401 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+
+<title>MySada Logs</title>
+
+<link rel="stylesheet"
+      href="styles/console.css" />
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef1f6;
+  color: #243447;
+}
+
+.top-bar {
+  background: #2563eb;
+  color: white;
+  padding: 14px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.top-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.top-buttons button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  background: white;
+  color: #2563eb;
+
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1600px;
+  margin: 20px auto 100px;
+  padding: 0 16px;
+}
+
+.status {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.logs-table th {
+  background: #2563eb;
+  color: white;
+
+  padding: 12px;
+  text-align: left;
+
+  font-size: 13px;
+}
+
+.logs-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.logs-table tr:hover {
+  background: #f8fafc;
+}
+
+.code {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.message {
+  font-weight: 700;
+}
+
+.empty {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  font-weight: 700;
+  color: #64748b;
+}
+
+@media (max-width: 1000px) {
+
+  .logs-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="top-bar">
+
+  <div class="top-title">
+    MySada Logs
+  </div>
+
+  <div class="top-buttons">
+
+    <button id="reloadBtn"
+            type="button">
+      Reload
+    </button>
+
+  </div>
+
+</header>
+
+<main class="container">
+
+  <div id="status"
+       class="status">
+    Loading logs...
+  </div>
+
+  <div id="logsBox"></div>
+
+</main>
+
+<script type="module">
+
+import { supabase }
+from './scripts/config.js'
+
+/*
+========================================
+DOM
+========================================
+*/
+
+const statusBox =
+  document.getElementById('status')
+
+const logsBox =
+  document.getElementById('logsBox')
+
+const reloadBtn =
+  document.getElementById('reloadBtn')
+
+/*
+========================================
+STATUS
+========================================
+*/
+
+function setStatus(text) {
+
+  console.log('[LOGS]', text)
+
+  statusBox.textContent =
+    text
+}
+
+/*
+========================================
+RENDER LOGS
+========================================
+*/
+
+function renderLogs(logs = []) {
+
+  if (!logs.length) {
+
+    logsBox.innerHTML = `
+      <div class="empty">
+        Logs not found
+      </div>
+    `
+
+    return
+  }
+
+  logsBox.innerHTML = `
+
+    <table class="logs-table">
+
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Action</th>
+          <th>User</th>
+          <th>Hall</th>
+          <th>Table</th>
+          <th>Order</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        ${logs.map(log => `
+
+          <tr>
+
+            <td>
+              ${
+                log.created_at
+                  ? new Date(log.created_at)
+                      .toLocaleString()
+                  : '-'
+              }
+            </td>
+
+            <td>
+              ${log.action || '-'}
+            </td>
+
+            <td class="code">
+              ${log.user_id || '-'}
+            </td>
+
+            <td class="code">
+              ${log.hall_id || '-'}
+            </td>
+
+            <td class="code">
+              ${log.table_id || '-'}
+            </td>
+
+            <td class="code">
+              ${log.order_id || '-'}
+            </td>
+
+            <td class="message">
+              ${log.message || '-'}
+            </td>
+
+          </tr>
+
+        `).join('')}
+
+      </tbody>
+
+    </table>
+  `
+}
+
+/*
+========================================
+LOAD LOGS
+========================================
+*/
+
+async function loadLogs() {
+
+  try {
+
+    setStatus('Loading logs...')
+
+    const { data, error } =
+      await supabase
+        .from('logs')
+        .select('*')
+        .order('created_at', {
+          ascending: false
+        })
+
+    console.log('LOGS DATA:', data)
+    console.log('LOGS ERROR:', error)
+
+    if (error)
+      throw error
+
+    renderLogs(data || [])
+
+    setStatus(
+      'Logs loaded: '
+      + (data ? data.length : 0)
+    )
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Load logs error: '
+      + err.message
+    )
+  }
+}
+
+/*
+========================================
+BUTTONS
+========================================
+*/
+
+reloadBtn.addEventListener(
+  'click',
+  loadLogs
+)
+
+/*
+========================================
+INIT
+========================================
+*/
+
+loadLogs()
+
+</script>
+
+<!--
+========================================
+КОНСОЛЬ
+========================================
+-->
+
+<div id="service-console">
+
+  <div class="row" id="build-top">
+    logs viewer | v1.0.0
+  </div>
+
+  <div class="row" id="build-down">
+    deploy: --
+  </div>
+
+</div>
+
+<script>
+(function () {
+
+  const now = new Date();
+
+  const pad = n =>
+    String(n).padStart(2, '0');
+
+  const date =
+      pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear();
+
+  const time =
+      pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes());
+
+  document
+    .getElementById('build-down')
+    .textContent =
+      'deploy: ' + date + ' ' + time;
+
+})();
+</script>
+
+</body>
+</html>
+```
