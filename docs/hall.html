@@ -1631,85 +1631,28 @@ function updateTable(updatedTable) {
 /*
 ========================================
 OPEN ORDER
+открываем table.html
 ========================================
 */
 
 btnOpenOrder.addEventListener(
   'click',
-  async () => {
-    try {
-      if (!activeTable)
-        return
+  () => {
 
-      setStatus('Opening order...')
+    if (!activeTable)
+      return
 
-      const { data: orderData, error: orderError } =
-        await supabase
-          .from('orders')
-          .insert({
-            project_id: activeTable.project_id,
-            hall_id: activeTable.hall_id,
-            table_id: activeTable.table_id,
-            guest_count: 0,
-            shift_id: activeTable.current_shift_id
-          })
-          .select()
+    window.location.href =
+      'table.html'
+      + '?project_id='
+      + encodeURIComponent(activeTable.project_id)
+      + '&hall_id='
+      + encodeURIComponent(activeTable.hall_id)
+      + '&table_id='
+      + encodeURIComponent(activeTable.table_id)
 
-      console.log('OPEN ORDER DATA:', orderData)
-      console.log('OPEN ORDER ERROR:', orderError)
-
-      if (orderError) {
-        await pushLogToDb(
-          'errors',
-          {
-            table_id: activeTable.table_id,
-            message: orderError.message
-          }
-        )
-
-        alert('Не удалось открыть заказ')
-        return
-      }
-
-      if (orderData && orderData[0]) {
-        addOrderInMemory(orderData[0])
-      }
-
-      await pushLogToDb(
-        'open order',
-        {
-          table_id: activeTable.table_id,
-          message:
-            'OPEN ORDER: '
-            + (
-              activeTable.name
-              || activeTable.table_id
-            )
-        }
-      )
-
-      await setTableStatus(
-        activeTable.table_id,
-        'occupied'
-      )
-    }
-    catch (err) {
-      console.error(err)
-
-      await pushLogToDb(
-        'errors',
-        {
-          message: err.message
-        }
-      )
-
-      setStatus(
-        'Open order error: ' + err.message
-      )
-    }
   }
 )
-
 /*
 ========================================
 CLOSE ORDER
@@ -2493,7 +2436,8 @@ REALTIME TEST в F12
 <div id="service-console">
 
   <div class="row" id="build-top">
-перенос консоли в log.html | v9.0.0
+OPEN ORDER только
+открывает table.html | v9.1.0
   </div>
 
   <div class="row" id="build-down">
