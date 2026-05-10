@@ -1016,7 +1016,10 @@ tabs | grid | all | console
 */
 
 function setHallViewMode(mode) {
- 
+
+  const modeChanged =
+    hallViewMode !== mode
+
   hallViewMode =
     mode
 
@@ -1086,10 +1089,11 @@ if (viewLabel) {
     mode !== 'all'
   )
 
+  if (modeChanged) {
   dialog.classList.add('hidden')
-
   activeTable =
     null
+}
 
   renderHallTabs()
   renderHallGrid()
@@ -2436,8 +2440,7 @@ REALTIME TEST в F12
 <div id="service-console">
 
   <div class="row" id="build-top">
-OPEN ORDER только
-открывает table.html | v9.1.0
+setHallViewMode fix | v9.1.1
   </div>
 
   <div class="row" id="build-down">
