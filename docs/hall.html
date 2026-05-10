@@ -1007,42 +1007,38 @@ function renderHallGrid() {
   })
 }
 
-      
 /*
 ========================================
 SET HALL VIEW MODE
-tabs | grid | all | console
+tabs | grid | mosaic
 ========================================
 */
 
 function setHallViewMode(mode) {
 
-  const modeChanged =
-    hallViewMode !== mode
-
   hallViewMode =
     mode
 
-/*
-----------------------------------------
-Grid status switch показываем только в Grid
-----------------------------------------
-*/
+  /*
+  ----------------------------------------
+  Grid status switch показываем только в Grid
+  ----------------------------------------
+  */
 
-if (gridStatusSwitchBtn) {
-  gridStatusSwitchBtn.classList.toggle(
-    'hidden',
-    mode !== 'grid'
-  )
-}      
+  if (gridStatusSwitchBtn) {
+    gridStatusSwitchBtn.classList.toggle(
+      'hidden',
+      mode !== 'grid'
+    )
+  }
 
-      const viewLabel =
-  document.querySelector('.view-label')
+  const viewLabel =
+    document.querySelector('.view-label')
 
-if (viewLabel) {
-  viewLabel.textContent =
-    'View Mode: ' + mode
-}
+  if (viewLabel) {
+    viewLabel.textContent =
+      'View Mode: ' + mode
+  }
 
   sessionStorage.setItem(
     'mysada_hall_view_mode',
@@ -1089,13 +1085,8 @@ if (viewLabel) {
     mode !== 'all'
   )
 
-  if (modeChanged) {
-  dialog.classList.add('hidden')
-  activeTable =
-    null
-}
-
   renderHallTabs()
+
   renderHallGrid()
 
   if (mode === 'all') {
@@ -1105,7 +1096,7 @@ if (viewLabel) {
   if (mode === 'tabs') {
     renderCurrentHall()
     renderTabsInfo()
-  } 
+  }
 }
 
 /*
@@ -1126,13 +1117,9 @@ Tabs mode
 */
 
 function renderCurrentHall() {
+
   hallCanvas.innerHTML =
     ''
-
-  activeTable =
-    null
-
-  dialog.classList.add('hidden')
 
   if (!currentHallId) {
     setStatus('No hall selected')
@@ -1145,20 +1132,24 @@ function renderCurrentHall() {
     )
 
   if (!tablesForHall.length) {
+
     renderTabsInfo()
 
     setStatus(
-      'No tables found for hall: ' + currentHallName
+      'No tables found for hall: '
+      + currentHallName
     )
 
     return
   }
 
   tablesForHall.forEach(table => {
+
     renderTableToCanvas(
       table,
       hallCanvas
     )
+
   })
 
   renderTabsInfo()
@@ -1170,7 +1161,7 @@ function renderCurrentHall() {
     + currentHallName
   )
 }
-
+      
 /*
 ========================================
 RENDER MOSAIC
@@ -1184,11 +1175,7 @@ function renderAllHalls() {
 
   allHalls.innerHTML = ''
 
-  activeTable = null
-
-  dialog.classList.add('hidden')
-
-  if (!hallsList.length) {
+   if (!hallsList.length) {
     setStatus('No halls to render')
     return
   }
@@ -1954,9 +1941,7 @@ CLOSE DIALOG BY OUTSIDE CLICK
 document.addEventListener(
   'click',
   event => {
-    if (
-      dialog.classList.contains('hidden')
-    )
+    if (dialog.classList.contains('hidden'))
       return
 
     const clickedInsideDialog =
@@ -1967,24 +1952,53 @@ document.addEventListener(
       ||
       event.target.closest('.table-tree-row')
 
-    if (
-      clickedInsideDialog
-      ||
-      clickedTable
-    )
+    const clickedButton =
+      event.target.closest('button')
+
+    /*
+    ----------------------------------------
+    1. Нажатие внутри dialog — НЕ закрываем здесь
+    кнопки внутри сами выполнят действие
+    ----------------------------------------
+    */
+
+    if (clickedInsideDialog)
       return
 
+    /*
+    ----------------------------------------
+    2. Нажатие по столу — НЕ закрываем здесь
+    стол сам откроет/сменит dialog
+    ----------------------------------------
+    */
+
+    if (clickedTable)
+      return
+
+    /*
+    ----------------------------------------
+    3. Нажатие кнопки вне dialog — закрываем
+    ----------------------------------------
+    */
+
+    if (clickedButton) {
+      dialog.classList.add('hidden')
+      dialog.classList.remove('hall-info-mode')
+      activeTable = null
+      return
+    }
+
+    /*
+    ----------------------------------------
+    4. Нажатие мимо поля — закрываем
+    ----------------------------------------
+    */
+
     dialog.classList.add('hidden')
-
     dialog.classList.remove('hall-info-mode')
-
-    activeTable =
-      null
-
-    setStatus('Table dialog closed')
+    activeTable = null
   }
 )
-
 /*
 ========================================
 SELECT HALL
@@ -2440,7 +2454,7 @@ REALTIME TEST в F12
 <div id="service-console">
 
   <div class="row" id="build-top">
-setHallViewMode fix | v9.1.1
+Dialog Table fix | v9.1.2
   </div>
 
   <div class="row" id="build-down">
