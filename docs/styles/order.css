@@ -1,8 +1,9 @@
 /*
 ========================================
-hoover for Close Order v2.1.0
+Split Cheks/ Change Table / hoover fix for Close Order v2.2.0
 ========================================
 */
+
 
 * {
   box-sizing: border-box;
@@ -15,6 +16,19 @@ body {
   color: #243447;
   min-height: 100vh;
 }
+
+
+/*
+========================================
+HIDDEN
+общее скрытие элементов
+========================================
+*/
+
+.hidden {
+  display: none !important;
+}
+
 
 /*
 ========================================
@@ -174,28 +188,145 @@ ORDER ACTION BUTTONS
 
 /*
 ========================================
-OPEN ORDER MAIN BUTTON
-green -> rose hover
+CLOSE ORDER BUTTON
+rose -> green hover
 ========================================
 */
 
-.open-order-main-btn {
-  position: absolute;
-  left: 18px;
-
+.close-order-btn {
   padding: 10px 18px;
   border: 2px solid white;
   border-radius: 999px;
 
-  background: #22c55e;
+  background: #fb7185;
   color: white;
 
   font-size: 16px;
   font-weight: 900;
+  cursor: pointer;
 }
 
-.open-order-main-btn:hover {
+.close-order-btn:hover {
+  background: #22c55e;
+}
+
+/* ========================================
+   DIALOGS
+======================================== */
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog.hidden {
+  display: none;
+}
+
+.dialog-box {
+  width: min(720px, 92vw);
+  max-height: 82vh;
+  overflow: auto;
+
+  background: #ffffff;
+  border-radius: 18px;
+
+  padding: 20px;
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.25);
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dialog-box h3 {
+  margin: 0;
+}
+
+/* ========================================
+   FREE TABLES GRID
+======================================== */
+
+.free-tables-list {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(180px, 1fr));
+
+  gap: 12px;
+}
+
+/* ========================================
+   FREE TABLE BUTTON
+======================================== */
+
+.table-free {
+  border: 2px solid #38bdf8;
+
+  background: #e0f2fe;
+
+  color: #0f172a;
+
+  border-radius: 14px;
+
+  padding: 14px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  text-align: center;
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.table-free:hover {
+  background: #bae6fd;
+
+  transform: translateY(-2px);
+}
+
+.table-free:active {
+  transform: scale(0.97);
+}
+
+/* ========================================
+   SPLIT CHECK
+======================================== */
+
+#splitCheckCount {
+  height: 42px;
+
+  border-radius: 10px;
+
+  border: 1px solid #cbd5e1;
+
+  padding: 0 12px;
+
+  font-size: 16px;
+}
+
+/* ========================================
+   CLOSE ORDER
+======================================== */
+
+.close-order-btn {
   background: #fb7185;
+  color: #ffffff;
+}
+
+.close-order-btn:hover {
+  background: #16a34a;
 }
 
 /*
