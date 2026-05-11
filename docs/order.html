@@ -1167,7 +1167,7 @@ ${itemsHtml}
 window.onload = function () {
   window.print()
 }
-</script>
+<\/script>
 
 </body>
 </html>
@@ -1369,17 +1369,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   Bill переименован в Check:
-Split Check, Print Check, MySada Check.
-Добавлена печать в файл:
-кнопка Print Check создаёт .html файл check-...html с авто-вызовом window.print().
-Добавлена функция buildCheckData() — раньше её не было, из-за этого печать падала.
-Opened at выводится красным.
-Closed at выводится зелёным, если заказ закрыт.
-Close Order закрывает order, ставит closed_at, и если открытых заказов на столе больше нет — делает стол free.
-Change Table теперь показывает список свободных столов через prompt и переносит check на выбранный стол.
-Split Check спрашивает количество, создаёт новые open checks и закрывает старый.
-Логи пишутся в logs через addConsoleLog(). | v9.2.0
+ <\/script> | v9.2.1
   </div>
 
   <div class="row" id="build-down">
