@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -1102,7 +1103,7 @@ function splitBill() {
 ========================================
 SPLIT EQUALLY
 делит итог поровну
-только печать файлов
+один HTML-файл со всеми чеками
 ========================================
 */
 
@@ -1124,9 +1125,12 @@ async function printSplitEqually() {
     const oneTotal =
       baseData.total / count
 
+    const checks =
+      []
+
     for (let i = 1; i <= count; i++) {
 
-      const splitData = {
+      checks.push({
         ...baseData,
 
         order_number:
@@ -1156,13 +1160,13 @@ async function printSplitEqually() {
 
         total:
           oneTotal
-      }
-
-      saveCheckHtmlFile(
-        splitData,
-        'split-equal-' + i
-      )
+      })
     }
+
+    saveMultiCheckHtmlFile(
+      checks,
+      'split-equal'
+    )
 
     await addConsoleLog(
       'split check',
@@ -1174,13 +1178,13 @@ async function printSplitEqually() {
         message:
           'SPLIT EQUALLY PRINTED: '
           + count
-          + ' checks'
+          + ' checks in one file'
       }
     )
 
     splitCheckDialog.classList.add('hidden')
 
-    setStatus('Split equally files saved')
+    setStatus('Split equally file saved')
   }
   catch (err) {
 
@@ -1435,7 +1439,83 @@ function saveCheckHtmlFile(checkData, suffix) {
 
   URL.revokeObjectURL(htmlUrl)
 }          
-          
+
+/*
+========================================
+SAVE MULTI CHECK HTML FILE
+один HTML-файл со всеми split checks
+========================================
+*/
+
+function saveMultiCheckHtmlFile(checks, suffix) {
+
+  const parts =
+    checks
+      .map(check =>
+        buildCheckHtml(check)
+          .replace('<!DOCTYPE html>', '')
+          .replace('<html lang="en">', '')
+          .replace('</html>', '')
+      )
+      .join('<div style="page-break-after: always;"></div>')
+
+  const htmlText =
+    `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Split Checks</title>
+</head>
+<body>
+${parts}
+
+<script>
+window.onload = function () {
+  window.print()
+}
+<\/script>
+
+</body>
+</html>
+`
+
+  const htmlBlob =
+    new Blob(
+      [htmlText],
+      {
+        type: 'text/html;charset=utf-8'
+      }
+    )
+
+  const htmlUrl =
+    URL.createObjectURL(htmlBlob)
+
+  const htmlLink =
+    document.createElement('a')
+
+  htmlLink.href =
+    htmlUrl
+
+  htmlLink.download =
+    'check-'
+    + (
+      currentOrder.order_number
+      || currentOrder.order_id
+    )
+    + '-'
+    + suffix
+    + '.html'
+
+  document.body.appendChild(htmlLink)
+
+  htmlLink.click()
+
+  htmlLink.remove()
+
+  URL.revokeObjectURL(htmlUrl)
+}
+      
 /*
 ========================================
 BUILD CHECK DATA
@@ -1863,12 +1943,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-Split Check больше не меняет orders.
-Не создаёт новые orders в базе.
-Не закрывает текущий order.
-Не переносит items в БД.
-Работает только как print split.
-        Change Table - Hall Grid style | v9.4.0
+SAVE MULTI CHECK | v9.5.0
   </div>
 
   <div class="row" id="build-down">
