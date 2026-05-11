@@ -1,7 +1,6 @@
 /*
 ========================================
-TOP BAR LEFT SIDE v2.0.0
-единые эффекты всех кнопок
+hoover for Close Order v2.1.0
 ========================================
 */
 
@@ -353,8 +352,18 @@ CLOSE ORDER BUTTON
 
   border-radius: 999px;
 
+ .close-order-btn {
   background: #fb7185;
-  color: white;
+  color: #ffffff;
+}
+
+.close-order-btn:hover {
+  background: #16a34a;
+}
+
+.close-order-btn:active {
+  transform: translateY(2px) scale(0.97);
+}
 
   font-size: 12px;
   font-weight: 900;
