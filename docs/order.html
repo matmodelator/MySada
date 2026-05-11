@@ -149,6 +149,59 @@
 
 </main>
 
+<!-- ========================================
+     CHANGE TABLE DIALOG
+======================================== -->
+
+<div id="changeTableDialog" class="dialog hidden">
+  <div class="dialog-box">
+
+    <h3>Change Table</h3>
+
+    <div id="freeTablesBox"
+         class="free-tables-list">
+    </div>
+
+    <button id="closeChangeTableDialogBtn"
+            type="button">
+      Close
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ========================================
+     SPLIT CHECK DIALOG
+======================================== -->
+
+<div id="splitCheckDialog" class="dialog hidden">
+  <div class="dialog-box">
+
+    <h3>Split Check</h3>
+
+    <label>
+      Checks count
+    </label>
+
+    <input id="splitCheckCount"
+           type="number"
+           min="2"
+           value="2" />
+
+    <button id="applySplitCheckBtn"
+            type="button">
+      Print Split Checks
+    </button>
+
+    <button id="closeSplitCheckDialogBtn"
+            type="button">
+      Close
+    </button>
+
+  </div>
+</div>      
+
 <script type="module">
 
 const DEBUG_IDS =
@@ -226,6 +279,27 @@ const reloadBtn =
 let buildDown =
   document.getElementById('build-down')
 
+const changeTableDialog =
+  document.getElementById('changeTableDialog')
+
+const freeTablesBox =
+  document.getElementById('freeTablesBox')
+
+const closeChangeTableDialogBtn =
+  document.getElementById('closeChangeTableDialogBtn')
+
+const splitCheckDialog =
+  document.getElementById('splitCheckDialog')
+
+const splitCheckCount =
+  document.getElementById('splitCheckCount')
+
+const applySplitCheckBtn =
+  document.getElementById('applySplitCheckBtn')
+
+const closeSplitCheckDialogBtn =
+  document.getElementById('closeSplitCheckDialogBtn')
+      
 /*
 ========================================
 STATE
@@ -742,7 +816,7 @@ async function closeOrder() {
 /*
 ========================================
 CHANGE TABLE
-выбор из свободных столов
+открывает список свободных столов
 ========================================
 */
 
@@ -755,7 +829,7 @@ async function changeTable() {
 
     setStatus('Loading free tables...')
 
-    const { data: freeTables, error: freeError } =
+    const { data, error } =
       await supabase
         .from('tables')
         .select('*')
@@ -763,43 +837,76 @@ async function changeTable() {
         .eq('table_status', 'free')
         .order('name', { ascending: true })
 
-    if (freeError)
-      throw freeError
+    if (error)
+      throw error
 
-    if (!freeTables || !freeTables.length) {
-      setStatus('No free tables')
+    freeTablesBox.innerHTML =
+      ''
+
+    if (!data || !data.length) {
+      freeTablesBox.innerHTML =
+        '<div class="empty">No free tables</div>'
+
+      changeTableDialog.classList.remove('hidden')
+
       return
     }
 
-    const listText =
-      freeTables
-        .map((table, index) =>
-          (index + 1)
-          + '. '
-          + (table.name || table.table_id)
-          + ' / '
-          + table.table_id
-        )
-        .join('\n')
+    data.forEach(table => {
 
-    const selected =
-      Number(
-        prompt(
-          'Select free table:\n\n'
-          + listText
-        )
+      const btn =
+        document.createElement('button')
+
+      btn.type =
+        'button'
+
+      btn.className =
+        'table-tree-row table-free'
+
+      btn.textContent =
+        (table.name || table.table_id)
+        + ' · free · '
+        + table.table_id
+
+      btn.addEventListener(
+        'click',
+        () => moveOrderToTable(table)
       )
 
-    if (!selected || !freeTables[selected - 1]) {
-      setStatus('Change table canceled')
-      return
-    }
+      freeTablesBox.appendChild(btn)
+    })
 
-    const newTable =
-      freeTables[selected - 1]
+    changeTableDialog.classList.remove('hidden')
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Change table error: '
+      + err.message
+    )
+  }
+}
+      
+/*
+========================================
+MOVE ORDER TO TABLE
+переносит check на свободный стол
+========================================
+*/
+
+async function moveOrderToTable(newTable) {
+
+  try {
+
+    if (!currentOrder)
+      return
 
     const oldTableId =
       currentOrder.table_id
+
+    setStatus('Changing table...')
 
     const { error: orderError } =
       await supabase
@@ -835,6 +942,7 @@ async function changeTable() {
       throw oldOpenError
 
     if (!oldOpenOrders || !oldOpenOrders.length) {
+
       const { error: oldTableError } =
         await supabase
           .from('tables')
@@ -862,6 +970,8 @@ async function changeTable() {
       }
     )
 
+    changeTableDialog.classList.add('hidden')
+
     await loadOrder()
 
     setStatus('Table changed')
@@ -871,7 +981,7 @@ async function changeTable() {
     console.error(err)
 
     setStatus(
-      'Change table error: '
+      'Move table error: '
       + err.message
     )
   }
@@ -880,12 +990,28 @@ async function changeTable() {
 /*
 ========================================
 SPLIT CHECK
-закрывает старый check
-и создает несколько новых open checks
+не закрывает старый check
+печатает несколько split-check файлов
 ========================================
 */
 
 async function splitBill() {
+
+  if (!currentOrder)
+    return
+
+  splitCheckDialog.classList.remove('hidden')
+}
+
+/*
+========================================
+PRINT SPLIT CHECKS
+делит сумму на несколько чеков
+и сохраняет HTML-файлы для печати
+========================================
+*/
+
+async function printSplitChecks() {
 
   try {
 
@@ -893,51 +1019,81 @@ async function splitBill() {
       return
 
     const count =
-      Number(
-        prompt('How many checks?')
-      )
+      Number(splitCheckCount.value)
 
     if (!count || count < 2) {
-      setStatus('Split canceled')
+      setStatus('Wrong checks count')
       return
     }
 
-    setStatus('Splitting check...')
+    const baseData =
+      buildCheckData()
 
-    const rows =
-      []
+    const splitTotal =
+      baseData.total / count
 
     for (let i = 1; i <= count; i++) {
-      rows.push({
-        project_id: currentOrder.project_id,
-        hall_id: currentOrder.hall_id,
-        table_id: currentOrder.table_id,
-        user_id: currentUser ? currentUser.id : null,
-        guest_count: 0,
-        order_status: 'open'
-      })
+
+      const splitData = {
+        ...baseData,
+        split_index: i,
+        split_count: count,
+        subtotal: splitTotal,
+        service_total: 0,
+        total: splitTotal,
+        items: [
+          {
+            name:
+              'Split check '
+              + i
+              + ' / '
+              + count,
+
+            qty: 1,
+            price: splitTotal,
+            sum: splitTotal
+          }
+        ]
+      }
+
+      const htmlText =
+        buildCheckHtml(splitData)
+
+      const htmlBlob =
+        new Blob(
+          [htmlText],
+          {
+            type: 'text/html;charset=utf-8'
+          }
+        )
+
+      const htmlUrl =
+        URL.createObjectURL(htmlBlob)
+
+      const htmlLink =
+        document.createElement('a')
+
+      htmlLink.href =
+        htmlUrl
+
+      htmlLink.download =
+        'check-'
+        + (
+          currentOrder.order_number
+          || currentOrder.order_id
+        )
+        + '-split-'
+        + i
+        + '.html'
+
+      document.body.appendChild(htmlLink)
+
+      htmlLink.click()
+
+      htmlLink.remove()
+
+      URL.revokeObjectURL(htmlUrl)
     }
-
-    const { data: newOrders, error: insertError } =
-      await supabase
-        .from('orders')
-        .insert(rows)
-        .select()
-
-    if (insertError)
-      throw insertError
-
-    const { error: closeError } =
-      await supabase
-        .from('orders')
-        .update({
-          order_status: 'closed',
-          closed_at: new Date().toISOString()
-        })
-        .eq('order_id', currentOrder.order_id)
-
-    if (closeError)
-      throw closeError
 
     await addConsoleLog(
       'split check',
@@ -947,23 +1103,18 @@ async function splitBill() {
         table_id: currentOrder.table_id,
         order_id: currentOrder.order_id,
         message:
-          'CHECK SPLIT: '
-          + (
-            currentOrder.order_number
-            || currentOrder.order_id
-          )
-          + ' -> '
+          'CHECK PRINT SPLIT: '
           + count
           + ' checks'
       }
     )
 
+    splitCheckDialog.classList.add('hidden')
+
     setStatus(
-      'Check split: '
+      'Split checks saved: '
       + count
     )
-
-    await loadOrder()
   }
   catch (err) {
 
@@ -975,7 +1126,7 @@ async function splitBill() {
     )
   }
 }
-
+      
 /*
 ========================================
 BUILD CHECK DATA
@@ -1304,10 +1455,34 @@ closeOrderBtn.addEventListener(
   closeOrder
 )
 
+closeChangeTableDialogBtn.addEventListener(
+  'click',
+  () => {
+    changeTableDialog.classList.add('hidden')
+  }
+)
+
+closeSplitCheckDialogBtn.addEventListener(
+  'click',
+  () => {
+    splitCheckDialog.classList.add('hidden')
+  }
+)
+
+applySplitCheckBtn.addEventListener(
+  'click',
+  printSplitChecks
+)
+      
 backBtn.addEventListener(
   'click',
   () => {
-    window.history.back()
+
+    window.location.href =
+      'hall.html'
+      + '?project_id='
+      + encodeURIComponent(currentOrder.project_id)
+
   }
 )
 
@@ -1369,7 +1544,37 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- <\/script> | v9.2.1
+ Bill → Check
+Split Bill → Split Check
+Print Bill → Print Check
+Order → Check
+Close Order перенесена в .top-buttons.
+Добавлены 2 dialog-блока:
+changeTableDialog
+splitCheckDialog
+orderTime теперь не просто строка, а контейнер для:
+Opened at (red)
+Closed at (green)
+Добавлены новые DOM-элементы:
+freeTablesBox
+splitCheckCount
+applySplitCheckBtn
+closeChangeTableDialogBtn
+closeSplitCheckDialogBtn
+Добавлены CSS-классы для:
+dialogs,
+free tables list,
+green hover кнопки Close Order.
+Печать теперь генерирует:
+HTML check file,
+с auto window.print().
+В generated printable HTML:
+MySada Bill → MySada Check
+Date заменён на:
+Opened at
+Closed at.
+Change Table больше не использует prompt().
+Теперь это dialog со списком свободных столов как mini-grid/list. | v9.3.0
   </div>
 
   <div class="row" id="build-down">
