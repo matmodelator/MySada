@@ -28,13 +28,13 @@
     <button id="splitBillBtn"
             class="split-bill-btn"
             type="button">
-      Split Bill
+      Split Check
     </button>
 
     <button id="printBillBtn"
             class="print-bill-btn"
             type="button">
-      Print Bill
+      Print Check
     </button>
 
     <button id="closeOrderBtn"
@@ -96,10 +96,10 @@
       <div style="display:flex; justify-content:space-between; width:100%;">
 
         <strong id="orderTitle">
-          Order
+          Check
         </strong>
 
-        <span id="orderTime" style="font-size:12px; opacity:0.7;">
+        <span id="orderTime" style="font-size:12px; opacity:0.9;">
           --
         </span>
 
@@ -148,8 +148,6 @@
   </div>
 
 </main>
-
-
 
 <script type="module">
 
@@ -311,9 +309,9 @@ function setStatus(text) {
 
 /*
 ========================================
-LOGS запись обязательна
+LOGS
 реальные поля logs:
-log_id, project_id, hall_id, table_id, order_id, user_id, action, message
+project_id, hall_id, table_id, order_id, user_id, action, message
 ========================================
 */
 
@@ -357,12 +355,6 @@ async function addConsoleLog(action, details = {}) {
       .select()
       .single()
 
-  /*
-  ----------------------------------------
-  LOG ERROR = STOP
-  ----------------------------------------
-  */
-
   if (error) {
 
     console.error(
@@ -374,11 +366,6 @@ async function addConsoleLog(action, details = {}) {
       'LOG INSERT ERROR: '
       + error.message
     )
-
-    /*
-    ВАЖНО:
-    ломаем выполнение
-    */
 
     throw error
   }
@@ -394,7 +381,7 @@ async function addConsoleLog(action, details = {}) {
 
   return data
 }
-      
+
 /*
 ========================================
 PARAMS
@@ -511,19 +498,6 @@ async function loadOrder() {
   currentOrder =
     data
 
-  await addConsoleLog(
-    'order page opened',
-    {
-      project_id: data.project_id,
-      hall_id: data.hall_id,
-      table_id: data.table_id,
-      order_id: data.order_id,
-      message:
-        'ORDER PAGE OPENED: '
-        + (data.order_number || data.order_id)
-    }
-  )
-
   await loadContext(data)
 
   renderOrder(data)
@@ -537,13 +511,14 @@ async function loadOrder() {
 /*
 ========================================
 RENDER ORDER
+Opened at / Closed at
 ========================================
 */
 
 function renderOrder(order) {
 
   let title =
-    'Order #' + (order.order_number ?? '-')
+    'Check #' + (order.order_number ?? '-')
 
   if (DEBUG_IDS) {
     title +=
@@ -553,13 +528,34 @@ function renderOrder(order) {
   orderTitle.textContent =
     title
 
-  if (order.opened_at || order.created_at) {
-    const d =
-      new Date(order.opened_at || order.created_at)
+  const openedAt =
+    order.opened_at || order.created_at
 
-    orderTime.textContent =
-      d.toLocaleString()
-  }
+  const closedAt =
+    order.closed_at || null
+
+  orderTime.innerHTML =
+    `
+      <div style="color:#dc2626; font-weight:700;">
+        Opened at:
+        ${
+          openedAt
+            ? new Date(openedAt).toLocaleString()
+            : '-'
+        }
+      </div>
+
+      ${
+        closedAt
+          ? `
+            <div style="color:#16a34a; font-weight:700; margin-top:4px;">
+              Closed at:
+              ${new Date(closedAt).toLocaleString()}
+            </div>
+          `
+          : ''
+      }
+    `
 
   itemsBox.innerHTML =
     ''
@@ -746,6 +742,7 @@ async function closeOrder() {
 /*
 ========================================
 CHANGE TABLE
+выбор из свободных столов
 ========================================
 */
 
@@ -756,46 +753,76 @@ async function changeTable() {
     if (!currentOrder)
       return
 
-    const newTableId =
-      prompt('New table_id')
+    setStatus('Loading free tables...')
 
-    if (!newTableId)
-      return
+    const { data: freeTables, error: freeError } =
+      await supabase
+        .from('tables')
+        .select('*')
+        .eq('project_id', currentOrder.project_id)
+        .eq('table_status', 'free')
+        .order('name', { ascending: true })
 
-    if (newTableId === currentOrder.table_id) {
-      setStatus('Same table selected')
+    if (freeError)
+      throw freeError
+
+    if (!freeTables || !freeTables.length) {
+      setStatus('No free tables')
       return
     }
 
-    setStatus('Changing table...')
+    const listText =
+      freeTables
+        .map((table, index) =>
+          (index + 1)
+          + '. '
+          + (table.name || table.table_id)
+          + ' / '
+          + table.table_id
+        )
+        .join('\n')
+
+    const selected =
+      Number(
+        prompt(
+          'Select free table:\n\n'
+          + listText
+        )
+      )
+
+    if (!selected || !freeTables[selected - 1]) {
+      setStatus('Change table canceled')
+      return
+    }
+
+    const newTable =
+      freeTables[selected - 1]
 
     const oldTableId =
       currentOrder.table_id
-
-    const { data: newTable, error: newTableError } =
-      await supabase
-        .from('tables')
-        .update({
-          table_status: 'occupied'
-        })
-        .eq('table_id', newTableId)
-        .select()
-        .single()
-
-    if (newTableError)
-      throw newTableError
 
     const { error: orderError } =
       await supabase
         .from('orders')
         .update({
-          table_id: newTableId,
+          table_id: newTable.table_id,
           hall_id: newTable.hall_id
         })
         .eq('order_id', currentOrder.order_id)
 
     if (orderError)
       throw orderError
+
+    const { error: newTableError } =
+      await supabase
+        .from('tables')
+        .update({
+          table_status: 'occupied'
+        })
+        .eq('table_id', newTable.table_id)
+
+    if (newTableError)
+      throw newTableError
 
     const { data: oldOpenOrders, error: oldOpenError } =
       await supabase
@@ -825,26 +852,19 @@ async function changeTable() {
       {
         project_id: currentOrder.project_id,
         hall_id: newTable.hall_id,
-        table_id: newTableId,
+        table_id: newTable.table_id,
         order_id: currentOrder.order_id,
         message:
           'TABLE CHANGED: '
           + oldTableId
-          + ' → '
-          + newTableId
+          + ' -> '
+          + newTable.table_id
       }
     )
-
-    currentOrder.table_id =
-      newTableId
-
-    currentOrder.hall_id =
-      newTable.hall_id
 
     await loadOrder()
 
     setStatus('Table changed')
-
   }
   catch (err) {
 
@@ -859,8 +879,9 @@ async function changeTable() {
 
 /*
 ========================================
-SPLIT BILL
-заглушка: пока только лог
+SPLIT CHECK
+закрывает старый check
+и создает несколько новых open checks
 ========================================
 */
 
@@ -871,28 +892,85 @@ async function splitBill() {
     if (!currentOrder)
       return
 
-    setStatus('Split Bill clicked')
+    const count =
+      Number(
+        prompt('How many checks?')
+      )
+
+    if (!count || count < 2) {
+      setStatus('Split canceled')
+      return
+    }
+
+    setStatus('Splitting check...')
+
+    const rows =
+      []
+
+    for (let i = 1; i <= count; i++) {
+      rows.push({
+        project_id: currentOrder.project_id,
+        hall_id: currentOrder.hall_id,
+        table_id: currentOrder.table_id,
+        user_id: currentUser ? currentUser.id : null,
+        guest_count: 0,
+        order_status: 'open'
+      })
+    }
+
+    const { data: newOrders, error: insertError } =
+      await supabase
+        .from('orders')
+        .insert(rows)
+        .select()
+
+    if (insertError)
+      throw insertError
+
+    const { error: closeError } =
+      await supabase
+        .from('orders')
+        .update({
+          order_status: 'closed',
+          closed_at: new Date().toISOString()
+        })
+        .eq('order_id', currentOrder.order_id)
+
+    if (closeError)
+      throw closeError
 
     await addConsoleLog(
-      'split bill',
+      'split check',
       {
         project_id: currentOrder.project_id,
         hall_id: currentOrder.hall_id,
         table_id: currentOrder.table_id,
         order_id: currentOrder.order_id,
         message:
-          'SPLIT BILL: '
-          + (currentOrder.order_number || currentOrder.order_id)
+          'CHECK SPLIT: '
+          + (
+            currentOrder.order_number
+            || currentOrder.order_id
+          )
+          + ' -> '
+          + count
+          + ' checks'
       }
     )
 
+    setStatus(
+      'Check split: '
+      + count
+    )
+
+    await loadOrder()
   }
   catch (err) {
 
     console.error(err)
 
     setStatus(
-      'Split bill error: '
+      'Split check error: '
       + err.message
     )
   }
@@ -900,15 +978,64 @@ async function splitBill() {
 
 /*
 ========================================
-BUILD BILL HTML
-печатаемый HTML счета
+BUILD CHECK DATA
+данные для файла печати
 ========================================
 */
 
-function buildBillHtml(billData) {
+function buildCheckData() {
+
+  const items =
+    []
+
+  itemsBox
+    .querySelectorAll('.order-row')
+    .forEach(row => {
+
+      const name =
+        row.querySelector('.name')?.value || 'Item'
+
+      const qty =
+        Number(row.querySelector('.qty')?.value) || 0
+
+      const price =
+        Number(row.querySelector('.price')?.value) || 0
+
+      items.push({
+        name,
+        qty,
+        price,
+        sum: qty * price
+      })
+    })
+
+  return {
+    order_id: currentOrder.order_id,
+    order_number: currentOrder.order_number,
+    project_id: currentOrder.project_id,
+    hall_id: currentOrder.hall_id,
+    table_id: currentOrder.table_id,
+    opened_at: currentOrder.opened_at || currentOrder.created_at,
+    closed_at: currentOrder.closed_at || null,
+    items,
+    subtotal: Number(subTotalBox.textContent) || 0,
+    service_percent: SERVICE_PERCENT,
+    service_total: Number(serviceBox.textContent) || 0,
+    total: Number(finalBox.textContent) || 0
+  }
+}
+
+/*
+========================================
+BUILD CHECK HTML
+файл для печати
+========================================
+*/
+
+function buildCheckHtml(checkData) {
 
   const itemsHtml =
-    billData.items
+    checkData.items
       .map(item => `
         <tr>
           <td>${escapeHtml(item.name)}</td>
@@ -923,71 +1050,61 @@ function buildBillHtml(billData) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
-
-<title>
-Bill ${billData.order_number || billData.order_id}
-</title>
+<title>Check ${checkData.order_number || checkData.order_id}</title>
 
 <style>
-
 body {
   font-family: Arial, sans-serif;
   margin: 24px;
   color: #111827;
 }
-
 h1 {
   margin-bottom: 10px;
 }
-
 .meta {
   margin-bottom: 4px;
 }
-
+.opened {
+  color: #dc2626;
+  font-weight: bold;
+}
+.closed {
+  color: #16a34a;
+  font-weight: bold;
+}
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
-
 th,
 td {
   border: 1px solid #d1d5db;
   padding: 8px;
   text-align: left;
 }
-
 th {
   background: #f3f4f6;
 }
-
 .total-block {
   margin-top: 24px;
   text-align: right;
 }
-
-.total-line {
-  margin-bottom: 6px;
-}
-
 .total-final {
   font-size: 22px;
   font-weight: bold;
 }
-
 </style>
-
 </head>
 
 <body>
 
-<h1>MySada Bill</h1>
+<h1>MySada Check</h1>
 
 <div class="meta">
-Order:
-${billData.order_number || billData.order_id}
+Check:
+${checkData.order_number || checkData.order_id}
 </div>
 
 <div class="meta">
@@ -1005,13 +1122,27 @@ Table:
 ${escapeHtml(tableBox.textContent)}
 </div>
 
-<div class="meta">
-Date:
-${new Date().toLocaleString()}
+<div class="meta opened">
+Opened at:
+${
+  checkData.opened_at
+    ? new Date(checkData.opened_at).toLocaleString()
+    : '-'
+}
 </div>
 
-<table>
+${
+  checkData.closed_at
+    ? `
+      <div class="meta closed">
+        Closed at:
+        ${new Date(checkData.closed_at).toLocaleString()}
+      </div>
+    `
+    : ''
+}
 
+<table>
 <thead>
 <tr>
   <th>Position</th>
@@ -1024,27 +1155,19 @@ ${new Date().toLocaleString()}
 <tbody>
 ${itemsHtml}
 </tbody>
-
 </table>
 
 <div class="total-block">
-
-  <div class="total-line">
-    Subtotal:
-    ${billData.subtotal.toFixed(2)}
-  </div>
-
-  <div class="total-line">
-    Service ${billData.service_percent}%:
-    ${billData.service_total.toFixed(2)}
-  </div>
-
-  <div class="total-final">
-    TOTAL:
-    ${billData.total.toFixed(2)}
-  </div>
-
+  <div>Subtotal: ${checkData.subtotal.toFixed(2)}</div>
+  <div>Service ${checkData.service_percent}%: ${checkData.service_total.toFixed(2)}</div>
+  <div class="total-final">TOTAL: ${checkData.total.toFixed(2)}</div>
 </div>
+
+<script>
+window.onload = function () {
+  window.print()
+}
+</script>
 
 </body>
 </html>
@@ -1053,8 +1176,8 @@ ${itemsHtml}
 
 /*
 ========================================
-PRINT BILL
-JSON + HTML FILE
+PRINT CHECK
+создает HTML-файл для печати
 ========================================
 */
 
@@ -1065,81 +1188,19 @@ async function printBill() {
     if (!currentOrder)
       return
 
-    setStatus(
-      'Preparing bill data...'
-    )
+    setStatus('Preparing check file...')
 
-    /*
-    ----------------------------------------
-    BUILD DATA
-    ----------------------------------------
-    */
-
-    const billData =
-      buildBillData()
-
-    /*
-    ----------------------------------------
-    SAVE JSON
-    ----------------------------------------
-    */
-
-    const jsonText =
-      JSON.stringify(
-        billData,
-        null,
-        2
-      )
-
-    const jsonBlob =
-      new Blob(
-        [jsonText],
-        {
-          type:
-            'application/json;charset=utf-8'
-        }
-      )
-
-    const jsonUrl =
-      URL.createObjectURL(jsonBlob)
-
-    const jsonLink =
-      document.createElement('a')
-
-    jsonLink.href =
-      jsonUrl
-
-    jsonLink.download =
-      'bill-'
-      + (
-        currentOrder.order_number
-        || currentOrder.order_id
-      )
-      + '.json'
-
-    document.body.appendChild(jsonLink)
-
-    jsonLink.click()
-
-    jsonLink.remove()
-
-    URL.revokeObjectURL(jsonUrl)
-
-    /*
-    ----------------------------------------
-    SAVE HTML
-    ----------------------------------------
-    */
+    const checkData =
+      buildCheckData()
 
     const htmlText =
-      buildBillHtml(billData)
+      buildCheckHtml(checkData)
 
     const htmlBlob =
       new Blob(
         [htmlText],
         {
-          type:
-            'text/html;charset=utf-8'
+          type: 'text/html;charset=utf-8'
         }
       )
 
@@ -1153,7 +1214,7 @@ async function printBill() {
       htmlUrl
 
     htmlLink.download =
-      'bill-'
+      'check-'
       + (
         currentOrder.order_number
         || currentOrder.order_id
@@ -1168,29 +1229,15 @@ async function printBill() {
 
     URL.revokeObjectURL(htmlUrl)
 
-    /*
-    ----------------------------------------
-    LOG
-    ----------------------------------------
-    */
-
     await addConsoleLog(
-      'print bill',
+      'print check',
       {
-        project_id:
-          currentOrder.project_id,
-
-        hall_id:
-          currentOrder.hall_id,
-
-        table_id:
-          currentOrder.table_id,
-
-        order_id:
-          currentOrder.order_id,
-
+        project_id: currentOrder.project_id,
+        hall_id: currentOrder.hall_id,
+        table_id: currentOrder.table_id,
+        order_id: currentOrder.order_id,
         message:
-          'BILL FILES CREATED: '
+          'CHECK FILE CREATED: '
           + (
             currentOrder.order_number
             || currentOrder.order_id
@@ -1198,21 +1245,19 @@ async function printBill() {
       }
     )
 
-    setStatus(
-      'Bill JSON + HTML saved'
-    )
-
+    setStatus('Check file saved')
   }
   catch (err) {
 
     console.error(err)
 
     setStatus(
-      'Print bill error: '
+      'Print check error: '
       + err.message
     )
   }
 }
+
 /*
 ========================================
 ESCAPE HTML
@@ -1315,9 +1360,6 @@ init()
 
 </script>
 
-
-
-
 <!--
 ========================================
 КОНСОЛЬ
@@ -1327,7 +1369,17 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-   LOGS запись обязательна| v9.1.1
+   Bill переименован в Check:
+Split Check, Print Check, MySada Check.
+Добавлена печать в файл:
+кнопка Print Check создаёт .html файл check-...html с авто-вызовом window.print().
+Добавлена функция buildCheckData() — раньше её не было, из-за этого печать падала.
+Opened at выводится красным.
+Closed at выводится зелёным, если заказ закрыт.
+Close Order закрывает order, ставит closed_at, и если открытых заказов на столе больше нет — делает стол free.
+Change Table теперь показывает список свободных столов через prompt и переносит check на выбранный стол.
+Split Check спрашивает количество, создаёт новые open checks и закрывает старый.
+Логи пишутся в logs через addConsoleLog(). | v9.2.0
   </div>
 
   <div class="row" id="build-down">
