@@ -1,6 +1,6 @@
 /*
 ========================================
-Split Cheks/ Change Table / hoover fix for Close Order v2.2.0
+CHANGE TABLE GRID v2.3.0
 ========================================
 */
 
@@ -251,53 +251,92 @@ rose -> green hover
 }
 
 /* ========================================
-   FREE TABLES GRID
+   CHANGE TABLE GRID
 ======================================== */
 
 .free-tables-list {
   display: grid;
 
   grid-template-columns:
-    repeat(auto-fill, minmax(180px, 1fr));
+    repeat(auto-fill, minmax(260px, 1fr));
 
-  gap: 12px;
+  gap: 14px;
 }
 
 /* ========================================
-   FREE TABLE BUTTON
+   HALL CARD
 ======================================== */
 
-.table-free {
+.change-hall-card {
+  background: #f8fafc;
+
+  border: 2px solid #dbe3ef;
+
+  border-radius: 14px;
+
+  padding: 12px;
+}
+
+/* ========================================
+   HALL TITLE
+======================================== */
+
+.change-hall-title {
+  font-size: 15px;
+  font-weight: 900;
+
+  color: #0f172a;
+
+  margin-bottom: 10px;
+}
+
+/* ========================================
+   TABLE LIST
+======================================== */
+
+.change-table-list {
+  display: grid;
+
+  gap: 8px;
+}
+
+/* ========================================
+   TABLE BUTTON
+======================================== */
+
+.change-table-row {
+  width: 100%;
+
   border: 2px solid #38bdf8;
+
+  border-radius: 10px;
+
+  padding: 10px 12px;
 
   background: #e0f2fe;
 
   color: #0f172a;
 
-  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
 
-  padding: 14px;
+  text-align: left;
 
   cursor: pointer;
-
-  font-size: 14px;
-  font-weight: 700;
-
-  text-align: center;
 
   transition:
     transform 0.15s ease,
     background 0.15s ease;
 }
 
-.table-free:hover {
+.change-table-row:hover {
   background: #bae6fd;
 
   transform: translateY(-2px);
 }
 
-.table-free:active {
-  transform: scale(0.97);
+.change-table-row:active {
+  transform: scale(0.98);
 }
 
 /* ========================================
