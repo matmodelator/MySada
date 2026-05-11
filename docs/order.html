@@ -189,9 +189,28 @@
            min="2"
            value="2" />
 
-    <button id="applySplitCheckBtn"
+    <div class="split-actions">
+
+      <button id="splitEqualBtn"
+              type="button">
+        Split equally
+      </button>
+
+      <button id="splitByItemsBtn"
+              type="button">
+        Split by positions
+      </button>
+
+    </div>
+
+    <div id="splitItemsBox"
+         class="split-items-box">
+    </div>
+
+    <button id="printSplitByItemsBtn"
+            class="hidden"
             type="button">
-      Print Split Checks
+      Print selected checks
     </button>
 
     <button id="closeSplitCheckDialogBtn"
@@ -200,7 +219,7 @@
     </button>
 
   </div>
-</div>      
+</div>
 
 <script type="module">
 
@@ -212,7 +231,7 @@ const SERVICE_PERCENT =
 
 import { supabase }
 from "./scripts/config.js"
-
+      
 /*
 ========================================
 DOM
@@ -294,11 +313,20 @@ const splitCheckDialog =
 const splitCheckCount =
   document.getElementById('splitCheckCount')
 
-const applySplitCheckBtn =
-  document.getElementById('applySplitCheckBtn')
-
 const closeSplitCheckDialogBtn =
   document.getElementById('closeSplitCheckDialogBtn')
+
+const splitEqualBtn =
+  document.getElementById('splitEqualBtn')
+
+const splitByItemsBtn =
+  document.getElementById('splitByItemsBtn')
+
+const splitItemsBox =
+  document.getElementById('splitItemsBox')
+
+const printSplitByItemsBtn =
+  document.getElementById('printSplitByItemsBtn')
       
 /*
 ========================================
@@ -816,7 +844,8 @@ async function closeOrder() {
 /*
 ========================================
 CHANGE TABLE
-открывает список свободных столов
+свободные столы сгруппированы по залам
+как Grid Hall
 ========================================
 */
 
@@ -827,14 +856,21 @@ async function changeTable() {
     if (!currentOrder)
       return
 
-    setStatus('Loading free tables...')
+    setStatus('Loading free tables by halls...')
 
     const { data, error } =
       await supabase
         .from('tables')
-        .select('*')
+        .select(`
+          *,
+          halls (
+            hall_id,
+            name
+          )
+        `)
         .eq('project_id', currentOrder.project_id)
         .eq('table_status', 'free')
+        .order('hall_id', { ascending: true })
         .order('name', { ascending: true })
 
     if (error)
@@ -852,28 +888,82 @@ async function changeTable() {
       return
     }
 
+    const groups =
+      {}
+
     data.forEach(table => {
 
-      const btn =
-        document.createElement('button')
+      const hallId =
+        table.hall_id || 'no-hall'
 
-      btn.type =
-        'button'
+      if (!groups[hallId]) {
+        groups[hallId] = {
+          hallName:
+            table.halls?.name || hallId,
 
-      btn.className =
-        'table-tree-row table-free'
+          tables:
+            []
+        }
+      }
 
-      btn.textContent =
-        (table.name || table.table_id)
-        + ' · free · '
-        + table.table_id
+      groups[hallId].tables.push(table)
+    })
 
-      btn.addEventListener(
-        'click',
-        () => moveOrderToTable(table)
-      )
+    Object.keys(groups).forEach(hallId => {
 
-      freeTablesBox.appendChild(btn)
+      const group =
+        groups[hallId]
+
+      const hallBlock =
+        document.createElement('div')
+
+      hallBlock.className =
+        'change-hall-card'
+
+      const title =
+        document.createElement('div')
+
+      title.className =
+        'change-hall-title'
+
+      title.textContent =
+        group.hallName
+        + ' · '
+        + group.tables.length
+
+      const list =
+        document.createElement('div')
+
+      list.className =
+        'change-table-list'
+
+      group.tables.forEach(table => {
+
+        const btn =
+          document.createElement('button')
+
+        btn.type =
+          'button'
+
+        btn.className =
+          'change-table-row table-free'
+
+        btn.textContent =
+          (table.name || table.table_id)
+          + ' · free'
+
+        btn.addEventListener(
+          'click',
+          () => moveOrderToTable(table)
+        )
+
+        list.appendChild(btn)
+      })
+
+      hallBlock.appendChild(title)
+      hallBlock.appendChild(list)
+
+      freeTablesBox.appendChild(hallBlock)
     })
 
     changeTableDialog.classList.remove('hidden')
@@ -990,33 +1080,35 @@ async function moveOrderToTable(newTable) {
 /*
 ========================================
 SPLIT CHECK
-не закрывает старый check
-печатает несколько split-check файлов
+только открывает окно выбора
+order в базе НЕ меняется
 ========================================
 */
 
-async function splitBill() {
+function splitBill() {
 
   if (!currentOrder)
     return
+
+  splitItemsBox.innerHTML =
+    ''
+
+  printSplitByItemsBtn.classList.add('hidden')
 
   splitCheckDialog.classList.remove('hidden')
 }
 
 /*
 ========================================
-PRINT SPLIT CHECKS
-делит сумму на несколько чеков
-и сохраняет HTML-файлы для печати
+SPLIT EQUALLY
+делит итог поровну
+только печать файлов
 ========================================
 */
 
-async function printSplitChecks() {
+async function printSplitEqually() {
 
   try {
-
-    if (!currentOrder)
-      return
 
     const count =
       Number(splitCheckCount.value)
@@ -1029,70 +1121,47 @@ async function printSplitChecks() {
     const baseData =
       buildCheckData()
 
-    const splitTotal =
+    const oneTotal =
       baseData.total / count
 
     for (let i = 1; i <= count; i++) {
 
       const splitData = {
         ...baseData,
-        split_index: i,
-        split_count: count,
-        subtotal: splitTotal,
-        service_total: 0,
-        total: splitTotal,
+
+        order_number:
+          (baseData.order_number || baseData.order_id)
+          + '-'
+          + i,
+
         items: [
           {
             name:
-              'Split check '
+              'Split equally '
               + i
               + ' / '
               + count,
 
             qty: 1,
-            price: splitTotal,
-            sum: splitTotal
+            price: oneTotal,
+            sum: oneTotal
           }
-        ]
+        ],
+
+        subtotal:
+          oneTotal,
+
+        service_total:
+          0,
+
+        total:
+          oneTotal
       }
 
-      const htmlText =
-        buildCheckHtml(splitData)
-
-      const htmlBlob =
-        new Blob(
-          [htmlText],
-          {
-            type: 'text/html;charset=utf-8'
-          }
-        )
-
-      const htmlUrl =
-        URL.createObjectURL(htmlBlob)
-
-      const htmlLink =
-        document.createElement('a')
-
-      htmlLink.href =
-        htmlUrl
-
-      htmlLink.download =
-        'check-'
-        + (
-          currentOrder.order_number
-          || currentOrder.order_id
-        )
-        + '-split-'
-        + i
-        + '.html'
-
-      document.body.appendChild(htmlLink)
-
-      htmlLink.click()
-
-      htmlLink.remove()
-
-      URL.revokeObjectURL(htmlUrl)
+      saveCheckHtmlFile(
+        splitData,
+        'split-equal-' + i
+      )
     }
 
     await addConsoleLog(
@@ -1103,7 +1172,7 @@ async function printSplitChecks() {
         table_id: currentOrder.table_id,
         order_id: currentOrder.order_id,
         message:
-          'CHECK PRINT SPLIT: '
+          'SPLIT EQUALLY PRINTED: '
           + count
           + ' checks'
       }
@@ -1111,22 +1180,262 @@ async function printSplitChecks() {
 
     splitCheckDialog.classList.add('hidden')
 
-    setStatus(
-      'Split checks saved: '
-      + count
-    )
+    setStatus('Split equally files saved')
   }
   catch (err) {
 
     console.error(err)
 
     setStatus(
-      'Split check error: '
+      'Split equally error: '
       + err.message
     )
   }
 }
+
+/*
+========================================
+SPLIT BY POSITIONS UI
+создает select для каждой позиции
+========================================
+*/
+
+function buildSplitByItemsUi() {
+
+  const count =
+    Number(splitCheckCount.value)
+
+  if (!count || count < 2) {
+    setStatus('Wrong checks count')
+    return
+  }
+
+  splitItemsBox.innerHTML =
+    ''
+
+  const rows =
+    [...itemsBox.querySelectorAll('.order-row')]
+
+  rows.forEach((row, index) => {
+
+    const name =
+      row.querySelector('.name')?.value || 'Item'
+
+    const qty =
+      Number(row.querySelector('.qty')?.value) || 0
+
+    const price =
+      Number(row.querySelector('.price')?.value) || 0
+
+    const sum =
+      qty * price
+
+    const line =
+      document.createElement('div')
+
+    line.className =
+      'split-item-row'
+
+    const select =
+      document.createElement('select')
+
+    select.dataset.index =
+      index
+
+    for (let i = 1; i <= count; i++) {
+      const option =
+        document.createElement('option')
+
+      option.value =
+        String(i)
+
+      option.textContent =
+        'Check ' + i
+
+      select.appendChild(option)
+    }
+
+    line.innerHTML =
+      `
+        <span>${escapeHtml(name)}</span>
+        <span>${qty}</span>
+        <span>${price}</span>
+        <span>${sum}</span>
+      `
+
+    line.appendChild(select)
+
+    splitItemsBox.appendChild(line)
+  })
+
+  printSplitByItemsBtn.classList.remove('hidden')
+}          
       
+/*
+========================================
+PRINT SPLIT BY POSITIONS
+позиции распределяются по выбранным check
+order в базе НЕ меняется
+========================================
+*/
+
+async function printSplitByPositions() {
+
+  try {
+
+    const count =
+      Number(splitCheckCount.value)
+
+    if (!count || count < 2) {
+      setStatus('Wrong checks count')
+      return
+    }
+
+    const baseData =
+      buildCheckData()
+
+    const checks =
+      {}
+
+    for (let i = 1; i <= count; i++) {
+      checks[i] = {
+        ...baseData,
+        order_number:
+          (baseData.order_number || baseData.order_id)
+          + '-'
+          + i,
+        items: [],
+        subtotal: 0,
+        service_total: 0,
+        total: 0
+      }
+    }
+
+    const rows =
+      [...itemsBox.querySelectorAll('.order-row')]
+
+    const selects =
+      [...splitItemsBox.querySelectorAll('select')]
+
+    rows.forEach((row, index) => {
+
+      const name =
+        row.querySelector('.name')?.value || 'Item'
+
+      const qty =
+        Number(row.querySelector('.qty')?.value) || 0
+
+      const price =
+        Number(row.querySelector('.price')?.value) || 0
+
+      const sum =
+        qty * price
+
+      const checkNumber =
+        Number(selects[index]?.value || 1)
+
+      checks[checkNumber].items.push({
+        name,
+        qty,
+        price,
+        sum
+      })
+
+      checks[checkNumber].subtotal +=
+        sum
+
+      checks[checkNumber].total +=
+        sum
+    })
+
+    Object.keys(checks).forEach(key => {
+
+      const check =
+        checks[key]
+
+      saveCheckHtmlFile(
+        check,
+        'split-items-' + key
+      )
+    })
+
+    await addConsoleLog(
+      'split check',
+      {
+        project_id: currentOrder.project_id,
+        hall_id: currentOrder.hall_id,
+        table_id: currentOrder.table_id,
+        order_id: currentOrder.order_id,
+        message:
+          'SPLIT BY POSITIONS PRINTED: '
+          + count
+          + ' checks'
+      }
+    )
+
+    splitCheckDialog.classList.add('hidden')
+
+    setStatus('Split by positions files saved')
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Split by positions error: '
+      + err.message
+    )
+  }
+}
+
+/*
+========================================
+SAVE CHECK HTML FILE
+сохраняет один printable check
+========================================
+*/
+
+function saveCheckHtmlFile(checkData, suffix) {
+
+  const htmlText =
+    buildCheckHtml(checkData)
+
+  const htmlBlob =
+    new Blob(
+      [htmlText],
+      {
+        type: 'text/html;charset=utf-8'
+      }
+    )
+
+  const htmlUrl =
+    URL.createObjectURL(htmlBlob)
+
+  const htmlLink =
+    document.createElement('a')
+
+  htmlLink.href =
+    htmlUrl
+
+  htmlLink.download =
+    'check-'
+    + (
+      currentOrder.order_number
+      || currentOrder.order_id
+    )
+    + '-'
+    + suffix
+    + '.html'
+
+  document.body.appendChild(htmlLink)
+
+  htmlLink.click()
+
+  htmlLink.remove()
+
+  URL.revokeObjectURL(htmlUrl)
+}          
+          
 /*
 ========================================
 BUILD CHECK DATA
@@ -1469,9 +1778,19 @@ closeSplitCheckDialogBtn.addEventListener(
   }
 )
 
-applySplitCheckBtn.addEventListener(
+splitEqualBtn.addEventListener(
   'click',
-  printSplitChecks
+  printSplitEqually
+)
+
+splitByItemsBtn.addEventListener(
+  'click',
+  buildSplitByItemsUi
+)
+
+printSplitByItemsBtn.addEventListener(
+  'click',
+  printSplitByPositions
 )
       
 backBtn.addEventListener(
@@ -1544,37 +1863,12 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- Bill → Check
-Split Bill → Split Check
-Print Bill → Print Check
-Order → Check
-Close Order перенесена в .top-buttons.
-Добавлены 2 dialog-блока:
-changeTableDialog
-splitCheckDialog
-orderTime теперь не просто строка, а контейнер для:
-Opened at (red)
-Closed at (green)
-Добавлены новые DOM-элементы:
-freeTablesBox
-splitCheckCount
-applySplitCheckBtn
-closeChangeTableDialogBtn
-closeSplitCheckDialogBtn
-Добавлены CSS-классы для:
-dialogs,
-free tables list,
-green hover кнопки Close Order.
-Печать теперь генерирует:
-HTML check file,
-с auto window.print().
-В generated printable HTML:
-MySada Bill → MySada Check
-Date заменён на:
-Opened at
-Closed at.
-Change Table больше не использует prompt().
-Теперь это dialog со списком свободных столов как mini-grid/list. | v9.3.0
+Split Check больше не меняет orders.
+Не создаёт новые orders в базе.
+Не закрывает текущий order.
+Не переносит items в БД.
+Работает только как print split.
+        Change Table - Hall Grid style | v9.4.0
   </div>
 
   <div class="row" id="build-down">
