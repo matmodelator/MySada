@@ -1347,11 +1347,16 @@ async function printSplitEqually() {
       })
     }
 
-    saveMultiCheckHtmlFile(
-      checks,
-      'split-equal'
-    )
+     localStorage.setItem(
+  'print_split_checks',
+  JSON.stringify(checks)
+)
 
+window.open(
+  'print.html?mode=split',
+  '_blank'
+)   
+   
     await addConsoleLog(
       'split check',
       {
@@ -1383,7 +1388,7 @@ async function printSplitEqually() {
 
 /*
 ========================================
-SPLIT BY POSITIONS 
+DRAG&DROP BY POSITIONS 
 исходный Check #0 слева
 конечные Checks 1..N справа
 позиции перетаскиваются мышкой
@@ -1401,6 +1406,10 @@ function buildSplitByItemsUi() {
     return
   }
 
+localStorage.removeItem(
+  'print_split_checks'
+)
+      
   splitItemsBox.innerHTML =
     ''
 
@@ -1537,8 +1546,8 @@ function buildSplitByItemsUi() {
       
 /*
 ========================================
-PRINT SPLIT BY POSITIONS
-печатает checks по фактически перетащенным позициям
+SPLIT BY POSITIONS
+готовит split checks для print.html
 order в базе НЕ меняется
 ========================================
 */
@@ -1551,7 +1560,11 @@ async function printSplitByPositions() {
       Number(splitCheckCount.value)
 
     if (!count || count < 2) {
-      setStatus('Wrong checks count')
+
+      setStatus(
+        'Wrong checks count'
+      )
+
       return
     }
 
@@ -1571,6 +1584,7 @@ async function printSplitByPositions() {
       const items =
         [...box.querySelectorAll('.split-draggable-item')]
           .map(item => ({
+
             name:
               item.dataset.name || 'Item',
 
@@ -1591,6 +1605,7 @@ async function printSplitByPositions() {
         )
 
       checks.push({
+
         ...baseData,
 
         order_number:
@@ -1610,10 +1625,33 @@ async function printSplitByPositions() {
       })
     }
 
-    saveMultiCheckHtmlFile(
-      checks,
-      'split-items'
+    /*
+    ----------------------------------------
+    SAVE DATA FOR print.html
+    ----------------------------------------
+    */
+
+    localStorage.setItem(
+      'print_split_checks',
+      JSON.stringify(checks)
     )
+
+    /*
+    ----------------------------------------
+    OPEN PRINT PAGE
+    ----------------------------------------
+    */
+
+    window.open(
+      'print.html?mode=split',
+      '_blank'
+    )
+
+    /*
+    ----------------------------------------
+    LOG
+    ----------------------------------------
+    */
 
     await addConsoleLog(
       'split check',
@@ -1631,16 +1669,24 @@ async function printSplitByPositions() {
           currentOrder.order_id,
 
         message:
-          'SPLIT BY POSITIONS PRINTED: '
+          'SPLIT BY POSITIONS OPENED: '
           + count
           + ' checks'
       }
     )
 
-    splitCheckDialog.classList.add('hidden')
+    /*
+    ----------------------------------------
+    CLOSE DIALOG
+    ----------------------------------------
+    */
+
+    splitCheckDialog.classList.add(
+      'hidden'
+    )
 
     setStatus(
-      'Split by positions file saved'
+      'Split by positions opened'
     )
   }
   catch (err) {
@@ -1656,241 +1702,8 @@ async function printSplitByPositions() {
 
 /*
 ========================================
-OPEN CHECK PRINT WINDOW
-открывает HTML в новом окне
-========================================
-*/
-
-function openCheckPrintWindow(htmlText) {
-
-  const printWindow =
-    window.open('', '_blank')
-
-  if (!printWindow) {
-
-    setStatus(
-      'Print window blocked'
-    )
-
-    return
-  }
-
-  printWindow.document.open()
-
-  printWindow.document.write(
-    htmlText
-  )
-
-  printWindow.document.close()
-}
-
-/*
-========================================
-SAVE CHECK HTML FILE
-скачивает HTML + открывает печать
-========================================
-*/
-
-function saveCheckHtmlFile(checkData, suffix) {
-
-  const htmlText =
-    buildCheckHtml(checkData)
-
-  /*
-  ----------------------------------------
-  FILE
-  ----------------------------------------
-  */
-
-  const htmlBlob =
-    new Blob(
-      [htmlText],
-      {
-        type:
-          'text/html;charset=utf-8'
-      }
-    )
-
-  const htmlUrl =
-    URL.createObjectURL(htmlBlob)
-
-  const htmlLink =
-    document.createElement('a')
-
-  htmlLink.href =
-    htmlUrl
-
-  htmlLink.download =
-    'check-'
-    + (
-      currentOrder.order_number
-      || currentOrder.order_id
-    )
-    + '-'
-    + suffix
-    + '.html'
-
-  document.body.appendChild(
-    htmlLink
-  )
-
-  htmlLink.click()
-
-  /*
-  ----------------------------------------
-  CLEAN
-  ----------------------------------------
-  */
-
-  setTimeout(() => {
-
-    htmlLink.remove()
-
-    URL.revokeObjectURL(
-      htmlUrl
-    )
-
-  }, 3000)
-
-  /*
-  ----------------------------------------
-  PRINT
-  ----------------------------------------
-  */
-
-  openCheckPrintWindow(
-    htmlText
-  )
-}
-
-/*
-========================================
-SAVE MULTI CHECK HTML FILE
-один HTML со всеми split checks
-========================================
-*/
-
-function saveMultiCheckHtmlFile(checks, suffix) {
-
-  const parts =
-    checks
-      .map(check =>
-        buildCheckHtml(check)
-          .replace(
-            '<!DOCTYPE html>',
-            ''
-          )
-          .replace(
-            '<html lang="en">',
-            ''
-          )
-          .replace(
-            '</html>',
-            ''
-          )
-      )
-      .join(
-        '<div style="page-break-after: always;"></div>'
-      )
-
-  const htmlText =
-`
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-
-<title>
-Split Checks
-</title>
-
-</head>
-
-<body>
-
-${parts}
-
-<script>
-
-window.onload = function () {
-
-  window.print()
-
-}
-
-<\/script>
-
-</body>
-</html>
-`
-
-  /*
-  ----------------------------------------
-  FILE
-  ----------------------------------------
-  */
-
-  const htmlBlob =
-    new Blob(
-      [htmlText],
-      {
-        type:
-          'text/html;charset=utf-8'
-      }
-    )
-
-  const htmlUrl =
-    URL.createObjectURL(htmlBlob)
-
-  const htmlLink =
-    document.createElement('a')
-
-  htmlLink.href =
-    htmlUrl
-
-  htmlLink.download =
-    'check-'
-    + (
-      currentOrder.order_number
-      || currentOrder.order_id
-    )
-    + '-'
-    + suffix
-    + '.html'
-
-  document.body.appendChild(
-    htmlLink
-  )
-
-  htmlLink.click()
-
-  setTimeout(() => {
-
-    htmlLink.remove()
-
-    URL.revokeObjectURL(
-      htmlUrl
-    )
-
-  }, 3000)
-
-  /*
-  ----------------------------------------
-  PRINT
-  ----------------------------------------
-  */
-
-  openCheckPrintWindow(
-    htmlText
-  )
-}
-      
-/*
-========================================
 BUILD CHECK DATA
-данные для файла печати
+собирает данные чека для print.html
 ========================================
 */
 
@@ -1923,12 +1736,20 @@ function buildCheckData() {
   return {
     order_id: currentOrder.order_id,
     order_number: currentOrder.order_number,
+
     project_id: currentOrder.project_id,
     hall_id: currentOrder.hall_id,
     table_id: currentOrder.table_id,
+
+    project_name: projectBox.textContent,
+    hall_name: hallBox.textContent,
+    table_name: tableBox.textContent,
+
     opened_at: currentOrder.opened_at || currentOrder.created_at,
     closed_at: currentOrder.closed_at || null,
+
     items,
+
     subtotal: Number(subTotalBox.textContent) || 0,
     service_percent: SERVICE_PERCENT,
     service_total: Number(serviceBox.textContent) || 0,
@@ -1938,157 +1759,8 @@ function buildCheckData() {
 
 /*
 ========================================
-BUILD CHECK HTML
-файл для печати
-========================================
-*/
-
-function buildCheckHtml(checkData) {
-
-  const itemsHtml =
-    checkData.items
-      .map(item => `
-        <tr>
-          <td>${escapeHtml(item.name)}</td>
-          <td>${item.qty}</td>
-          <td>${item.price.toFixed(2)}</td>
-          <td>${item.sum.toFixed(2)}</td>
-        </tr>
-      `)
-      .join('')
-
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Check ${checkData.order_number || checkData.order_id}</title>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 24px;
-  color: #111827;
-}
-h1 {
-  margin-bottom: 10px;
-}
-.meta {
-  margin-bottom: 4px;
-}
-.opened {
-  color: #dc2626;
-  font-weight: bold;
-}
-.closed {
-  color: #16a34a;
-  font-weight: bold;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-th,
-td {
-  border: 1px solid #d1d5db;
-  padding: 8px;
-  text-align: left;
-}
-th {
-  background: #f3f4f6;
-}
-.total-block {
-  margin-top: 24px;
-  text-align: right;
-}
-.total-final {
-  font-size: 22px;
-  font-weight: bold;
-}
-</style>
-</head>
-
-<body>
-
-<h1>MySada Check</h1>
-
-<div class="meta">
-Check:
-${checkData.order_number || checkData.order_id}
-</div>
-
-<div class="meta">
-Project:
-${escapeHtml(projectBox.textContent)}
-</div>
-
-<div class="meta">
-Hall:
-${escapeHtml(hallBox.textContent)}
-</div>
-
-<div class="meta">
-Table:
-${escapeHtml(tableBox.textContent)}
-</div>
-
-<div class="meta opened">
-Opened at:
-${
-  checkData.opened_at
-    ? new Date(checkData.opened_at).toLocaleString()
-    : '-'
-}
-</div>
-
-${
-  checkData.closed_at
-    ? `
-      <div class="meta closed">
-        Closed at:
-        ${new Date(checkData.closed_at).toLocaleString()}
-      </div>
-    `
-    : ''
-}
-
-<table>
-<thead>
-<tr>
-  <th>Position</th>
-  <th>Qty</th>
-  <th>Price</th>
-  <th>Sum</th>
-</tr>
-</thead>
-
-<tbody>
-${itemsHtml}
-</tbody>
-</table>
-
-<div class="total-block">
-  <div>Subtotal: ${checkData.subtotal.toFixed(2)}</div>
-  <div>Service ${checkData.service_percent}%: ${checkData.service_total.toFixed(2)}</div>
-  <div class="total-final">TOTAL: ${checkData.total.toFixed(2)}</div>
-</div>
-
-<script>
-window.onload = function () {
-  window.print()
-}
-<\/script>
-
-</body>
-</html>
-`
-}
-
-/*
-========================================
 PRINT CHECK
-создает HTML-файл для печати
+готовит обычный чек для print.html
 ========================================
 */
 
@@ -2099,46 +1771,18 @@ async function printBill() {
     if (!currentOrder)
       return
 
-    setStatus('Preparing check file...')
-
     const checkData =
       buildCheckData()
 
-    const htmlText =
-      buildCheckHtml(checkData)
+    localStorage.setItem(
+      'print_check_data',
+      JSON.stringify(checkData)
+    )
 
-    const htmlBlob =
-      new Blob(
-        [htmlText],
-        {
-          type: 'text/html;charset=utf-8'
-        }
-      )
-
-    const htmlUrl =
-      URL.createObjectURL(htmlBlob)
-
-    const htmlLink =
-      document.createElement('a')
-
-    htmlLink.href =
-      htmlUrl
-
-    htmlLink.download =
-      'check-'
-      + (
-        currentOrder.order_number
-        || currentOrder.order_id
-      )
-      + '.html'
-
-    document.body.appendChild(htmlLink)
-
-    htmlLink.click()
-
-    htmlLink.remove()
-
-    URL.revokeObjectURL(htmlUrl)
+    window.open(
+      'print.html',
+      '_blank'
+    )
 
     await addConsoleLog(
       'print check',
@@ -2148,7 +1792,7 @@ async function printBill() {
         table_id: currentOrder.table_id,
         order_id: currentOrder.order_id,
         message:
-          'CHECK FILE CREATED: '
+          'CHECK PRINT OPENED: '
           + (
             currentOrder.order_number
             || currentOrder.order_id
@@ -2156,7 +1800,9 @@ async function printBill() {
       }
     )
 
-    setStatus('Check file saved')
+    setStatus(
+      'Check opened'
+    )
   }
   catch (err) {
 
@@ -2168,7 +1814,7 @@ async function printBill() {
     )
   }
 }
-
+      
 /*
 ========================================
 ESCAPE HTML
@@ -2314,7 +1960,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-DB Errors | v10.0.1
+перевод принтов в print.html | v11.0.0
   </div>
 
   <div class="row" id="build-down">
