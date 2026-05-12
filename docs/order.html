@@ -724,39 +724,62 @@ function renderOrder(order) {
 /*
 ========================================
 LOAD MENUS SELECT
+загружает список меню
 ========================================
 */
 
 async function loadMenusSelect() {
 
-  const { data, error } =
-    await supabase
-      .from('menus')
-      .select('menu_id, menu_name, sort_order')
-      .eq('project_id', currentOrder.project_id)
-      .order('sort_order', { ascending: true })
+  try {
 
-  if (error)
-    throw error
+    if (!currentOrder)
+      return
 
-  menuSelect.innerHTML =
-    '<option value="">Menu...</option>'
+    const { data, error } =
+      await supabase
+        .from('menus')
+        .select('menu_id, menu_name, sort_order')
+        .eq('project_id', currentOrder.project_id)
+        .order('sort_order', { ascending: true })
 
-  data.forEach(menu => {
+    console.log('MENUS DATA:', data)
+    console.log('MENUS ERROR:', error)
 
-    const option =
-      document.createElement('option')
+    if (error)
+      throw error
 
-    option.value =
-      menu.menu_id
+    menuSelect.innerHTML =
+      '<option value="">Menu...</option>'
 
-    option.textContent =
-      menu.menu_name
+    data.forEach(menu => {
 
-    menuSelect.appendChild(option)
-  })
+      const option =
+        document.createElement('option')
+
+      option.value =
+        menu.menu_id
+
+      option.textContent =
+        menu.menu_name
+
+      menuSelect.appendChild(option)
+    })
+
+    setStatus(
+      'Menus loaded: '
+      + data.length
+    )
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Load menus error: '
+      + err.message
+    )
+  }
 }
-
 /*
 ========================================
 LOAD CATS BY MENU
@@ -2329,7 +2352,8 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-новый блок выбора меню/категории/блюда из БД | v12.0.0
+LOAD MENUS SELECT
+загружает список меню | v12.0.1
   </div>
 
   <div class="row" id="build-down">
