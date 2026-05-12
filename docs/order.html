@@ -780,10 +780,13 @@ async function loadMenusSelect() {
     )
   }
 }
+      
 /*
 ========================================
 LOAD CATS BY MENU
-категории по выбранному меню через multis_view
+категории по выбранному меню
+dishes.menu_id = основное меню
+multis = дополнительные меню
 ========================================
 */
 
@@ -809,12 +812,23 @@ async function loadCatsByMenu() {
 
   const { data, error } =
     await supabase
-      .from('multis_view')
-      .select('category_id, cat_name, sort_order')
-      .eq('menu_id', menuId)
-      .order('sort_order', { ascending: true })
+      .from('dishes')
+      .select(`
+        dish_id,
+        menu_id,
+        category_id,
+        cats (
+          cat_id,
+          cat_name,
+          sort_order
+        ),
+        multis (
+          menu_id
+        )
+      `)
+      .eq('project_id', currentOrder.project_id)
 
-  console.log('CATS DATA:', data)
+  console.log('CATS RAW DATA:', data)
   console.log('CATS ERROR:', error)
 
   if (error)
@@ -823,39 +837,64 @@ async function loadCatsByMenu() {
   const map =
     new Map()
 
-  data.forEach(row => {
+  data.forEach(dish => {
 
-    if (!row.category_id || !row.cat_name)
+    const inMainMenu =
+      dish.menu_id === menuId
+
+    const inExtraMenu =
+      Array.isArray(dish.multis)
+      && dish.multis.some(ms =>
+        ms.menu_id === menuId
+      )
+
+    if (!inMainMenu && !inExtraMenu)
+      return
+
+    if (!dish.category_id || !dish.cats)
       return
 
     map.set(
-      row.category_id,
-      row.cat_name
+      dish.category_id,
+      dish.cats
     )
   })
 
-  map.forEach((catName, catId) => {
+  const cats =
+    [...map.values()]
+      .sort((a, b) =>
+        (a.sort_order || 0) - (b.sort_order || 0)
+      )
+
+  cats.forEach(cat => {
 
     const option =
       document.createElement('option')
 
     option.value =
-      catId
+      cat.cat_id
 
     option.textContent =
-      catName
+      cat.cat_name
 
     catSelect.appendChild(option)
   })
 
   catSelect.disabled =
     false
+
+  setStatus(
+    'Categories loaded: '
+    + cats.length
+  )
 }
 
 /*
 ========================================
 LOAD DISHES BY MENU + CAT
 блюда по выбранному меню и категории
+dishes.menu_id = основное меню
+multis = дополнительные меню
 ========================================
 */
 
@@ -878,19 +917,45 @@ async function loadDishesByMenuAndCat() {
 
   const { data, error } =
     await supabase
-      .from('multis_view')
-      .select('dish_id, dish_name, price, sort_order')
-      .eq('menu_id', menuId)
+      .from('dishes')
+      .select(`
+        dish_id,
+        dish_name,
+        price,
+        sort_order,
+        menu_id,
+        category_id,
+        multis (
+          menu_id
+        )
+      `)
+      .eq('project_id', currentOrder.project_id)
       .eq('category_id', catId)
+      .eq('dish_status', 'active')
       .order('sort_order', { ascending: true })
 
-  console.log('DISHES DATA:', data)
+  console.log('DISHES RAW DATA:', data)
   console.log('DISHES ERROR:', error)
 
   if (error)
     throw error
 
-  data.forEach(dish => {
+  const dishes =
+    data.filter(dish => {
+
+      const inMainMenu =
+        dish.menu_id === menuId
+
+      const inExtraMenu =
+        Array.isArray(dish.multis)
+        && dish.multis.some(ms =>
+          ms.menu_id === menuId
+        )
+
+      return inMainMenu || inExtraMenu
+    })
+
+  dishes.forEach(dish => {
 
     const option =
       document.createElement('option')
@@ -914,6 +979,11 @@ async function loadDishesByMenuAndCat() {
 
   dishSelect.disabled =
     false
+
+  setStatus(
+    'Dishes loaded: '
+    + dishes.length
+  )
 }
 
 /*
@@ -2319,7 +2389,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-все выпадающие списки меню | v12.1.0
+fix выпадающие списки меню cats/dishes | v12.1.1
   </div>
 
   <div class="row" id="build-down">
