@@ -1,6 +1,6 @@
 /*
 ========================================
-CHANGE TABLE GRID v2.3.0
+SPLIT BY POSITIONS v3.0.0
 ========================================
 */
 
@@ -340,7 +340,7 @@ rose -> green hover
 }
 
 /* ========================================
-   SPLIT CHECK
+   SPLIT CHECK EQUAL
 ======================================== */
 
 #splitCheckCount {
@@ -353,6 +353,58 @@ rose -> green hover
   padding: 0 12px;
 
   font-size: 16px;
+}
+
+/* ========================================
+   SPLIT BY POSITIONS
+======================================== */
+
+.split-items-box {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 14px;
+}
+
+.split-source,
+.split-target {
+  background: #f8fafc;
+  border: 2px solid #dbe3ef;
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 160px;
+}
+
+.split-source h4,
+.split-target h4 {
+  margin: 0 0 10px 0;
+}
+
+.split-targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.split-draggable-item {
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: grab;
+
+  display: grid;
+  gap: 4px;
+
+  font-size: 13px;
+}
+
+.split-draggable-item:active {
+  cursor: grabbing;
+}
+
+.split-draggable-item strong {
+  color: #0f172a;
 }
 
 /* ========================================
