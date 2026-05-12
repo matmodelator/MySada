@@ -110,6 +110,45 @@
 
     <div class="order-body">
 
+          <!-- ========================================
+     MENU ITEM SELECTOR
+     Menu -> Category -> Dish -> Qty -> Add
+======================================== -->
+
+<div class="menu-selector">
+
+  <div class="menu-selector-title">
+    Add item
+  </div>
+
+  <div class="menu-selector-row">
+
+    <select id="menuSelect">
+      <option value="">Menu...</option>
+    </select>
+
+    <select id="catSelect" disabled>
+      <option value="">Category...</option>
+    </select>
+
+    <select id="dishSelect" disabled>
+      <option value="">Dish...</option>
+    </select>
+
+    <input id="dishQty"
+           type="number"
+           min="1"
+           value="1" />
+
+    <button id="addDishBtn"
+            type="button">
+      Add
+    </button>
+
+  </div>
+
+</div>
+
       <div class="order-row order-row-title">
         <span>Position</span>
         <span>Qty</span>
@@ -328,6 +367,21 @@ const splitItemsBox =
 
 const printSplitByItemsBtn =
   document.getElementById('printSplitByItemsBtn')
+
+const menuSelect =
+  document.getElementById('menuSelect')
+
+const catSelect =
+  document.getElementById('catSelect')
+
+const dishSelect =
+  document.getElementById('dishSelect')
+
+const dishQty =
+  document.getElementById('dishQty')
+
+const addDishBtn =
+  document.getElementById('addDishBtn')      
       
 /*
 ========================================
@@ -605,6 +659,8 @@ async function loadOrder() {
 
   renderOrder(data)
 
+  await loadMenusSelect()    
+
   setStatus(
     'Order loaded: '
     + (data.order_number || data.order_id)
@@ -665,6 +721,284 @@ function renderOrder(order) {
   loadItems()
 }
 
+/*
+========================================
+LOAD MENUS SELECT
+========================================
+*/
+
+async function loadMenusSelect() {
+
+  const { data, error } =
+    await supabase
+      .from('menus')
+      .select('menu_id, menu_name, sort_order')
+      .eq('project_id', currentOrder.project_id)
+      .order('sort_order', { ascending: true })
+
+  if (error)
+    throw error
+
+  menuSelect.innerHTML =
+    '<option value="">Menu...</option>'
+
+  data.forEach(menu => {
+
+    const option =
+      document.createElement('option')
+
+    option.value =
+      menu.menu_id
+
+    option.textContent =
+      menu.menu_name
+
+    menuSelect.appendChild(option)
+  })
+}
+
+/*
+========================================
+LOAD CATS BY MENU
+категории только по блюдам выбранного меню
+dishes.menu_id = основное меню
+multis.menu_id = дополнительное меню
+========================================
+*/
+
+async function loadCatsByMenu() {
+
+  const menuId =
+    menuSelect.value
+
+  catSelect.innerHTML =
+    '<option value="">Category...</option>'
+
+  dishSelect.innerHTML =
+    '<option value="">Dish...</option>'
+
+  catSelect.disabled =
+    true
+
+  dishSelect.disabled =
+    true
+
+  if (!menuId)
+    return
+
+  const { data, error } =
+    await supabase
+      .from('dishes')
+      .select(`
+        category_id,
+        cats (
+          cat_id,
+          cat_name,
+          sort_order
+        ),
+        multis!left (
+          menu_id
+        )
+      `)
+      .eq('project_id', currentOrder.project_id)
+      .or(
+        'menu_id.eq.'
+        + menuId
+        + ',multis.menu_id.eq.'
+        + menuId
+      )
+
+  if (error)
+    throw error
+
+  const map =
+    new Map()
+
+  data.forEach(row => {
+
+    if (!row.category_id || !row.cats)
+      return
+
+    map.set(
+      row.category_id,
+      row.cats
+    )
+  })
+
+  const cats =
+    [...map.values()]
+      .sort((a, b) =>
+        (a.sort_order || 0) - (b.sort_order || 0)
+      )
+
+  cats.forEach(cat => {
+
+    const option =
+      document.createElement('option')
+
+    option.value =
+      cat.cat_id
+
+    option.textContent =
+      cat.cat_name
+
+    catSelect.appendChild(option)
+  })
+
+  catSelect.disabled =
+    false
+}
+
+/*
+========================================
+LOAD DISHES BY MENU + CAT
+========================================
+*/
+
+async function loadDishesByMenuAndCat() {
+
+  const menuId =
+    menuSelect.value
+
+  const catId =
+    catSelect.value
+
+  dishSelect.innerHTML =
+    '<option value="">Dish...</option>'
+
+  dishSelect.disabled =
+    true
+
+  if (!menuId || !catId)
+    return
+
+  const { data, error } =
+    await supabase
+      .from('dishes')
+      .select(`
+        dish_id,
+        dish_name,
+        price,
+        sort_order,
+        category_id,
+        menu_id,
+        multis!left (
+          menu_id
+        )
+      `)
+      .eq('project_id', currentOrder.project_id)
+      .eq('category_id', catId)
+      .eq('dish_status', 'active')
+      .or(
+        'menu_id.eq.'
+        + menuId
+        + ',multis.menu_id.eq.'
+        + menuId
+      )
+      .order('sort_order', { ascending: true })
+
+  if (error)
+    throw error
+
+  data.forEach(dish => {
+
+    const option =
+      document.createElement('option')
+
+    option.value =
+      dish.dish_id
+
+    option.textContent =
+      dish.dish_name
+      + ' — '
+      + Number(dish.price || 0).toFixed(2)
+
+    option.dataset.name =
+      dish.dish_name
+
+    option.dataset.price =
+      String(dish.price || 0)
+
+    dishSelect.appendChild(option)
+  })
+
+  dishSelect.disabled =
+    false
+}
+
+/*
+========================================
+ADD SELECTED DISH
+добавляет выбранное блюдо в items
+========================================
+*/
+
+async function addSelectedDish() {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    const option =
+      dishSelect.selectedOptions[0]
+
+    if (!option || !option.value) {
+      setStatus('Select dish first')
+      return
+    }
+
+    const qty =
+      Number(dishQty.value) || 1
+
+    const price =
+      Number(option.dataset.price) || 0
+
+    const { data, error } =
+      await supabase
+        .from('items')
+        .insert({
+          order_id:
+            currentOrder.order_id,
+
+          name:
+            option.dataset.name,
+
+          qty,
+          price,
+
+          item_status:
+            'new'
+        })
+        .select()
+        .single()
+
+    if (error)
+      throw error
+
+    createRow(data)
+
+    update()
+
+    dishSelect.value =
+      ''
+
+    dishQty.value =
+      1
+
+    setStatus('Dish added')
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Add dish error: '
+      + err.message
+    )
+  }
+}
+      
 /*
 ========================================
 LOAD ITEMS
@@ -1881,6 +2215,21 @@ closeOrderBtn.addEventListener(
   closeOrder
 )
 
+ menuSelect.addEventListener(
+  'change',
+  loadCatsByMenu
+)
+
+catSelect.addEventListener(
+  'change',
+  loadDishesByMenuAndCat
+)
+
+addDishBtn.addEventListener(
+  'click',
+  addSelectedDish
+)     
+
 closeChangeTableDialogBtn.addEventListener(
   'click',
   () => {
@@ -1980,7 +2329,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-mishmash in print (not load) | v11.0.3
+новый блок выбора меню/категории/блюда из БД | v12.0.0
   </div>
 
   <div class="row" id="build-down">
