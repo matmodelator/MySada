@@ -32,11 +32,11 @@
       Split Check
     </button>
 
-    <button id="Btn"
-            class="print-bill-btn"
-            type="button">
-      Print Check
-    </button>
+    <button id="printBillBtn"
+        class="print-bill-btn"
+        type="button">
+  Print Check
+</button>
 
     <button id="closeOrderBtn"
             class="close-order-btn"
@@ -284,8 +284,8 @@ const changeTableBtn =
 const splitBillBtn =
   document.getElementById('splitBillBtn')
 
-const Btn =
-  document.getElementById('Btn')
+const printBillBtn =
+  document.getElementById('printBillBtn')
 
 const closeOrderBtn =
   document.getElementById('closeOrderBtn')
@@ -1374,9 +1374,10 @@ async function printSplitEqually() {
       'Split equally opened'
     )
 
-    openDetachedPrintPage(
-  'print.html'
+   openDetachedPrintPage(
+  'print.html?mode=split'
 )
+        
   }
   catch (err) {
 
@@ -1818,9 +1819,10 @@ async function printBill() {
       'Check opened'
     )
 
-    openDetachedPrintPage(
-  'print.html?mode=split'
+   openDetachedPrintPage(
+  'print.html'
 )
+        
   }
   catch (err) {
 
@@ -1978,7 +1980,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-minus window.open (зависание) | v11.0.2
+mishmash in print (not load) | v11.0.3
   </div>
 
   <div class="row" id="build-down">
