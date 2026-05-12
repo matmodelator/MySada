@@ -1287,7 +1287,8 @@ function splitBill() {
 ========================================
 SPLIT EQUALLY
 делит итог поровну
-один HTML-файл со всеми чеками
+готовит split checks для print.html
+window.open только в самом конце
 ========================================
 */
 
@@ -1347,16 +1348,11 @@ async function printSplitEqually() {
       })
     }
 
-     localStorage.setItem(
-  'print_split_checks',
-  JSON.stringify(checks)
-)
+    localStorage.setItem(
+      'print_split_checks',
+      JSON.stringify(checks)
+    )
 
-window.open(
-  'print.html?mode=split',
-  '_blank'
-)   
-   
     await addConsoleLog(
       'split check',
       {
@@ -1365,15 +1361,24 @@ window.open(
         table_id: currentOrder.table_id,
         order_id: currentOrder.order_id,
         message:
-          'SPLIT EQUALLY PRINTED: '
+          'SPLIT EQUALLY OPENED: '
           + count
-          + ' checks in one file'
+          + ' checks'
       }
     )
 
-    splitCheckDialog.classList.add('hidden')
+    splitCheckDialog.classList.add(
+      'hidden'
+    )
 
-    setStatus('Split equally file saved')
+    setStatus(
+      'Split equally opened'
+    )
+
+    window.open(
+      'print.html?mode=split',
+      '_blank'
+    )
   }
   catch (err) {
 
@@ -1478,25 +1483,34 @@ localStorage.removeItem(
   const rows =
     [...itemsBox.querySelectorAll('.order-row')]
 
-  rows.forEach((row, index) => {
+  rows.forEach((row, rowIndex) => {
 
-    const name =
-      row.querySelector('.name')?.value || 'Item'
+  const name =
+    row.querySelector('.name')?.value || 'Item'
 
-    const qty =
-      Number(row.querySelector('.qty')?.value) || 0
+  const qty =
+    Number(row.querySelector('.qty')?.value) || 0
 
-    const price =
-      Number(row.querySelector('.price')?.value) || 0
+  const price =
+    Number(row.querySelector('.price')?.value) || 0
 
-    const sum =
-      qty * price
+  /*
+  ----------------------------------------
+  SPLIT QTY TO UNITS
+  каждая единица товара = отдельная карточка
+  ----------------------------------------
+  */
+
+  for (let unit = 1; unit <= qty; unit++) {
 
     const item =
       document.createElement('div')
 
     item.id =
-      'split-item-' + index
+      'split-item-'
+      + rowIndex
+      + '-'
+      + unit
 
     item.className =
       'split-draggable-item'
@@ -1508,20 +1522,21 @@ localStorage.removeItem(
       name
 
     item.dataset.qty =
-      String(qty)
+      '1'
 
     item.dataset.price =
       String(price)
 
     item.dataset.sum =
-      String(sum)
+      String(price)
 
     item.innerHTML =
       `
         <strong>${escapeHtml(name)}</strong>
-        <span>Qty: ${qty}</span>
+        <span>Unit: ${unit} / ${qty}</span>
+        <span>Qty: 1</span>
         <span>Price: ${price.toFixed(2)}</span>
-        <span>Sum: ${sum.toFixed(2)}</span>
+        <span>Sum: ${price.toFixed(2)}</span>
       `
 
     item.addEventListener(
@@ -1535,7 +1550,8 @@ localStorage.removeItem(
     )
 
     source.appendChild(item)
-  })
+  }
+})
 
   splitItemsBox.appendChild(source)
 
@@ -1549,6 +1565,7 @@ localStorage.removeItem(
 SPLIT BY POSITIONS
 готовит split checks для print.html
 order в базе НЕ меняется
+window.open только в самом конце
 ========================================
 */
 
@@ -1625,33 +1642,10 @@ async function printSplitByPositions() {
       })
     }
 
-    /*
-    ----------------------------------------
-    SAVE DATA FOR print.html
-    ----------------------------------------
-    */
-
     localStorage.setItem(
       'print_split_checks',
       JSON.stringify(checks)
     )
-
-    /*
-    ----------------------------------------
-    OPEN PRINT PAGE
-    ----------------------------------------
-    */
-
-    window.open(
-      'print.html?mode=split',
-      '_blank'
-    )
-
-    /*
-    ----------------------------------------
-    LOG
-    ----------------------------------------
-    */
 
     await addConsoleLog(
       'split check',
@@ -1675,18 +1669,17 @@ async function printSplitByPositions() {
       }
     )
 
-    /*
-    ----------------------------------------
-    CLOSE DIALOG
-    ----------------------------------------
-    */
-
     splitCheckDialog.classList.add(
       'hidden'
     )
 
     setStatus(
       'Split by positions opened'
+    )
+
+    window.open(
+      'print.html?mode=split',
+      '_blank'
     )
   }
   catch (err) {
@@ -1699,7 +1692,7 @@ async function printSplitByPositions() {
     )
   }
 }
-
+      
 /*
 ========================================
 BUILD CHECK DATA
@@ -1761,6 +1754,7 @@ function buildCheckData() {
 ========================================
 PRINT CHECK
 готовит обычный чек для print.html
+window.open только в самом конце
 ========================================
 */
 
@@ -1777,11 +1771,6 @@ async function printBill() {
     localStorage.setItem(
       'print_check_data',
       JSON.stringify(checkData)
-    )
-
-    window.open(
-      'print.html',
-      '_blank'
     )
 
     await addConsoleLog(
@@ -1802,6 +1791,11 @@ async function printBill() {
 
     setStatus(
       'Check opened'
+    )
+
+    window.open(
+      'print.html',
+      '_blank'
     )
   }
   catch (err) {
@@ -1960,7 +1954,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-перевод принтов в print.html | v11.0.0
+split & print fix (зависание) | v11.0.1
   </div>
 
   <div class="row" id="build-down">
