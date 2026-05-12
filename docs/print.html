@@ -1,0 +1,575 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+
+<title>MySada Print</title>
+
+<!-- СТИЛЬ КОНСОЛИ -->
+
+  <link rel="stylesheet"
+        href="styles/console.css" />
+
+  
+<style>
+/*
+========================================
+PRINT PAGE
+отдельная страница печати чеков
+данные приходят из localStorage
+========================================
+*/
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 24px;
+  color: #111827;
+  background: #ffffff;
+}
+
+/*
+========================================
+SCREEN PANEL
+видно только на экране
+========================================
+*/
+
+.print-panel {
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+}
+
+.print-panel button {
+  padding: 8px 14px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.print-status {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/*
+========================================
+CHECK STYLE
+сохраняет стиль твоего текущего чека
+========================================
+*/
+
+.check-page {
+  width: 100%;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+.meta {
+  margin-bottom: 4px;
+}
+
+.opened {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.closed {
+  color: #16a34a;
+  font-weight: bold;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th,
+td {
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background: #f3f4f6;
+}
+
+.total-block {
+  margin-top: 24px;
+  text-align: right;
+}
+
+.total-final {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/*
+========================================
+PAGE BREAK
+разделитель между split checks
+========================================
+*/
+
+.page-break {
+  page-break-after: always;
+  break-after: page;
+}
+
+/*
+========================================
+PRINT MODE
+панель не печатается
+========================================
+*/
+
+@media print {
+
+  body {
+    margin: 12mm;
+    background: white;
+  }
+
+  .print-panel {
+    display: none;
+  }
+
+  .check-page {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!--
+========================================
+SCREEN CONTROL PANEL
+нужна если браузер заблокировал автопечать
+========================================
+-->
+
+<div class="print-panel">
+  <button id="printBtn" type="button">
+    Print
+  </button>
+
+  <div id="printStatus" class="print-status">
+    Preparing print...
+  </div>
+</div>
+
+<!--
+========================================
+PRINT CONTENT
+сюда JS вставляет чек или split checks
+========================================
+-->
+
+<main id="printRoot"></main>
+
+<script>
+/*
+========================================
+DOM
+========================================
+*/
+
+const printRoot =
+  document.getElementById('printRoot')
+
+const printBtn =
+  document.getElementById('printBtn')
+
+const printStatus =
+  document.getElementById('printStatus')
+
+/*
+========================================
+INIT
+режим:
+обычный чек      -> print.html
+split checks    -> print.html?mode=split
+========================================
+*/
+
+initPrintPage()
+
+function initPrintPage() {
+
+  try {
+
+    const mode =
+      new URLSearchParams(window.location.search)
+        .get('mode')
+
+    if (mode === 'split') {
+      renderSplitChecks()
+    } else {
+      renderSingleCheck()
+    }
+
+    printStatus.textContent =
+      'Ready for print'
+
+    /*
+    ----------------------------------------
+    AUTO PRINT
+    один print на всю страницу
+    ----------------------------------------
+    */
+
+    setTimeout(() => {
+      window.print()
+    }, 300)
+
+  } catch (err) {
+
+    console.error(err)
+
+    printStatus.textContent =
+      'Print page error: '
+      + err.message
+  }
+}
+
+/*
+========================================
+RENDER SINGLE CHECK
+берет данные обычного чека
+ключ: print_check_data
+========================================
+*/
+
+function renderSingleCheck() {
+
+  const raw =
+    localStorage.getItem(
+      'print_check_data'
+    )
+
+  if (!raw) {
+    throw new Error(
+      'No print_check_data in localStorage'
+    )
+  }
+
+  const checkData =
+    JSON.parse(raw)
+
+  printRoot.innerHTML =
+    buildCheckHtml(checkData)
+}
+
+/*
+========================================
+RENDER SPLIT CHECKS
+берет массив разделенных чеков
+ключ: print_split_checks
+========================================
+*/
+
+function renderSplitChecks() {
+
+  const raw =
+    localStorage.getItem(
+      'print_split_checks'
+    )
+
+  if (!raw) {
+    throw new Error(
+      'No print_split_checks in localStorage'
+    )
+  }
+
+  const checks =
+    JSON.parse(raw)
+
+  if (!Array.isArray(checks) || !checks.length) {
+    throw new Error(
+      'Split checks list is empty'
+    )
+  }
+
+  printRoot.innerHTML =
+    checks
+      .map((checkData, index) => {
+
+        const html =
+          buildCheckHtml(checkData)
+
+        if (index === checks.length - 1)
+          return html
+
+        return html
+          + '<div class="page-break"></div>'
+      })
+      .join('')
+}
+
+/*
+========================================
+BUILD CHECK HTML
+только тело чека
+без html/head/body/script
+========================================
+*/
+
+function buildCheckHtml(checkData) {
+
+  const items =
+    Array.isArray(checkData.items)
+      ? checkData.items
+      : []
+
+  const itemsHtml =
+    items
+      .map(item => {
+
+        const qty =
+          Number(item.qty) || 0
+
+        const price =
+          Number(item.price) || 0
+
+        const sum =
+          Number(item.sum) || 0
+
+        return `
+          <tr>
+            <td>${escapeHtml(item.name || 'Item')}</td>
+            <td>${qty}</td>
+            <td>${price.toFixed(2)}</td>
+            <td>${sum.toFixed(2)}</td>
+          </tr>
+        `
+      })
+      .join('')
+
+  const subtotal =
+    Number(checkData.subtotal) || 0
+
+  const servicePercent =
+    Number(checkData.service_percent) || 0
+
+  const serviceTotal =
+    Number(checkData.service_total) || 0
+
+  const total =
+    Number(checkData.total) || 0
+
+  return `
+<section class="check-page">
+
+<h1>MySada Check</h1>
+
+<div class="meta">
+Check:
+${escapeHtml(checkData.order_number || checkData.order_id || '-')}
+</div>
+
+<div class="meta">
+Project:
+${escapeHtml(checkData.project_name || checkData.project || '-')}
+</div>
+
+<div class="meta">
+Hall:
+${escapeHtml(checkData.hall_name || checkData.hall || '-')}
+</div>
+
+<div class="meta">
+Table:
+${escapeHtml(checkData.table_name || checkData.table || '-')}
+</div>
+
+<div class="meta opened">
+Opened at:
+${formatDate(checkData.opened_at)}
+</div>
+
+${
+  checkData.closed_at
+    ? `
+      <div class="meta closed">
+        Closed at:
+        ${formatDate(checkData.closed_at)}
+      </div>
+    `
+    : ''
+}
+
+<table>
+<thead>
+<tr>
+  <th>Position</th>
+  <th>Qty</th>
+  <th>Price</th>
+  <th>Sum</th>
+</tr>
+</thead>
+
+<tbody>
+${itemsHtml}
+</tbody>
+</table>
+
+<div class="total-block">
+  <div>Subtotal: ${subtotal.toFixed(2)}</div>
+  <div>Service ${servicePercent}%: ${serviceTotal.toFixed(2)}</div>
+  <div class="total-final">TOTAL: ${total.toFixed(2)}</div>
+</div>
+
+</section>
+`
+}
+
+/*
+========================================
+FORMAT DATE
+========================================
+*/
+
+function formatDate(value) {
+
+  if (!value)
+    return '-'
+
+  const date =
+    new Date(value)
+
+  if (Number.isNaN(date.getTime()))
+    return '-'
+
+  return date.toLocaleString()
+}
+
+/*
+========================================
+ESCAPE HTML
+защита от поломки разметки
+========================================
+*/
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
+/*
+========================================
+BUTTON
+ручная печать если авто-печать заблокирована
+========================================
+*/
+
+printBtn.addEventListener(
+  'click',
+  () => {
+    window.print()
+  }
+)
+</script>
+
+</body>
+</html>
+
+<!-- ========================================
+     SERVICE CONSOLE
+     Верхняя строка редактируется вручную
+     Здесь задается:
+     - название страницы
+     - номер версии
+======================================== -->
+
+<div id="service-console">
+
+  <div class="row" id="build-top">
+
+    <!-- ВВОД ВРУЧНУЮ -->
+
+   created by GPT | v1.0.0
+
+  </div>
+
+  <div class="row" id="build-down">
+
+    deploy: --
+
+  </div>
+
+</div>
+
+<!-- ========================================
+     SCRIPT
+     Автоматически выводит:
+     - дату
+     - время
+     Момент загрузки страницы
+======================================== -->
+
+<script>
+
+(function () {
+
+  /* Текущая дата и время */
+
+  const now = new Date();
+
+  /* Добавляет ведущий ноль */
+
+  const pad = n =>
+    String(n).padStart(2, '0');
+
+  /* Формат даты */
+
+  const date =
+      pad(now.getDate())
+    + '.'
+    + pad(now.getMonth() + 1)
+    + '.'
+    + now.getFullYear();
+
+  /* Формат времени */
+
+  const time =
+      pad(now.getHours())
+    + ':'
+    + pad(now.getMinutes());
+
+  /* Вывод в нижнюю строку */
+
+  document
+    .getElementById('build-down')
+    .textContent =
+      'deploy: '
+      + date
+      + ' '
+      + time;
+
+})();
+
+</script>
