@@ -681,13 +681,12 @@ async function loadItems() {
 
     setStatus('Loading items...')
 
-    const { data, error } =
-      await supabase
-        .from('items')
-        .select('*')
-        .eq('order_id', currentOrder.order_id)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true })
+   const { data, error } =
+  await supabase
+    .from('items')
+    .select('*')
+    .eq('order_id', currentOrder.order_id)
+    .order('created_at', { ascending: true })
 
     if (error)
       throw error
@@ -761,7 +760,7 @@ function createRow(item) {
         class="price">
 
       <span class="sum">
-        ${Number(item.sum || 0).toFixed(2)}
+        ${Number(item.line_total || 0).toFixed(2)}
       </span>
     `
 
@@ -862,10 +861,16 @@ async function addRow() {
             1,
 
           price:
-            0
+            0,
+
+          item_status:
+            'new'
         })
         .select()
         .single()
+
+    console.log('ADD ITEM DATA:', data)
+    console.log('ADD ITEM ERROR:', error)
 
     if (error)
       throw error
@@ -2309,7 +2314,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-SWitch ON Nable_items / Print SuperBlock /  SPLIT BY POSITIONS | v10.0.0
+DB Errors | v10.0.1
   </div>
 
   <div class="row" id="build-down">
