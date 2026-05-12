@@ -32,7 +32,7 @@
       Split Check
     </button>
 
-    <button id="printBillBtn"
+    <button id="Btn"
             class="print-bill-btn"
             type="button">
       Print Check
@@ -284,8 +284,8 @@ const changeTableBtn =
 const splitBillBtn =
   document.getElementById('splitBillBtn')
 
-const printBillBtn =
-  document.getElementById('printBillBtn')
+const Btn =
+  document.getElementById('Btn')
 
 const closeOrderBtn =
   document.getElementById('closeOrderBtn')
@@ -1288,7 +1288,6 @@ function splitBill() {
 SPLIT EQUALLY
 делит итог поровну
 готовит split checks для print.html
-window.open только в самом конце
 ========================================
 */
 
@@ -1375,10 +1374,9 @@ async function printSplitEqually() {
       'Split equally opened'
     )
 
-    window.open(
-      'print.html?mode=split',
-      '_blank'
-    )
+    openDetachedPrintPage(
+  'print.html'
+)
   }
   catch (err) {
 
@@ -1565,7 +1563,6 @@ localStorage.removeItem(
 SPLIT BY POSITIONS
 готовит split checks для print.html
 order в базе НЕ меняется
-window.open только в самом конце
 ========================================
 */
 
@@ -1677,10 +1674,9 @@ async function printSplitByPositions() {
       'Split by positions opened'
     )
 
-    window.open(
-      'print.html?mode=split',
-      '_blank'
-    )
+    openDetachedPrintPage(
+  'print.html?mode=split'
+)
   }
   catch (err) {
 
@@ -1752,9 +1748,38 @@ function buildCheckData() {
 
 /*
 ========================================
+OPEN DETACHED PRINT PAGE
+открывает print.html отдельно от order
+========================================
+*/
+
+function openDetachedPrintPage(url) {
+
+  const link =
+    document.createElement('a')
+
+  link.href =
+    url
+
+  link.target =
+    '_blank'
+
+  link.rel =
+    'noopener noreferrer'
+
+  document.body.appendChild(
+    link
+  )
+
+  link.click()
+
+  link.remove()
+}
+      
+/*
+========================================
 PRINT CHECK
 готовит обычный чек для print.html
-window.open только в самом конце
 ========================================
 */
 
@@ -1793,10 +1818,9 @@ async function printBill() {
       'Check opened'
     )
 
-    window.open(
-      'print.html',
-      '_blank'
-    )
+    openDetachedPrintPage(
+  'print.html?mode=split'
+)
   }
   catch (err) {
 
@@ -1954,7 +1978,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-split & print fix (зависание) | v11.0.1
+minus window.open (зависание) | v11.0.2
   </div>
 
   <div class="row" id="build-down">
