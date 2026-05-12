@@ -662,17 +662,78 @@ function renderOrder(order) {
 
   itemsBox.innerHTML =
     ''
+  loadItems()
+}
 
-  addRow()
+/*
+========================================
+LOAD ITEMS
+загрузка позиций заказа
+========================================
+*/
+
+async function loadItems() {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    setStatus('Loading items...')
+
+    const { data, error } =
+      await supabase
+        .from('items')
+        .select('*')
+        .eq('order_id', currentOrder.order_id)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true })
+
+    if (error)
+      throw error
+
+    itemsBox.innerHTML =
+      ''
+
+    if (!data || !data.length) {
+
+      update()
+
+      setStatus('No items found')
+
+      return
+    }
+
+    data.forEach(item => {
+      createRow(item)
+    })
+
+    update()
+
+    setStatus(
+      'Items loaded: '
+      + data.length
+    )
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Load items error: '
+      + err.message
+    )
+  }
 }
 
 /*
 ========================================
 CREATE ROW
+позиция из DB
 ========================================
 */
 
-function createRow(name = '', qty = 1, price = 0) {
+function createRow(item) {
 
   const row =
     document.createElement('div')
@@ -680,42 +741,156 @@ function createRow(name = '', qty = 1, price = 0) {
   row.className =
     'order-row'
 
+  row.dataset.itemId =
+    item.item_id
+
   row.innerHTML =
     `
-      <input value="${escapeHtml(name)}" class="name">
-      <input type="number" value="${qty}" class="qty">
-      <input type="number" value="${price}" class="price">
-      <span class="sum">${qty * price}</span>
+      <input
+        value="${escapeHtml(item.name || '')}"
+        class="name">
+
+      <input
+        type="number"
+        value="${item.qty || 1}"
+        class="qty">
+
+      <input
+        type="number"
+        value="${item.price || 0}"
+        class="price">
+
+      <span class="sum">
+        ${Number(item.sum || 0).toFixed(2)}
+      </span>
     `
 
-  row
-    .querySelector('.qty')
-    .addEventListener(
-      'input',
-      update
-    )
+  const nameInput =
+    row.querySelector('.name')
 
-  row
-    .querySelector('.price')
-    .addEventListener(
-      'input',
-      update
-    )
+  const qtyInput =
+    row.querySelector('.qty')
 
-  return row
-}
+  const priceInput =
+    row.querySelector('.price')
 
-function addRow() {
-  itemsBox.appendChild(
-    createRow()
+  async function saveRow() {
+
+    try {
+
+      const qty =
+        Number(qtyInput.value) || 0
+
+      const price =
+        Number(priceInput.value) || 0
+
+      const sum =
+        qty * price
+
+      row.querySelector('.sum').textContent =
+        sum.toFixed(2)
+
+      const { error } =
+        await supabase
+          .from('items')
+          .update({
+            name: nameInput.value,
+            qty,
+            price
+          })
+          .eq('item_id', item.item_id)
+
+      if (error)
+        throw error
+
+      update()
+    }
+    catch (err) {
+
+      console.error(err)
+
+      setStatus(
+        'Save item error: '
+        + err.message
+      )
+    }
+  }
+
+  nameInput.addEventListener(
+    'change',
+    saveRow
   )
 
-  update()
+  qtyInput.addEventListener(
+    'change',
+    saveRow
+  )
+
+  priceInput.addEventListener(
+    'change',
+    saveRow
+  )
+
+  itemsBox.appendChild(row)
 }
 
 /*
 ========================================
+ADD ITEM
+создание новой позиции
+========================================
+*/
+
+async function addRow() {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    const { data, error } =
+      await supabase
+        .from('items')
+        .insert({
+          order_id:
+            currentOrder.order_id,
+
+          name:
+            'New item',
+
+          qty:
+            1,
+
+          price:
+            0
+        })
+        .select()
+        .single()
+
+    if (error)
+      throw error
+
+    createRow(data)
+
+    update()
+
+    setStatus('Item created')
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Add item error: '
+      + err.message
+    )
+  }
+}
+      
+/*
+========================================
 TOTAL
+from table_items
 ========================================
 */
 
@@ -729,16 +904,20 @@ function update() {
     .forEach(row => {
 
       const qty =
-        Number(row.querySelector('.qty').value) || 0
+        Number(
+          row.querySelector('.qty')?.value
+        ) || 0
 
       const price =
-        Number(row.querySelector('.price').value) || 0
+        Number(
+          row.querySelector('.price')?.value
+        ) || 0
 
       const sum =
         qty * price
 
       row.querySelector('.sum').textContent =
-        sum
+        sum.toFixed(2)
 
       subtotal +=
         sum
@@ -1199,8 +1378,11 @@ async function printSplitEqually() {
 
 /*
 ========================================
-SPLIT BY POSITIONS UI
-создает select для каждой позиции
+SPLIT BY POSITIONS 
+исходный Check #0 слева
+конечные Checks 1..N справа
+позиции перетаскиваются мышкой
+order в базе НЕ меняется
 ========================================
 */
 
@@ -1216,6 +1398,68 @@ function buildSplitByItemsUi() {
 
   splitItemsBox.innerHTML =
     ''
+
+  const source =
+    document.createElement('div')
+
+  source.className =
+    'split-source'
+
+  source.innerHTML =
+    '<h4>Check #0</h4>'
+
+  const targets =
+    document.createElement('div')
+
+  targets.className =
+    'split-targets'
+
+  const targetBoxes =
+    {}
+
+  for (let i = 1; i <= count; i++) {
+
+    const box =
+      document.createElement('div')
+
+    box.className =
+      'split-target'
+
+    box.dataset.check =
+      String(i)
+
+    box.innerHTML =
+      '<h4>Check #' + i + '</h4>'
+
+    box.addEventListener(
+      'dragover',
+      event => {
+        event.preventDefault()
+      }
+    )
+
+    box.addEventListener(
+      'drop',
+      event => {
+        event.preventDefault()
+
+        const rowId =
+          event.dataTransfer.getData('text/plain')
+
+        const row =
+          document.getElementById(rowId)
+
+        if (row) {
+          box.appendChild(row)
+        }
+      }
+    )
+
+    targetBoxes[i] =
+      box
+
+    targets.appendChild(box)
+  }
 
   const rows =
     [...itemsBox.querySelectorAll('.order-row')]
@@ -1234,51 +1478,62 @@ function buildSplitByItemsUi() {
     const sum =
       qty * price
 
-    const line =
+    const item =
       document.createElement('div')
 
-    line.className =
-      'split-item-row'
+    item.id =
+      'split-item-' + index
 
-    const select =
-      document.createElement('select')
+    item.className =
+      'split-draggable-item'
 
-    select.dataset.index =
-      index
+    item.draggable =
+      true
 
-    for (let i = 1; i <= count; i++) {
-      const option =
-        document.createElement('option')
+    item.dataset.name =
+      name
 
-      option.value =
-        String(i)
+    item.dataset.qty =
+      String(qty)
 
-      option.textContent =
-        'Check ' + i
+    item.dataset.price =
+      String(price)
 
-      select.appendChild(option)
-    }
+    item.dataset.sum =
+      String(sum)
 
-    line.innerHTML =
+    item.innerHTML =
       `
-        <span>${escapeHtml(name)}</span>
-        <span>${qty}</span>
-        <span>${price}</span>
-        <span>${sum}</span>
+        <strong>${escapeHtml(name)}</strong>
+        <span>Qty: ${qty}</span>
+        <span>Price: ${price.toFixed(2)}</span>
+        <span>Sum: ${sum.toFixed(2)}</span>
       `
 
-    line.appendChild(select)
+    item.addEventListener(
+      'dragstart',
+      event => {
+        event.dataTransfer.setData(
+          'text/plain',
+          item.id
+        )
+      }
+    )
 
-    splitItemsBox.appendChild(line)
+    source.appendChild(item)
   })
 
+  splitItemsBox.appendChild(source)
+
+  splitItemsBox.appendChild(targets)
+
   printSplitByItemsBtn.classList.remove('hidden')
-}          
+}     
       
 /*
 ========================================
 PRINT SPLIT BY POSITIONS
-позиции распределяются по выбранным check
+печатает checks по фактически перетащенным позициям
 order в базе НЕ меняется
 ========================================
 */
@@ -1299,77 +1554,77 @@ async function printSplitByPositions() {
       buildCheckData()
 
     const checks =
-      {}
+      []
 
     for (let i = 1; i <= count; i++) {
-      checks[i] = {
+
+      const box =
+        splitItemsBox.querySelector(
+          '.split-target[data-check="' + i + '"]'
+        )
+
+      const items =
+        [...box.querySelectorAll('.split-draggable-item')]
+          .map(item => ({
+            name:
+              item.dataset.name || 'Item',
+
+            qty:
+              Number(item.dataset.qty) || 0,
+
+            price:
+              Number(item.dataset.price) || 0,
+
+            sum:
+              Number(item.dataset.sum) || 0
+          }))
+
+      const subtotal =
+        items.reduce(
+          (sum, item) => sum + item.sum,
+          0
+        )
+
+      checks.push({
         ...baseData,
+
         order_number:
           (baseData.order_number || baseData.order_id)
           + '-'
           + i,
-        items: [],
-        subtotal: 0,
-        service_total: 0,
-        total: 0
-      }
+
+        items,
+
+        subtotal,
+
+        service_total:
+          0,
+
+        total:
+          subtotal
+      })
     }
 
-    const rows =
-      [...itemsBox.querySelectorAll('.order-row')]
-
-    const selects =
-      [...splitItemsBox.querySelectorAll('select')]
-
-    rows.forEach((row, index) => {
-
-      const name =
-        row.querySelector('.name')?.value || 'Item'
-
-      const qty =
-        Number(row.querySelector('.qty')?.value) || 0
-
-      const price =
-        Number(row.querySelector('.price')?.value) || 0
-
-      const sum =
-        qty * price
-
-      const checkNumber =
-        Number(selects[index]?.value || 1)
-
-      checks[checkNumber].items.push({
-        name,
-        qty,
-        price,
-        sum
-      })
-
-      checks[checkNumber].subtotal +=
-        sum
-
-      checks[checkNumber].total +=
-        sum
-    })
-
-    Object.keys(checks).forEach(key => {
-
-      const check =
-        checks[key]
-
-      saveCheckHtmlFile(
-        check,
-        'split-items-' + key
-      )
-    })
+    saveMultiCheckHtmlFile(
+      checks,
+      'split-items'
+    )
 
     await addConsoleLog(
       'split check',
       {
-        project_id: currentOrder.project_id,
-        hall_id: currentOrder.hall_id,
-        table_id: currentOrder.table_id,
-        order_id: currentOrder.order_id,
+        project_id:
+          currentOrder.project_id,
+
+        hall_id:
+          currentOrder.hall_id,
+
+        table_id:
+          currentOrder.table_id,
+
+        order_id:
+          currentOrder.order_id,
+
         message:
           'SPLIT BY POSITIONS PRINTED: '
           + count
@@ -1379,7 +1634,9 @@ async function printSplitByPositions() {
 
     splitCheckDialog.classList.add('hidden')
 
-    setStatus('Split by positions files saved')
+    setStatus(
+      'Split by positions file saved'
+    )
   }
   catch (err) {
 
@@ -1394,8 +1651,38 @@ async function printSplitByPositions() {
 
 /*
 ========================================
+OPEN CHECK PRINT WINDOW
+открывает HTML в новом окне
+========================================
+*/
+
+function openCheckPrintWindow(htmlText) {
+
+  const printWindow =
+    window.open('', '_blank')
+
+  if (!printWindow) {
+
+    setStatus(
+      'Print window blocked'
+    )
+
+    return
+  }
+
+  printWindow.document.open()
+
+  printWindow.document.write(
+    htmlText
+  )
+
+  printWindow.document.close()
+}
+
+/*
+========================================
 SAVE CHECK HTML FILE
-сохраняет один printable check
+скачивает HTML + открывает печать
 ========================================
 */
 
@@ -1404,11 +1691,18 @@ function saveCheckHtmlFile(checkData, suffix) {
   const htmlText =
     buildCheckHtml(checkData)
 
+  /*
+  ----------------------------------------
+  FILE
+  ----------------------------------------
+  */
+
   const htmlBlob =
     new Blob(
       [htmlText],
       {
-        type: 'text/html;charset=utf-8'
+        type:
+          'text/html;charset=utf-8'
       }
     )
 
@@ -1431,19 +1725,43 @@ function saveCheckHtmlFile(checkData, suffix) {
     + suffix
     + '.html'
 
-  document.body.appendChild(htmlLink)
+  document.body.appendChild(
+    htmlLink
+  )
 
   htmlLink.click()
 
-  htmlLink.remove()
+  /*
+  ----------------------------------------
+  CLEAN
+  ----------------------------------------
+  */
 
-  URL.revokeObjectURL(htmlUrl)
-}          
+  setTimeout(() => {
+
+    htmlLink.remove()
+
+    URL.revokeObjectURL(
+      htmlUrl
+    )
+
+  }, 3000)
+
+  /*
+  ----------------------------------------
+  PRINT
+  ----------------------------------------
+  */
+
+  openCheckPrintWindow(
+    htmlText
+  )
+}
 
 /*
 ========================================
 SAVE MULTI CHECK HTML FILE
-один HTML-файл со всеми split checks
+один HTML со всеми split checks
 ========================================
 */
 
@@ -1453,38 +1771,68 @@ function saveMultiCheckHtmlFile(checks, suffix) {
     checks
       .map(check =>
         buildCheckHtml(check)
-          .replace('<!DOCTYPE html>', '')
-          .replace('<html lang="en">', '')
-          .replace('</html>', '')
+          .replace(
+            '<!DOCTYPE html>',
+            ''
+          )
+          .replace(
+            '<html lang="en">',
+            ''
+          )
+          .replace(
+            '</html>',
+            ''
+          )
       )
-      .join('<div style="page-break-after: always;"></div>')
+      .join(
+        '<div style="page-break-after: always;"></div>'
+      )
 
   const htmlText =
-    `
+`
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<title>Split Checks</title>
+
+<title>
+Split Checks
+</title>
+
 </head>
+
 <body>
+
 ${parts}
 
 <script>
+
 window.onload = function () {
+
   window.print()
+
 }
+
 <\/script>
 
 </body>
 </html>
 `
 
+  /*
+  ----------------------------------------
+  FILE
+  ----------------------------------------
+  */
+
   const htmlBlob =
     new Blob(
       [htmlText],
       {
-        type: 'text/html;charset=utf-8'
+        type:
+          'text/html;charset=utf-8'
       }
     )
 
@@ -1507,13 +1855,31 @@ window.onload = function () {
     + suffix
     + '.html'
 
-  document.body.appendChild(htmlLink)
+  document.body.appendChild(
+    htmlLink
+  )
 
   htmlLink.click()
 
-  htmlLink.remove()
+  setTimeout(() => {
 
-  URL.revokeObjectURL(htmlUrl)
+    htmlLink.remove()
+
+    URL.revokeObjectURL(
+      htmlUrl
+    )
+
+  }, 3000)
+
+  /*
+  ----------------------------------------
+  PRINT
+  ----------------------------------------
+  */
+
+  openCheckPrintWindow(
+    htmlText
+  )
 }
       
 /*
@@ -1943,7 +2309,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-SAVE MULTI CHECK | v9.5.0
+SWitch ON Nable_items / Print SuperBlock /  SPLIT BY POSITIONS | v10.0.0
   </div>
 
   <div class="row" id="build-down">
