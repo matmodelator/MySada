@@ -783,9 +783,7 @@ async function loadMenusSelect() {
 /*
 ========================================
 LOAD CATS BY MENU
-категории только по блюдам выбранного меню
-dishes.menu_id = основное меню
-multis.menu_id = дополнительное меню
+категории по выбранному меню через multis_view
 ========================================
 */
 
@@ -811,25 +809,13 @@ async function loadCatsByMenu() {
 
   const { data, error } =
     await supabase
-      .from('dishes')
-      .select(`
-        category_id,
-        cats (
-          cat_id,
-          cat_name,
-          sort_order
-        ),
-        multis!left (
-          menu_id
-        )
-      `)
-      .eq('project_id', currentOrder.project_id)
-      .or(
-        'menu_id.eq.'
-        + menuId
-        + ',multis.menu_id.eq.'
-        + menuId
-      )
+      .from('multis_view')
+      .select('category_id, cat_name, sort_order')
+      .eq('menu_id', menuId)
+      .order('sort_order', { ascending: true })
+
+  console.log('CATS DATA:', data)
+  console.log('CATS ERROR:', error)
 
   if (error)
     throw error
@@ -839,31 +825,25 @@ async function loadCatsByMenu() {
 
   data.forEach(row => {
 
-    if (!row.category_id || !row.cats)
+    if (!row.category_id || !row.cat_name)
       return
 
     map.set(
       row.category_id,
-      row.cats
+      row.cat_name
     )
   })
 
-  const cats =
-    [...map.values()]
-      .sort((a, b) =>
-        (a.sort_order || 0) - (b.sort_order || 0)
-      )
-
-  cats.forEach(cat => {
+  map.forEach((catName, catId) => {
 
     const option =
       document.createElement('option')
 
     option.value =
-      cat.cat_id
+      catId
 
     option.textContent =
-      cat.cat_name
+      catName
 
     catSelect.appendChild(option)
   })
@@ -875,6 +855,7 @@ async function loadCatsByMenu() {
 /*
 ========================================
 LOAD DISHES BY MENU + CAT
+блюда по выбранному меню и категории
 ========================================
 */
 
@@ -897,28 +878,14 @@ async function loadDishesByMenuAndCat() {
 
   const { data, error } =
     await supabase
-      .from('dishes')
-      .select(`
-        dish_id,
-        dish_name,
-        price,
-        sort_order,
-        category_id,
-        menu_id,
-        multis!left (
-          menu_id
-        )
-      `)
-      .eq('project_id', currentOrder.project_id)
+      .from('multis_view')
+      .select('dish_id, dish_name, price, sort_order')
+      .eq('menu_id', menuId)
       .eq('category_id', catId)
-      .eq('dish_status', 'active')
-      .or(
-        'menu_id.eq.'
-        + menuId
-        + ',multis.menu_id.eq.'
-        + menuId
-      )
       .order('sort_order', { ascending: true })
+
+  console.log('DISHES DATA:', data)
+  console.log('DISHES ERROR:', error)
 
   if (error)
     throw error
@@ -2352,8 +2319,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-LOAD MENUS SELECT
-загружает список меню | v12.0.1
+все выпадающие списки меню | v12.1.0
   </div>
 
   <div class="row" id="build-down">
