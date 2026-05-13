@@ -1,6 +1,6 @@
 /*
 ========================================
-MENU SELECTOR v4.0.0
+DELETE & CANCEL buttons v5.0.0
 ========================================
 */
 
@@ -736,6 +736,117 @@ ORDER FIELDS GRID
   font-weight: 800;
   color: #0f172a;
   word-break: break-word;
+}
+
+/*
+========================================
+ORDER ROW
+========================================
+*/
+
+.order-row {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1fr)
+    70px
+    90px
+    90px
+    90px
+    90px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.order-row input {
+  width: 100%;
+}
+
+/*
+========================================
+DELETE BUTTON
+желтая
+========================================
+*/
+
+.delete-item-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #fde68a;
+  color: #78350f;
+}
+
+/*
+========================================
+CANCEL BUTTON
+красная
+========================================
+*/
+
+.cancel-item-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #fca5a5;
+  color: #7f1d1d;
+}
+
+/*
+========================================
+CANCELLED BLOCK
+========================================
+*/
+
+.cancelled-items-box {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+/*
+========================================
+CANCELLED ROW
+========================================
+*/
+
+.cancelled-row {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1fr)
+    120px
+    120px
+    120px;
+  gap: 8px;
+  align-items: center;
+
+  margin-top: 6px;
+  padding: 8px 10px;
+
+  border-radius: 8px;
+
+  background: #f8fafc;
+
+  color: #94a3b8;
+
+  font-size: 13px;
+
+  opacity: 0.7;
+}
+
+/*
+========================================
+TITLE ROW
+========================================
+*/
+
+.order-row-title {
+  font-weight: 700;
+  margin-bottom: 12px;
 }
 
 /*
