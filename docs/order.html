@@ -162,6 +162,15 @@
         + Add position
       </button>
 
+<!-- ========================================
+     CANCELLED ITEMS
+     отменённые позиции
+======================================== -->
+
+<div id="cancelledItemsBox"
+     class="cancelled-items-box">
+</div>
+          
       <div id="orderSummary" style="margin-top:15px;">
 
         <div>
@@ -296,6 +305,9 @@ const statusBox =
 const itemsBox =
   document.getElementById('orderItems')
 
+const cancelledItemsBox =
+  document.getElementById('cancelledItemsBox')
+      
 const addBtn =
   document.getElementById('addItemBtn')
 
@@ -718,6 +730,9 @@ function renderOrder(order) {
 
   itemsBox.innerHTML =
     ''
+   cancelledItemsBox.innerHTML =
+  ''
+      
   loadItems()
 }
 
@@ -1129,10 +1144,15 @@ async function loadItems() {
       return
     }
 
-    data.forEach(item => {
-      createRow(item)
-    })
+   data.forEach(item => {
 
+  if (item.item_status === 'cancelled') {
+    createCancelledRow(item)
+  } else {
+    createRow(item)
+  }
+})
+        
     update()
 
     setStatus(
@@ -1188,6 +1208,14 @@ function createRow(item) {
       <span class="sum">
         ${Number(item.line_total || 0).toFixed(2)}
       </span>
+
+<button type="button" class="delete-item-btn">
+  Delete
+</button>
+
+<button type="button" class="cancel-item-btn">
+  Cancel
+</button>
     `
 
   const nameInput =
@@ -1198,6 +1226,12 @@ function createRow(item) {
 
   const priceInput =
     row.querySelector('.price')
+
+const deleteBtn =
+  row.querySelector('.delete-item-btn')
+
+const cancelBtn =
+  row.querySelector('.cancel-item-btn')
 
   async function saveRow() {
 
@@ -1256,9 +1290,187 @@ function createRow(item) {
     saveRow
   )
 
+deleteBtn.addEventListener(
+  'click',
+  () => deleteOneUnit(item, row)
+)
+
+cancelBtn.addEventListener(
+  'click',
+  () => cancelOneUnit(item, row)
+)
+      
   itemsBox.appendChild(row)
 }
 
+/*
+========================================
+CREATE CANCELLED ROW
+отменённая позиция ниже Add position
+========================================
+*/
+
+function createCancelledRow(item) {
+
+  const row =
+    document.createElement('div')
+
+  row.className =
+    'cancelled-row'
+
+  row.innerHTML =
+    `
+      <span>${escapeHtml(item.name || 'Item')}</span>
+      <span>cancelled</span>
+      <span>Qty: ${item.qty || 1}</span>
+      <span>Price: 0.00</span>
+    `
+
+  cancelledItemsBox.appendChild(row)
+}
+
+/*
+========================================
+DELETE ONE UNIT
+уменьшает qty на 1
+если qty становится 0 — физически удаляет строку
+========================================
+*/
+
+async function deleteOneUnit(item, row) {
+
+  try {
+
+    const qtyInput =
+      row.querySelector('.qty')
+
+    const qty =
+      Number(qtyInput.value) || 0
+
+    if (qty <= 1) {
+
+      const { error } =
+        await supabase
+          .from('items')
+          .delete()
+          .eq('item_id', item.item_id)
+
+      if (error)
+        throw error
+
+    } else {
+
+      const { error } =
+        await supabase
+          .from('items')
+          .update({
+            qty: qty - 1
+          })
+          .eq('item_id', item.item_id)
+
+      if (error)
+        throw error
+    }
+
+    await loadOrder()
+
+    setStatus('Item deleted')
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Delete item error: '
+      + err.message
+    )
+  }
+}
+
+/*
+========================================
+CANCEL ONE UNIT
+уменьшает qty на 1
+и создает cancelled строку с price = 0
+========================================
+*/
+
+async function cancelOneUnit(item, row) {
+
+  try {
+
+    const name =
+      row.querySelector('.name')?.value || 'Item'
+
+    const qtyInput =
+      row.querySelector('.qty')
+
+    const qty =
+      Number(qtyInput.value) || 0
+
+    if (qty <= 1) {
+
+      const { error } =
+        await supabase
+          .from('items')
+          .delete()
+          .eq('item_id', item.item_id)
+
+      if (error)
+        throw error
+
+    } else {
+
+      const { error } =
+        await supabase
+          .from('items')
+          .update({
+            qty: qty - 1
+          })
+          .eq('item_id', item.item_id)
+
+      if (error)
+        throw error
+    }
+
+    const { error: insertError } =
+      await supabase
+        .from('items')
+        .insert({
+          order_id:
+            currentOrder.order_id,
+
+          name:
+            name,
+
+          qty:
+            1,
+
+          price:
+            0,
+
+          item_status:
+            'cancelled'
+        })
+
+    if (insertError)
+      throw insertError
+
+    await loadOrder()
+
+    setStatus('Item cancelled')
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Cancel item error: '
+      + err.message
+    )
+  }
+}
+      
 /*
 ========================================
 ADD ITEM
@@ -2421,7 +2633,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-test cats/dishes in F12 | v12.1.2
+ add DELETE & CANCEL buttons | v12.2.0
   </div>
 
   <div class="row" id="build-down">
