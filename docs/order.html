@@ -795,6 +795,15 @@ async function loadCatsByMenu() {
   const menuId =
     menuSelect.value
 
+
+      
+      console.log(
+  'SELECTED MENU ID:',
+  menuId
+)
+
+
+      
   catSelect.innerHTML =
     '<option value="">Category...</option>'
 
@@ -813,24 +822,47 @@ async function loadCatsByMenu() {
   const { data, error } =
     await supabase
       .from('dishes')
+
+        
+        
       .select(`
-        dish_id,
-        menu_id,
-        category_id,
-        cats (
-          cat_id,
-          cat_name,
-          sort_order
-        ),
-        multis (
-          menu_id
-        )
-      `)
+  dish_id,
+  dish_name,
+  menu_id,
+  category_id,
+  cats (
+    cat_id,
+    cat_name,
+    sort_order
+  ),
+  multis (
+    menu_id
+  )
+`)
+
+
+        
       .eq('project_id', currentOrder.project_id)
 
   console.log('CATS RAW DATA:', data)
   console.log('CATS ERROR:', error)
 
+
+      
+console.log(
+  'CATS FILTERED:',
+  data
+    .filter(dish => dish.menu_id === menuId)
+    .map(dish => ({
+      dish: dish.dish_name,
+      menu_id: dish.menu_id,
+      category_id: dish.category_id,
+      cat: dish.cats?.cat_name
+    }))
+)
+
+
+      
   if (error)
     throw error
 
@@ -2389,7 +2421,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-fix выпадающие списки меню cats/dishes | v12.1.1
+test cats/dishes in F12 | v12.1.2
   </div>
 
   <div class="row" id="build-down">
