@@ -200,8 +200,16 @@
           TOTAL: <span id="finalTotal">0</span>
         </div>
 
-<div style="font-weight:bold; font-size:16px; margin-top:6px;">
-  PAID: <span id="paidTotal">0</span>
+<div class="paid-row">
+  <div>
+    PAID: <span id="paidTotal">0</span>
+  </div>
+
+  <button id="addPaymentBtn"
+          class="add-payment-btn"
+          type="button">
+    Add payment
+  </button>
 </div>
             
       </div>
@@ -298,6 +306,48 @@ const SERVICE_PERCENT =
 
 import { supabase }
 from "./scripts/config.js"
+
+<!-- ========================================
+     PAYMENT DIALOG
+     внесение оплаты по заказу
+======================================== -->
+
+<div id="paymentDialog" class="dialog hidden">
+  <div class="dialog-box">
+
+    <h3>Add payment</h3>
+
+    <label>
+      Amount
+    </label>
+
+    <input id="paymentAmount"
+           type="number"
+           min="0"
+           step="0.01"
+           value="0" />
+
+    <div class="payment-actions">
+
+      <button id="payCashBtn"
+              type="button">
+        Cash
+      </button>
+
+      <button id="payCardBtn"
+              type="button">
+        Card
+      </button>
+
+    </div>
+
+    <button id="closePaymentDialogBtn"
+            type="button">
+      Close
+    </button>
+
+  </div>
+</div>
       
 /*
 ========================================
@@ -418,6 +468,24 @@ const dishQty =
 
 const addDishBtn =
   document.getElementById('addDishBtn')      
+
+const addPaymentBtn =
+  document.getElementById('addPaymentBtn')
+
+const paymentDialog =
+  document.getElementById('paymentDialog')
+
+const paymentAmount =
+  document.getElementById('paymentAmount')
+
+const payCashBtn =
+  document.getElementById('payCashBtn')
+
+const payCardBtn =
+  document.getElementById('payCardBtn')
+
+const closePaymentDialogBtn =
+  document.getElementById('closePaymentDialogBtn')      
       
 /*
 ========================================
@@ -2975,6 +3043,119 @@ async function printBill() {
     )
   }
 }
+
+/*
+========================================
+OPEN PAYMENT DIALOG
+открывает окно внесения оплаты
+========================================
+*/
+
+function openPaymentDialog() {
+
+  if (!currentOrder)
+    return
+
+  const total =
+    Number(currentOrder.total || 0)
+
+  const paid =
+    Number(currentOrder.paid || 0)
+
+  const rest =
+    Math.max(
+      total - paid,
+      0
+    )
+
+  paymentAmount.value =
+    rest.toFixed(2)
+
+  paymentDialog.classList.remove(
+    'hidden'
+  )
+}
+
+/*
+========================================
+ADD PAYMENT
+добавляет сумму оплаты прямо в orders.paid
+method пока только для лога
+========================================
+*/
+
+async function addPayment(method) {
+
+  try {
+
+    if (!currentOrder)
+      return
+
+    const amount =
+      Number(paymentAmount.value) || 0
+
+    if (amount <= 0) {
+
+      setStatus(
+        'Wrong payment amount'
+      )
+
+      return
+    }
+
+    const oldPaid =
+      Number(currentOrder.paid || 0)
+
+    const newPaid =
+      oldPaid + amount
+
+    const { error } =
+      await supabase
+        .from('orders')
+        .update({
+          paid:
+            newPaid
+        })
+        .eq('order_id', currentOrder.order_id)
+
+    if (error)
+      throw error
+
+    await addConsoleLog(
+      'add payment',
+      {
+        project_id: currentOrder.project_id,
+        hall_id: currentOrder.hall_id,
+        table_id: currentOrder.table_id,
+        order_id: currentOrder.order_id,
+        message:
+          'PAYMENT ADDED: '
+          + amount.toFixed(2)
+          + ' '
+          + method
+      }
+    )
+
+    paymentDialog.classList.add(
+      'hidden'
+    )
+
+    await loadOrder()
+
+    setStatus(
+      'Payment added'
+    )
+  }
+  catch (err) {
+
+    console.error(err)
+
+    setStatus(
+      'Payment error: '
+      + err.message
+    )
+  }
+}
       
 /*
 ========================================
@@ -3070,6 +3251,28 @@ printSplitByItemsBtn.addEventListener(
   'click',
   printSplitByPositions
 )
+
+addPaymentBtn.addEventListener(
+  'click',
+  openPaymentDialog
+)
+
+payCashBtn.addEventListener(
+  'click',
+  () => addPayment('cash')
+)
+
+payCardBtn.addEventListener(
+  'click',
+  () => addPayment('card')
+)
+
+closePaymentDialogBtn.addEventListener(
+  'click',
+  () => {
+    paymentDialog.classList.add('hidden')
+  }
+)
       
 backBtn.addEventListener(
   'click',
@@ -3141,7 +3344,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-PAID >= TOTAL | v12.5.0
+PAYMENT DIALOG | v13.0.0
   </div>
 
   <div class="row" id="build-down">
