@@ -1,6 +1,6 @@
 /*
 ========================================
-DELETE & CANCEL buttons v5.1.0
+DISABLED SEND & DELETE BUTTONS v5.2.0
 ========================================
 */
 
@@ -822,7 +822,20 @@ NEW / PROCESSING / CANCELLED
   color: white;
 }
 
+/*
+========================================
+DISABLED SEND & DELETE BUTTONS
+========================================
+*/
+
 .delete-item-btn:disabled {
+  background: #d1d5db;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.send-item-btn:disabled,
+.send-all-btn:disabled {
   background: #d1d5db;
   color: #6b7280;
   cursor: not-allowed;
