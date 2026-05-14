@@ -1206,53 +1206,50 @@ function createRow(item) {
   row.dataset.itemId =
     item.item_id
 
- row.dataset.itemStatus =
-  item.item_status || 'new'     
+  row.dataset.itemStatus =
+    item.item_status || 'new'
 
   row.innerHTML =
-  `
-    <input
-      value="${escapeHtml(item.name || '')}"
-      class="name">
+    `
+      <input
+        value="${escapeHtml(item.name || '')}"
+        class="name">
 
-    <input
-      type="number"
-      value="${item.qty || 1}"
-      class="qty">
+      <input
+        type="number"
+        value="${item.qty || 1}"
+        class="qty">
 
-    <input
-      type="number"
-      value="${item.price || 0}"
-      class="price">
+      <input
+        type="number"
+        value="${item.price || 0}"
+        class="price">
 
-    <span class="sum">
-      ${Number(item.line_total || 0).toFixed(2)}
-    </span>
+      <span class="sum">
+        ${Number(item.line_total || 0).toFixed(2)}
+      </span>
 
-    <span class="item-status">
-      ${escapeHtml(item.item_status || 'new')}
-    </span>
+      <span class="item-status">
+        ${escapeHtml(item.item_status || 'new')}
+      </span>
 
-    <button type="button" class="delete-item-btn">
-      Delete
-    </button>
+      <button
+        type="button"
+        class="delete-item-btn">
+        Delete
+      </button>
 
-    <button type="button" class="cancel-item-btn">
-      Cancel
-    </button>
+      <button
+        type="button"
+        class="cancel-item-btn">
+        Cancel
+      </button>
 
-    <button type="button" class="send-item-btn">
-      Send
-    </button>
-  `
-
-<button type="button" class="delete-item-btn">
-  Delete
-</button>
-
-<button type="button" class="cancel-item-btn">
-  Cancel
-</button>
+      <button
+        type="button"
+        class="send-item-btn">
+        Send
+      </button>
     `
 
   const nameInput =
@@ -1264,25 +1261,32 @@ function createRow(item) {
   const priceInput =
     row.querySelector('.price')
 
-   const deleteBtn =
-  row.querySelector('.delete-item-btn')
+  const deleteBtn =
+    row.querySelector('.delete-item-btn')
 
-const cancelBtn =
-  row.querySelector('.cancel-item-btn')
+  const cancelBtn =
+    row.querySelector('.cancel-item-btn')
 
-const sendBtn =
-  row.querySelector('.send-item-btn')
+  const sendBtn =
+    row.querySelector('.send-item-btn')
 
-if ((item.item_status || 'new') === 'processing') {
-  deleteBtn.disabled =
-    true
-} 
+  /*
+  ----------------------------------------
+  DELETE DISABLED FOR PROCESSING
+  ----------------------------------------
+  */
 
-const deleteBtn =
-  row.querySelector('.delete-item-btn')
+  if ((item.item_status || 'new') === 'processing') {
 
-const cancelBtn =
-  row.querySelector('.cancel-item-btn')
+    deleteBtn.disabled =
+      true
+  }
+
+  /*
+  ----------------------------------------
+  SAVE ROW
+  ----------------------------------------
+  */
 
   async function saveRow() {
 
@@ -1304,7 +1308,9 @@ const cancelBtn =
         await supabase
           .from('items')
           .update({
-            name: nameInput.value,
+            name:
+              nameInput.value,
+
             qty,
             price
           })
@@ -1326,6 +1332,12 @@ const cancelBtn =
     }
   }
 
+  /*
+  ----------------------------------------
+  EVENTS
+  ----------------------------------------
+  */
+
   nameInput.addEventListener(
     'change',
     saveRow
@@ -1341,31 +1353,21 @@ const cancelBtn =
     saveRow
   )
 
-deleteBtn.addEventListener(
-  'click',
-  () => deleteOneUnit(item, row)
-)
+  deleteBtn.addEventListener(
+    'click',
+    () => deleteOneUnit(item, row)
+  )
 
-cancelBtn.addEventListener(
-  'click',
-  () => cancelOneUnit(item, row)
-)
+  cancelBtn.addEventListener(
+    'click',
+    () => cancelOneUnit(item, row)
+  )
 
-deleteBtn.addEventListener(
-  'click',
-  () => deleteOneUnit(item, row)
-)
+  sendBtn.addEventListener(
+    'click',
+    () => sendItemToWork(item)
+  )
 
-cancelBtn.addEventListener(
-  'click',
-  () => cancelOneUnit(item, row)
-)
-
-sendBtn.addEventListener(
-  'click',
-  () => sendItemToWork(item)
-)
-      
   itemsBox.appendChild(row)
 }
 
@@ -2790,12 +2792,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
- статус processing
-кнопка Send
-кнопка Send all to work
-блокировка Delete для processing
-отображение Status в строке заказа
-перевод new -> processing для одной или всех позиций| v12.3.0
+CREATE ROW fix| v12.3.1
   </div>
 
   <div class="row" id="build-down">
