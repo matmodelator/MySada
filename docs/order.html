@@ -1054,6 +1054,17 @@ async function loadDishesByMenuAndCat() {
 ========================================
 ADD SELECTED DISH
 добавляет выбранное блюдо в items
+
+ЛОГИКА:
+
+если уже есть такая же позиция со статусом NEW:
+- увеличиваем qty
+
+если такая же позиция уже PROCESSING:
+- НЕ трогаем её
+- создаём новую строку NEW
+
+cancelled строки не трогаем
 ========================================
 */
 
@@ -1078,31 +1089,58 @@ async function addSelectedDish() {
     const price =
       Number(option.dataset.price) || 0
 
-    const { data, error } =
+    const name =
+      option.dataset.name || 'Item'
+
+    const { data: existingNew, error: findError } =
       await supabase
         .from('items')
-        .insert({
-          order_id:
-            currentOrder.order_id,
+        .select('*')
+        .eq('order_id', currentOrder.order_id)
+        .eq('name', name)
+        .eq('price', price)
+        .eq('item_status', 'new')
+        .maybeSingle()
 
-          name:
-            option.dataset.name,
+    if (findError)
+      throw findError
 
-          qty,
-          price,
+    if (existingNew) {
 
-          item_status:
-            'new'
-        })
-        .select()
-        .single()
+      const { error: updateError } =
+        await supabase
+          .from('items')
+          .update({
+            qty:
+              (Number(existingNew.qty) || 0) + qty
+          })
+          .eq('item_id', existingNew.item_id)
 
-    if (error)
-      throw error
+      if (updateError)
+        throw updateError
 
-    createRow(data)
+    } else {
 
-    update()
+      const { error: insertError } =
+        await supabase
+          .from('items')
+          .insert({
+            order_id:
+              currentOrder.order_id,
+
+            name,
+            qty,
+            price,
+
+            item_status:
+              'new'
+          })
+
+      if (insertError)
+        throw insertError
+    }
+
+    await loadOrder()
 
     dishSelect.value =
       ''
@@ -3057,10 +3095,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-Send теперь отправляет в работу только 1 unit
-All to work:
-переносит все NEW -> PROCESSING
-Send disabled для processing | v12.4.0
+addSelectedDish отдельной строкой | v12.4.1
   </div>
 
   <div class="row" id="build-down">
