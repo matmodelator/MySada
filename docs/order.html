@@ -1169,6 +1169,20 @@ async function loadItems() {
     createRow(item)
   }
 })
+
+/*
+----------------------------------------
+ENABLE / DISABLE SEND ALL
+----------------------------------------
+*/
+
+const hasNewItems =
+  data.some(item =>
+    item.item_status === 'new'
+  )
+
+sendAllBtn.disabled =
+  !hasNewItems
         
     update()
 
@@ -1269,7 +1283,18 @@ function createRow(item) {
 
   const sendBtn =
     row.querySelector('.send-item-btn')
+/*
+----------------------------------------
+DISABLE SEND FOR PROCESSING
+----------------------------------------
+*/
 
+if ((item.item_status || 'new') === 'processing') {
+
+  sendBtn.disabled =
+    true
+}
+      
   /*
   ----------------------------------------
   DELETE DISABLED FOR PROCESSING
@@ -1374,7 +1399,26 @@ function createRow(item) {
 /*
 ========================================
 SEND ITEM TO WORK
-переводит одну позицию new -> processing
+1 нажатие = 1 unit
+NEW -> PROCESSING
+
+ЛОГИКА:
+
+если:
+Pizza qty=5 NEW
+
+и нажать SEND
+
+станет:
+
+Pizza qty=4 NEW
+Pizza qty=1 PROCESSING
+
+если processing строка уже существует:
+новый unit добавляется в неё
+
+DELETE для processing запрещён
+SEND для processing запрещён
 ========================================
 */
 
@@ -1383,25 +1427,139 @@ async function sendItemToWork(item) {
   try {
 
     if ((item.item_status || 'new') !== 'new') {
-      setStatus('Only NEW item can be sent')
+
+      setStatus(
+        'Only NEW item can be sent'
+      )
+
       return
     }
 
-    const { error } =
+    /*
+    ----------------------------------------
+    LOAD CURRENT ITEM
+    ----------------------------------------
+    */
+
+    const { data: current, error: loadError } =
       await supabase
         .from('items')
-        .update({
-          item_status:
-            'processing'
-        })
+        .select('*')
         .eq('item_id', item.item_id)
+        .single()
 
-    if (error)
-      throw error
+    if (loadError)
+      throw loadError
+
+    const qty =
+      Number(current.qty) || 0
+
+    /*
+    ----------------------------------------
+    REMOVE 1 UNIT FROM NEW
+    ----------------------------------------
+    */
+
+    if (qty <= 1) {
+
+      const { error: deleteError } =
+        await supabase
+          .from('items')
+          .delete()
+          .eq('item_id', item.item_id)
+
+      if (deleteError)
+        throw deleteError
+
+    } else {
+
+      const { error: updateError } =
+        await supabase
+          .from('items')
+          .update({
+            qty:
+              qty - 1
+          })
+          .eq('item_id', item.item_id)
+
+      if (updateError)
+        throw updateError
+    }
+
+    /*
+    ----------------------------------------
+    FIND EXISTING PROCESSING ROW
+    same name + same price
+    ----------------------------------------
+    */
+
+    const { data: existingProcessing } =
+      await supabase
+        .from('items')
+        .select('*')
+        .eq('order_id', currentOrder.order_id)
+        .eq('name', current.name)
+        .eq('price', current.price)
+        .eq('item_status', 'processing')
+        .maybeSingle()
+
+    /*
+    ----------------------------------------
+    ADD TO EXISTING PROCESSING
+    ----------------------------------------
+    */
+
+    if (existingProcessing) {
+
+      const { error: mergeError } =
+        await supabase
+          .from('items')
+          .update({
+            qty:
+              (Number(existingProcessing.qty) || 0) + 1
+          })
+          .eq('item_id', existingProcessing.item_id)
+
+      if (mergeError)
+        throw mergeError
+
+    } else {
+
+      /*
+      ----------------------------------------
+      CREATE NEW PROCESSING ROW
+      ----------------------------------------
+      */
+
+      const { error: insertError } =
+        await supabase
+          .from('items')
+          .insert({
+            order_id:
+              currentOrder.order_id,
+
+            name:
+              current.name,
+
+            qty:
+              1,
+
+            price:
+              current.price,
+
+            item_status:
+              'processing'
+          })
+
+      if (insertError)
+        throw insertError
+    }
 
     await loadOrder()
 
-    setStatus('Item sent to work')
+    setStatus(
+      '1 unit sent to work'
+    )
   }
   catch (err) {
 
@@ -1413,12 +1571,30 @@ async function sendItemToWork(item) {
     )
   }
 }
-
+      
 /*
 ========================================
 SEND ALL TO WORK
-переводит все позиции заказа new -> processing
-cancelled не трогает
+все NEW -> PROCESSING
+
+ЛОГИКА:
+
+все строки NEW:
+- переносятся в PROCESSING
+- объединяются с существующими
+  PROCESSING строками
+
+пример:
+
+Pizza qty=3 NEW
+Pizza qty=2 PROCESSING
+
+после ALL TO WORK:
+
+Pizza qty=5 PROCESSING
+
+если NEW позиций нет:
+кнопка ALL TO WORK disabled
 ========================================
 */
 
@@ -1429,22 +1605,111 @@ async function sendAllToWork() {
     if (!currentOrder)
       return
 
-    const { error } =
+    /*
+    ----------------------------------------
+    LOAD ALL NEW ITEMS
+    ----------------------------------------
+    */
+
+    const { data: items, error: loadError } =
       await supabase
         .from('items')
-        .update({
-          item_status:
-            'processing'
-        })
+        .select('*')
         .eq('order_id', currentOrder.order_id)
         .eq('item_status', 'new')
 
-    if (error)
-      throw error
+    if (loadError)
+      throw loadError
+
+    if (!items || !items.length) {
+
+      setStatus(
+        'No NEW items'
+      )
+
+      return
+    }
+
+    /*
+    ----------------------------------------
+    MOVE EACH ITEM
+    ----------------------------------------
+    */
+
+    for (const item of items) {
+
+      const { data: existingProcessing } =
+        await supabase
+          .from('items')
+          .select('*')
+          .eq('order_id', currentOrder.order_id)
+          .eq('name', item.name)
+          .eq('price', item.price)
+          .eq('item_status', 'processing')
+          .maybeSingle()
+
+      if (existingProcessing) {
+
+        const { error: mergeError } =
+          await supabase
+            .from('items')
+            .update({
+              qty:
+                (Number(existingProcessing.qty) || 0)
+                + (Number(item.qty) || 0)
+            })
+            .eq('item_id', existingProcessing.item_id)
+
+        if (mergeError)
+          throw mergeError
+
+      } else {
+
+        const { error: insertError } =
+          await supabase
+            .from('items')
+            .insert({
+              order_id:
+                currentOrder.order_id,
+
+              name:
+                item.name,
+
+              qty:
+                item.qty,
+
+              price:
+                item.price,
+
+              item_status:
+                'processing'
+            })
+
+        if (insertError)
+          throw insertError
+      }
+
+      /*
+      ----------------------------------------
+      REMOVE OLD NEW ROW
+      ----------------------------------------
+      */
+
+      const { error: deleteError } =
+        await supabase
+          .from('items')
+          .delete()
+          .eq('item_id', item.item_id)
+
+      if (deleteError)
+        throw deleteError
+    }
 
     await loadOrder()
 
-    setStatus('All NEW items sent to work')
+    setStatus(
+      'All NEW items sent to work'
+    )
   }
   catch (err) {
 
@@ -1456,7 +1721,7 @@ async function sendAllToWork() {
     )
   }
 }
-
+      
 /*
 ========================================
 CREATE CANCELLED ROW
@@ -2792,7 +3057,10 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-CREATE ROW fix| v12.3.1
+Send теперь отправляет в работу только 1 unit
+All to work:
+переносит все NEW -> PROCESSING
+Send disabled для processing | v12.4.0
   </div>
 
   <div class="row" id="build-down">
