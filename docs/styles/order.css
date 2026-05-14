@@ -1,7 +1,7 @@
 /*
 ========================================
-PROCESSING QTY
-бледный v5.2.1
+PAYMENT
+бледный v6.0.0
 ========================================
 */
 
@@ -929,6 +929,49 @@ CANCELLED ROW
   font-size: 13px;
 
   opacity: 0.7;
+}
+
+/*
+========================================
+PAYMENT
+========================================
+*/
+
+.paid-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 6px;
+}
+
+.add-payment-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #2563eb;
+  color: white;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.payment-actions button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #22c55e;
+  color: white;
 }
 
 /*
