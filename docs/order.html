@@ -1329,6 +1329,18 @@ DISABLE SEND FOR PROCESSING
 
 if ((item.item_status || 'new') === 'processing') {
 
+  qtyInput.disabled =
+    true
+
+  nameInput.disabled =
+    true
+
+  priceInput.disabled =
+    true
+
+  deleteBtn.disabled =
+    true
+
   sendBtn.disabled =
     true
 }
@@ -1352,6 +1364,17 @@ if ((item.item_status || 'new') === 'processing') {
   */
 
   async function saveRow() {
+
+     if ((item.item_status || 'new') === 'processing') {
+
+  setStatus(
+    'Processing item cannot be edited'
+  )
+
+  await loadOrder()
+
+  return
+}   
 
     try {
 
@@ -3095,7 +3118,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-addSelectedDish отдельной строкой | v12.4.1
+позиция в работе не редактируется руками | v12.4.2
   </div>
 
   <div class="row" id="build-down">
