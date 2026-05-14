@@ -1,6 +1,7 @@
 /*
 ========================================
-DISABLED SEND & DELETE BUTTONS v5.2.0
+PROCESSING QTY
+бледный v5.2.1
 ========================================
 */
 
@@ -839,6 +840,19 @@ DISABLED SEND & DELETE BUTTONS
   background: #d1d5db;
   color: #6b7280;
   cursor: not-allowed;
+}
+
+/*
+========================================
+PROCESSING QTY
+бледный qty у processing
+========================================
+*/
+
+.order-row[data-item-status="processing"] .qty {
+  opacity: 0.45;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 /*
