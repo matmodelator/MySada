@@ -1,6 +1,6 @@
 /*
 ========================================
-DELETE & CANCEL buttons v5.0.0
+DELETE & CANCEL buttons v5.1.0
 ========================================
 */
 
@@ -760,6 +760,72 @@ ORDER ROW
 
 .order-row input {
   width: 100%;
+}
+
+/*
+========================================
+ORDER STATUS + WORK BUTTONS
+NEW / PROCESSING / CANCELLED
+========================================
+*/
+
+.order-row {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1fr)
+    70px
+    90px
+    90px
+    90px
+    90px
+    90px
+    90px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.order-bottom-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.item-status {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px;
+  border-radius: 6px;
+  background: #e5e7eb;
+}
+
+.send-item-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #bbf7d0;
+  color: #14532d;
+}
+
+.send-all-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #22c55e;
+  color: white;
+}
+
+.delete-item-btn:disabled {
+  background: #d1d5db;
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 /*
