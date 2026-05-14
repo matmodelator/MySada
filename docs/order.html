@@ -200,6 +200,10 @@
           TOTAL: <span id="finalTotal">0</span>
         </div>
 
+<div style="font-weight:bold; font-size:16px; margin-top:6px;">
+  PAID: <span id="paidTotal">0</span>
+</div>
+            
       </div>
 
     </div>
@@ -342,6 +346,9 @@ const serviceBox =
 
 const finalBox =
   document.getElementById('finalTotal')
+
+const paidBox =
+  document.getElementById('paidTotal')      
 
 const serviceLabel =
   document.getElementById('serviceLabel')
@@ -745,6 +752,9 @@ function renderOrder(order) {
       }
     `
 
+paidBox.textContent =
+  Number(order.paid || 0).toFixed(2)
+      
   itemsBox.innerHTML =
     ''
    cancelledItemsBox.innerHTML =
@@ -2075,6 +2085,19 @@ async function closeOrder() {
     if (!currentOrder)
       return
 
+if (
+  Number(currentOrder.paid || 0)
+  <
+  Number(currentOrder.total || 0)
+) {
+
+  setStatus(
+    'Order is not fully paid'
+  )
+
+  return
+}
+        
     setStatus('Closing order...')
 
     const { error: closeError } =
@@ -3118,7 +3141,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-позиция в работе не редактируется руками | v12.4.2
+PAID >= TOTAL | v12.5.0
   </div>
 
   <div class="row" id="build-down">
