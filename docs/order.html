@@ -211,6 +211,10 @@
     Add payment
   </button>
 </div>
+
+<div>
+  CHANGE: <span id="changeTotal">0</span>
+</div>
             
       </div>
 
@@ -402,7 +406,10 @@ const finalBox =
   document.getElementById('finalTotal')
 
 const paidBox =
-  document.getElementById('paidTotal')      
+  document.getElementById('paidTotal')   
+
+const changeBox =
+  document.getElementById('changeTotal')      
 
 const serviceLabel =
   document.getElementById('serviceLabel')
@@ -826,12 +833,31 @@ function renderOrder(order) {
 
 paidBox.textContent =
   Number(order.paid || 0).toFixed(2)
+
+
+const total =
+  Number(order.total || 0)
+
+const paid =
+  Number(order.paid || 0)
+
+const change =
+  Math.max(
+    paid - total,
+    0
+  )
+
+changeBox.textContent =
+  change.toFixed(2)
+      
+      
       
   itemsBox.innerHTML =
     ''
    cancelledItemsBox.innerHTML =
   ''
-      
+
+
   loadItems()
 }
 
@@ -3348,7 +3374,7 @@ init()
 <div id="service-console">
 
   <div class="row" id="build-top">
-PAYMENT DIALOG fix| v13.0.1
+СДАЧА| v13.1.1
   </div>
 
   <div class="row" id="build-down">
